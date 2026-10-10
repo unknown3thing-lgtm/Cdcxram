@@ -1,10 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel/release.json",
   "installCommand": "pip install -r requirements-vercel.txt",
-  "builds": [
-    { "src": "api/*.py", "use": "@vercel/python" },
-    { "src": "web/**", "use": "@vercel/static" }
-  ],
   "rewrites": [
     { "source": "/",          "destination": "/web/index.html" },
     { "source": "/scan",      "destination": "/web/index.html" },
@@ -14,8 +10,5 @@
     { "source": "/backtest",  "destination": "/web/index.html" },
     { "source": "/portfolio", "destination": "/web/index.html" },
     { "source": "/trades",    "destination": "/web/index.html" }
-  ],
-  "crons": [
-    { "path": "/api/cron", "schedule": "0 * * * *" }
   ]
 }
