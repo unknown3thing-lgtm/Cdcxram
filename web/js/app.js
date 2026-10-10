@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       show(route);
       onRouteChange(route);
     });
-  });
+  }
   // Back button
   window.addEventListener("popstate", () => {
     const route = (history.state && history.state.route)
