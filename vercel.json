@@ -1,26 +1,21 @@
 {
-  "version": 2,
-  "buildCommand": "None",
+  "$schema": "https://openapi.vercel.sh/vercel/release.json",
   "installCommand": "pip install -r requirements-vercel.txt",
-  "framework": null,
   "builds": [
-    { "src": "api/*.py", "use": "@vercel/python" }
-  ],
-  "routes": [
-    { "src": "/css/(.*)", "dest": "/web/css/$1" },
-    { "src": "/js/(.*)", "dest": "/web/js/$1" },
-    { "src": "/favicon.ico", "dest": "/web/favicon.ico" }
+    { "src": "api/*.py", "use": "@vercel/python" },
+    { "src": "web/**", "use": "@vercel/static" }
   ],
   "rewrites": [
-    { "source": "/", "destination": "/web/index.html" },
-    { "source": "/scan", "destination": "/web/index.html" },
-    { "source": "/backtest", "destination": "/web/index.html" },
-    { "source": "/portfolio", "destination": "/web/index.html" }
+    { "source": "/",          "destination": "/web/index.html" },
+    { "source": "/scan",      "destination": "/web/index.html" },
+    { "source": "/chart",     "destination": "/web/index.html" },
+    { "source": "/signals",   "destination": "/web/index.html" },
+    { "source": "/calc",      "destination": "/web/index.html" },
+    { "source": "/backtest",  "destination": "/web/index.html" },
+    { "source": "/portfolio", "destination": "/web/index.html" },
+    { "source": "/trades",    "destination": "/web/index.html" }
   ],
   "crons": [
-    {
-      "path": "/api/cron",
-      "schedule": "0 * * * *"
-    }
+    { "path": "/api/cron", "schedule": "0 * * * *" }
   ]
 }
