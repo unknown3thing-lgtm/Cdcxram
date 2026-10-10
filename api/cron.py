@@ -1,17 +1,23 @@
-"""POST /api/cron
+"""POST /api/cron  (also GET /api/cron for external schedulers)
 
 Scheduled refresh endpoint. Secured with CRON_SECRET.
 
-Vercel Cron (Hobby plan: 1 invocation per day for free; Pro/Enterprise
-support more frequent schedules). This endpoint:
+This endpoint accepts BOTH POST and GET so that it works with:
+  - Vercel Cron (sends POST with Authorization: Bearer <CRON_SECRET>)
+  - External schedulers like cron-job.org, EasyCron, UptimeRobot, etc.
+    that default to GET (their "Test Run" button issues a GET).
 
+Both methods require the same Authorization: Bearer <CRON_SECRET> header.
+Without a valid secret, the response is HTTP 401 unauthorized.
+
+HEAD requests are intentionally NOT implemented — they return HTTP 501
+because HEAD should not have side effects (and this endpoint writes to
+the database). cron-job.org's "Test Run" uses GET, not HEAD.
+
+This endpoint:
     1. Fetches latest current_prices from CoinDCX (live or simulated).
     2. Persists the ticker per pair into market_data_cache (Supabase).
     3. Logs the job execution to job_log.
-
-The endpoint refuses to run if:
-    - the CRON_SECRET env var is unset
-    - the Authorization header doesn't match (constant-time)
 
 Idempotency: the same timestamp will not be inserted twice because
 market_data_cache uses UPSERT on (pair).
@@ -35,8 +41,12 @@ class handler(BaseHTTPRequestHandler):
     def _handle(self, method: str) -> None:
         if handle_preflight(method, self):
             return
-        if method != "POST":
-            send_error(self, 405, "method_not_allowed", "Use POST")
+        # Accept both POST (Vercel Cron) and GET (cron-job.org, UptimeRobot,
+        # EasyCron, etc. — most external schedulers default to GET).
+        # Both methods require the same Bearer auth.
+        if method not in ("POST", "GET"):
+            send_error(self, 405, "method_not_allowed",
+                       "Use POST or GET with Authorization: Bearer <CRON_SECRET>")
             return
         try:
             from coindcx_lab.server.common import current_user_id
@@ -49,7 +59,7 @@ class handler(BaseHTTPRequestHandler):
             from coindcx_lab.api.synthetic import SyntheticGenerator
             from datetime import datetime, timezone
 
-            # Auth check
+            # Auth check (same for GET and POST — constant-time comparison)
             auth = self.headers.get("Authorization", "")
             token = ""
             if auth.lower().startswith("bearer "):
@@ -61,8 +71,12 @@ class handler(BaseHTTPRequestHandler):
                            "missing or incorrect CRON_SECRET")
                 return
 
-            started_at = datetime.now(timezone.utc).isoformat()
-            t0_ms = int(started_at.replace(tzinfo=timezone.utc).timestamp() * 1000)
+            # Capture the datetime object BEFORE isoformat() — isoformat()
+            # returns a string, and we need the datetime object for the
+            # epoch-millis calculation below.
+            started_dt = datetime.now(timezone.utc)
+            started_at = started_dt.isoformat()
+            t0_ms = int(started_dt.timestamp() * 1000)
 
             try:
                 cfg = SupabaseConfig.from_env()
@@ -171,5 +185,8 @@ class handler(BaseHTTPRequestHandler):
     def log_message(self, *args, **kwargs):
         pass
 
-    def do_POST(self):  self._handle("POST")
+    def do_GET(self):   self._handle("GET")    # for cron-job.org, UptimeRobot, etc.
+    def do_POST(self):  self._handle("POST")   # for Vercel Cron
     def do_OPTIONS(self): self._handle("OPTIONS")
+    # NOTE: do_HEAD is intentionally NOT defined — HEAD should not trigger
+    # side effects. Default BaseHTTPRequestHandler returns 501 for HEAD.
