@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "coindcx-lab"
+version = "0.1.0"
+description = "Advanced CoinDCX spot-market analysis & paper-trading platform (research-only, no real-money trading)."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "CoinDCX Spot Lab" }]
+dependencies = [
+    "streamlit==1.65.0",
+    "pandas==2.2.3",
+    "numpy==2.1.3",
+    "plotly==6.5.2",
+    "requests==2.32.5",
+    "pytest==9.0.2",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-ra -q"

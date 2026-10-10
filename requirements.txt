@@ -1,0 +1,24 @@
+# CoinDCX Spot Lab — runtime dependencies
+# Python 3.11+ (tested on 3.12.14)
+#
+# Stable, compatible versions. All packages are pure-Python wheels from PyPI.
+# No paid APIs, no AI APIs, no Node.js, no subscriptions required.
+
+# --- Web dashboard ---
+streamlit==1.65.0
+
+# --- Data processing ---
+pandas==2.2.3
+numpy==2.1.3
+
+# --- Charting ---
+plotly==6.5.2
+
+# --- HTTP client (CoinDCX public market data) ---
+requests==2.32.5
+
+# --- Testing ---
+pytest==9.0.2
+
+# --- (Optional) interactive notebook for research ---
+# jupyter==1.1.1

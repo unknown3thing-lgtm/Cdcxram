@@ -1,0 +1,17 @@
+# =====================================================================
+# CoinDCX Spot Lab — Vercel runtime dependencies
+# =====================================================================
+# Smaller dependency set for the Vercel serverless functions.
+# Excludes streamlit (Streamlit dashboard stays as a local-dev option)
+# and pytest (not needed in production).
+#
+# All versions are pinned to match the local-dev requirements.txt so
+# the analysis engine behaves identically in both environments.
+# =====================================================================
+
+# --- Data processing (used by indicators, signals, scanner, backtest) ---
+numpy==2.1.3
+pandas==2.2.3
+
+# --- HTTP client (CoinDCX public API + Supabase REST API) ---
+requests==2.32.5
