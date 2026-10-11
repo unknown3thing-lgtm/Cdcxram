@@ -182,6 +182,60 @@ class TestScannerSummary:
                 srv.shutdown()
 
 
+    def test_scanner_handles_empty_top_pairs(self):
+        """Phase 3 regression: when ALL pairs fail the volume filter,
+        top_pairs is empty. ThreadPoolExecutor(max_workers=0) crashes
+        with ValueError. The scanner must handle this gracefully and
+        return all pairs as excluded (no crash)."""
+        from api.scanner import handler
+        import socketserver
+        import threading
+        import time
+        import requests as _rq
+
+        with patch("coindcx_lab.api.multi_provider.MultiProviderClient") as MockClient:
+            inst = MockClient.return_value
+            from coindcx_lab.api.models import PairInfo, DataProvenance, SourceKind
+            from datetime import datetime, timezone
+            inst.list_inr_spot_pairs.return_value = (
+                [PairInfo(pair="B-SHIBINR", base="SHIB", quote="INR",
+                          status="active", is_inr_quote=True)],
+                DataProvenance(source=SourceKind.LIVE, endpoint="test",
+                               fetched_at_utc=datetime.now(timezone.utc)),
+            )
+            # SHIB with very low volume — fails the ₹50L filter
+            inst.current_prices.return_value = (
+                {"B-SHIBINR": {"last_price": 0.001, "volume_24h": 100,
+                                "high_24h": 0.0011, "low_24h": 0.0009,
+                                "change_pct_24h": 0.1, "volume_24h_base": 100000}},
+                DataProvenance(source=SourceKind.LIVE, endpoint="test",
+                               fetched_at_utc=datetime.now(timezone.utc)),
+            )
+
+            class _S(socketserver.TCPServer):
+                allow_reuse_address = True
+            srv = _S(("127.0.0.1", 0), handler)
+            port = srv.server_address[1]
+            t = threading.Thread(target=srv.serve_forever, daemon=True)
+            t.start()
+            time.sleep(0.05)
+            try:
+                r = _rq.post(f"http://127.0.0.1:{port}/api/scanner",
+                              json={"interval": "1h", "max_pairs": 10},
+                              timeout=15)
+                assert r.status_code == 200, f"HTTP {r.status_code}: {r.text[:300]}"
+                body = r.json()
+                assert body["count"] == 1
+                assert body["summary"]["total_discovered"] == 1
+                assert body["summary"]["pre_filtered_by_volume"] == 1
+                assert body["summary"]["candles_fetched_for"] == 0
+                assert body["summary"]["excluded_total"] == 1
+                assert body["results"][0]["excluded"] is True
+                assert "24h volume" in body["results"][0]["exclusion_reason"]
+            finally:
+                srv.shutdown()
+
+
 # ---------------------------------------------------------------------------
 # 3. Plotly chart — no removed Plotly API calls in app.js
 # ---------------------------------------------------------------------------

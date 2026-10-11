@@ -169,11 +169,16 @@ class handler(BaseHTTPRequestHandler):
                         source=SourceKind.UNAVAILABLE, endpoint="error",
                         fetched_at_utc=datetime.now(timezone.utc))
 
-            with ThreadPoolExecutor(max_workers=min(10, len(top_pairs))) as ex:
-                futures = [ex.submit(_fetch_klines, p) for p, _, _ in top_pairs]
-                for f in as_completed(futures):
-                    pair_code, candles, prov = f.result()
-                    candles_by_pair[pair_code] = (candles, prov)
+            # Only create the ThreadPoolExecutor if there are pairs to
+            # fetch klines for. If all pairs failed the volume filter
+            # (top_pairs is empty), skip the parallel fetch entirely —
+            # ThreadPoolExecutor(max_workers=0) raises ValueError.
+            if top_pairs:
+                with ThreadPoolExecutor(max_workers=min(10, len(top_pairs))) as ex:
+                    futures = [ex.submit(_fetch_klines, p) for p, _, _ in top_pairs]
+                    for f in as_completed(futures):
+                        pair_code, candles, prov = f.result()
+                        candles_by_pair[pair_code] = (candles, prov)
 
             # ---- Step 5: run the scanner over all discovered pairs
             signal_engine = SignalEngine(settings=settings)
