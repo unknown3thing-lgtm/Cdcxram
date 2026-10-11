@@ -174,12 +174,23 @@ class RiskState:
     # ---- equity helpers
     @property
     def current_equity(self) -> float:
-        """Current equity = initial + realized pnl + open positions value
-        (using entry value as a conservative proxy for current value).
+        """Current equity = initial + realized P&L.
 
-        Note: realized_pnl is signed (negative for losses).
+        This does NOT include open_positions_value because that value
+        represents the ENTRY COST of open positions, which was already
+        deducted from available_cash. Adding it back would double-count.
+
+        Equity at entry = cash + position_value_at_entry
+                       = (initial + realized - open_positions_value)
+                         + open_positions_value
+                       = initial + realized
+
+        The backtester computes mark-to-market equity separately:
+            mtm_equity = available_cash + qty * current_price
+                       = (initial + realized - entry*qty) + qty*price
+                       = initial + realized + qty*(price - entry)
         """
-        return self.initial_inr + self.realized_pnl + self.open_positions_value
+        return self.initial_inr + self.realized_pnl
 
     @property
     def available_cash(self) -> float:

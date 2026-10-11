@@ -298,11 +298,14 @@ class Backtester:
                                     open_at_idx = i + 1
 
             # End-of-bar equity mark
-            cur_equity = state.current_equity
-            # If we have an open position, mark-to-market using this bar's close
+            # Mark-to-market: if position is open, equity = cash + qty * close
+            # where cash = available_cash = initial + realized - open_positions_value
+            # So: mtm_equity = (initial + realized - entry*qty) + qty*close
+            #                    = initial + realized + qty*(close - entry)
             if pos is not None:
-                cur_equity = state.current_equity - pos["position_value"] \
-                             + pos["qty"] * candles[i].close
+                cur_equity = state.available_cash + pos["qty"] * candles[i].close
+            else:
+                cur_equity = state.current_equity
             equity_curve.append((candles[i].close_time_ms, cur_equity))
 
         # End of data: force-close any open position at last close.
