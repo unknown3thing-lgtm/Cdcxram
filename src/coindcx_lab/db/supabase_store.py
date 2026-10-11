@@ -200,6 +200,25 @@ class SupabaseStore(Store):
             params={"select": "id"},
             timeout=self.HTTP_TIMEOUT,
         )
+        # If the request_key column doesn't exist (migration 0004 not
+        # applied yet), PostgREST returns error 42703. Retry without
+        # request_key so the trade is still created (idempotency disabled).
+        if r.status_code >= 400 and "request_key" in body:
+            try:
+                err = r.json()
+                if "42703" in str(err.get("code", "")) or \
+                   "does not exist" in str(err.get("message", "")):
+                    body.pop("request_key", None)
+                    r = requests.post(
+                        url,
+                        headers={**self.config.headers(use_service=True),
+                                  "Prefer": "return=representation"},
+                        json=body,
+                        params={"select": "id"},
+                        timeout=self.HTTP_TIMEOUT,
+                    )
+            except (ValueError, json.JSONDecodeError):
+                pass
         self._check(r, "insert_trade")
         # PostgREST may return an empty body even with return=representation
         # (depends on RLS and column visibility). Handle gracefully — the
