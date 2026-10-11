@@ -1,0 +1,71 @@
+# Default settings for CoinDCX Spot Lab.
+# All values here are paper-trading defaults; the dashboard overrides per-session.
+
+[capital]
+initial_inr = 2000                 # default starting virtual equity (INR)
+presets_inr = [2000, 5000, 10000, 25000, 50000]
+
+[risk]
+# Per-trade risk as a percentage of current equity.
+risk_per_trade_pct = 1.0
+# Allocation of equity that may be committed to a single position.
+max_position_pct = 25.0
+# Maximum total portfolio exposure (sum of open position values).
+max_portfolio_exposure_pct = 80.0
+# Hard daily-loss limit, as a percentage of starting-day equity.
+max_daily_loss_pct = 5.0
+# Hard absolute daily-loss limit (INR). 0 = disabled.
+max_daily_loss_abs_inr = 0.0
+# Maximum portfolio drawdown (percentage of peak equity) before auto-pause.
+max_drawdown_pct = 15.0
+# Maximum simultaneously open positions.
+max_open_positions = 5
+# Maximum trades per calendar day (Asia/Kolkata).
+max_daily_trades = 10
+# Reward-to-risk target (gross, before cost adjustments).
+reward_to_risk_target = 2.0
+# Cooldown after N consecutive losing trades (paper-trades only).
+cooldown_after_consecutive_losses = 3
+# Allow the system to hold a paper position overnight (NY/London session rollover).
+allow_overnight = true
+
+[costs]
+# Trading fee applied on each side (entry and exit).
+fee_pct = 0.1
+# Estimated bid-ask spread as a percentage of price.
+spread_pct = 0.05
+# Estimated slippage as a percentage of price (adverse fill).
+slippage_pct = 0.05
+
+[liquidity]
+# Minimum 24-hour quote volume in INR for a market to be considered tradeable.
+min_24h_volume_inr = 5_000_000
+# Minimum number of trades in the last 24h (proxy for liquidity).
+min_24h_trades = 1000
+
+[data]
+# Listed pairs are spot INR pairs from CoinDCX public market data.
+default_interval = "1h"
+supported_intervals = ["15m", "1h", "4h", "1d"]
+# Treat the latest candle as "incomplete" until this many seconds after its close.
+incomplete_buffer_seconds = 30
+# Reject a candle batch whose latest close is older than this many seconds.
+stale_after_seconds = 600
+# Bounded retry policy for HTTP requests.
+max_retries = 3
+retry_backoff_seconds = 0.6
+request_timeout_seconds = 10
+
+[strategies]
+trend_pullback_enabled = true
+breakout_retest_enabled = true
+momentum_continuation_enabled = true
+baseline_sma_enabled = true
+
+[system]
+# Timezone used for "today" boundary, daily-loss reset, display timestamps.
+display_timezone = "Asia/Kolkata"
+# Whether to allow simulated data when live CoinDCX API is unreachable.
+# When true, the dashboard will CLEARLY label simulated series and never
+# invent live prices or fabricate API responses.
+allow_simulated_when_live_unavailable = true

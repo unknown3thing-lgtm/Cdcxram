@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CoinDCX Spot Lab</title>
+  <link rel="stylesheet" href="/css/app.css">
+  <!-- Plotly.js for charts (from CDN) -->
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="logo">📊</span>
+      <span class="title">CoinDCX Spot Lab</span>
+      <span class="subtitle">Research &amp; paper trading — INR spot markets</span>
+    </div>
+    <nav id="nav">
+      <a href="/" data-route="overview">Overview</a>
+      <a href="/scan" data-route="scan">Scanner</a>
+      <a href="/chart" data-route="chart">Chart</a>
+      <a href="/signals" data-route="signals">Signals</a>
+      <a href="/calc" data-route="calc">Calculator</a>
+      <a href="/backtest" data-route="backtest">Backtest</a>
+      <a href="/portfolio" data-route="portfolio">Portfolio</a>
+      <a href="/trades" data-route="trades">Trades</a>
+    </nav>
+    <div id="provenance-banner" class="badge badge-warn">
+      Loading data source…
+    </div>
+  </header>
+
+  <main>
+    <section id="view-overview" class="view active">
+      <h2>Market Overview</h2>
+      <div id="overview-cards" class="cards"></div>
+    </section>
+
+    <section id="view-scan" class="view" hidden>
+      <h2>INR Spot Scanner</h2>
+      <div class="controls">
+        <label>Interval
+          <select id="scan-interval">
+            <option value="15m">15m</option>
+            <option value="1h" selected>1h</option>
+            <option value="4h">4h</option>
+            <option value="1d">1d</option>
+          </select>
+        </label>
+        <button id="scan-run" class="primary">Run scan</button>
+      </div>
+      <div id="scan-results"></div>
+    </section>
+
+    <section id="view-chart" class="view" hidden>
+      <h2>Candlestick Chart</h2>
+      <div class="controls">
+        <label>Symbol
+          <select id="chart-pair"></select>
+        </label>
+        <label>Interval
+          <select id="chart-interval">
+            <option value="15m">15m</option>
+            <option value="1h" selected>1h</option>
+            <option value="4h">4h</option>
+            <option value="1d">1d</option>
+          </select>
+        </label>
+      </div>
+      <div id="chart-candles"></div>
+      <div id="chart-rsi"></div>
+    </section>
+
+    <section id="view-signals" class="view" hidden>
+      <h2>Signal Explanations</h2>
+      <div class="controls">
+        <label>Symbol
+          <select id="signals-pair"></select>
+        </label>
+        <label>Interval
+          <select id="signals-interval">
+            <option value="15m">15m</option>
+            <option value="1h" selected>1h</option>
+            <option value="4h">4h</option>
+            <option value="1d">1d</option>
+          </select>
+        </label>
+        <button id="signals-run" class="primary">Evaluate</button>
+      </div>
+      <div id="signals-list"></div>
+    </section>
+
+    <section id="view-calc" class="view" hidden>
+      <h2>Position Sizing Calculator</h2>
+      <div class="controls-row">
+        <label>Entry (INR) <input type="number" id="calc-entry" value="100" step="0.01"></label>
+        <label>Stop (INR)  <input type="number" id="calc-stop"  value="98"  step="0.01"></label>
+        <label>Target (INR)<input type="number" id="calc-target" value="104" step="0.01"></label>
+        <button id="calc-run" class="primary">Calculate</button>
+      </div>
+      <div id="calc-result"></div>
+    </section>
+
+    <section id="view-backtest" class="view" hidden>
+      <h2>Backtest</h2>
+      <div class="controls-row">
+        <label>Symbol
+          <select id="bt-pair"></select>
+        </label>
+        <label>Interval
+          <select id="bt-interval">
+            <option value="15m">15m</option>
+            <option value="1h" selected>1h</option>
+            <option value="4h">4h</option>
+            <option value="1d">1d</option>
+          </select>
+        </label>
+        <label>Strategy
+          <select id="bt-strategy">
+            <option value="trend_pullback">Trend pullback</option>
+            <option value="breakout_retest">Breakout &amp; retest</option>
+            <option value="momentum_continuation">Momentum continuation</option>
+            <option value="baseline_sma" selected>Baseline SMA</option>
+          </select>
+        </label>
+        <label>Starting capital (INR)
+          <input type="number" id="bt-capital" value="2000" step="100">
+        </label>
+        <button id="bt-run" class="primary">Run backtest</button>
+      </div>
+      <div id="bt-result"></div>
+    </section>
+
+    <section id="view-portfolio" class="view" hidden>
+      <h2>Paper Portfolio</h2>
+      <div id="portfolio-summary" class="cards"></div>
+    </section>
+
+    <section id="view-trades" class="view" hidden>
+      <h2>Paper Trade History</h2>
+      <div id="trades-list"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>
+      <strong>Research &amp; education only.</strong> No live orders. No real
+      money. No leverage. Live execution can produce losses greater than the
+      planned stop risk due to gaps, slippage, or unavailable liquidity.
+    </p>
+    <p id="server-health"></p>
+  </footer>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "buildCommand": "None",
+  "installCommand": "pip install -r requirements-vercel.txt",
+  "framework": null,
+  "builds": [
+    { "src": "api/*.py", "use": "@vercel/python" }
+  ],
+  "routes": [
+    { "src": "/css/(.*)", "dest": "/web/css/$1" },
+    { "src": "/js/(.*)", "dest": "/web/js/$1" },
+    { "src": "/favicon.ico", "dest": "/web/favicon.ico" }
+  ],
+  "rewrites": [
+    { "source": "/", "destination": "/web/index.html" },
+    { "source": "/scan", "destination": "/web/index.html" },
+    { "source": "/backtest", "destination": "/web/index.html" },
+    { "source": "/portfolio", "destination": "/web/index.html" }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron",
+      "schedule": "0 * * * *"
+    }
+  ]
+}

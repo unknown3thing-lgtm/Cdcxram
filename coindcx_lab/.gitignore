@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtualenvs
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Project-specific data / secrets
+*.db
+*.sqlite
+*.sqlite3
+.env
+.env.local
+.env.*.local
+secrets.json
+config/local_settings.json
+data/cache/
+data/cache_*/
+data/*.parquet
+data/*.csv
+
+# Vercel local
+.vercel/
+
+# Supabase local
+supabase/.branches
+supabase/.temp
+
+# Streamlit
+.streamlit/secrets.toml
+
+# OS
+.DS_Store
+Thumbs.db
