@@ -181,6 +181,51 @@ class handler(BaseHTTPRequestHandler):
                            f"Supabase batch upsert failed: {e}")
                 return
 
+            # ---- Step 3: Check open paper trades for stop/target exits ----
+            # The cron fetches the latest candle for each pair that has an
+            # OPEN paper trade, then calls check_exits() to process any
+            # stop or target hits. This is idempotent — check_exits only
+            # processes OPEN trades (CLOSED trades are skipped).
+            exits_processed = 0
+            exits_detail = []
+            try:
+                from coindcx_lab.engine.paper import PaperTradingEngine
+                from coindcx_lab.engine.risk import RiskSettings
+                # Load settings for the paper engine
+                loaded_settings = store.load_settings("risk")
+                pe_settings = RiskSettings(**loaded_settings) if loaded_settings else RiskSettings()
+                pe = PaperTradingEngine(settings=pe_settings, store=store)
+                pe.reconcile_state()  # fix any stale state
+
+                # Get all OPEN trades
+                open_trades = store.get_open_trades()
+                if open_trades:
+                    # Collect unique pairs from open trades
+                    open_pairs = list(set(t["pair"] for t in open_trades))
+                    # Fetch latest candle for each open pair
+                    candles_by_pair = {}
+                    for pair in open_pairs:
+                        try:
+                            candles, cprov = client.candles(
+                                pair=pair, interval="1h", limit=5)
+                            candles_by_pair[pair] = candles
+                        except Exception:
+                            pass  # skip if candle fetch fails
+
+                    if candles_by_pair:
+                        closed = pe.check_exits(candles_by_pair=candles_by_pair)
+                        exits_processed = len(closed)
+                        for t in closed:
+                            exits_detail.append({
+                                "pair": t.pair,
+                                "exit_reason": t.exit_reason,
+                                "exit_price": t.exit_price,
+                                "pnl_net": t.pnl_net,
+                            })
+            except Exception as e:
+                # Exit-checking failure should NOT fail the whole cron
+                exits_detail.append({"error": f"exit check failed: {type(e).__name__}: {e}"})
+
             ended_at = datetime.now(timezone.utc).isoformat()
             duration_ms = int(
                 (datetime.now(timezone.utc).timestamp() * 1000) - t0_ms)
@@ -191,7 +236,9 @@ class handler(BaseHTTPRequestHandler):
                 duration_ms=duration_ms,
                 detail={"pairs_upserted": upserted,
                         "live_error": live_error,
-                        "source": prov.source.value},
+                        "source": prov.source.value,
+                        "exits_processed": exits_processed,
+                        "exits_detail": exits_detail},
             )
 
             send_json(self, 200, {
@@ -200,14 +247,17 @@ class handler(BaseHTTPRequestHandler):
                 "ended_at": ended_at,
                 "duration_ms": duration_ms,
                 "pairs_upserted": upserted,
+                "exits_processed": exits_processed,
+                "exits_detail": exits_detail,
                 "provenance": {
                     "source": prov.source.value,
                     "label": prov.label(),
                     "note": prov.note,
                 },
                 "live_unavailable_reason": live_error,
-                "note": ("Vercel Hobby plan Cron supports 1 daily invocation. "
-                         "This endpoint is also callable on demand."),
+                "note": ("Cron refreshes market data AND checks open paper "
+                         "trades for stop/target exits. Idempotent — "
+                         "CLOSED trades are never re-processed."),
             })
         except Exception as e:
             send_error(self, 500, "internal_error", f"{type(e).__name__}: {e}")
