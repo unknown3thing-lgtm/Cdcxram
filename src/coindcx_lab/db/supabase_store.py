@@ -148,6 +148,36 @@ class SupabaseStore(Store):
         return _row_to_state(rows[0])
 
     # ---------------------------------------------------------------- trades
+    def find_trade_by_request_key(self, request_key: str) -> Optional[dict]:
+        """Find an existing trade by its idempotency request_key.
+
+        The request_key is stored inside the signal_json JSONB field.
+        PostgREST supports JSONB path operators for filtering:
+        signal_json->>request_key=eq.<value>
+
+        Returns the trade dict if found, None otherwise.
+        """
+        if not request_key:
+            return None
+        url = self.config.rest_url("paper_trades")
+        # Use PostgREST's JSONB path operator to filter on the request_key
+        # inside signal_json. The ->> operator extracts as text.
+        r = requests.get(
+            url,
+            headers=self.config.headers(use_service=True),
+            params={
+                "user_id": f"eq.{self.user_id}",
+                "signal_json->>request_key": f"eq.{request_key}",
+                "limit": "1",
+            },
+            timeout=self.HTTP_TIMEOUT,
+        )
+        self._check(r, "find_trade_by_request_key")
+        rows = r.json()
+        if rows and isinstance(rows, list) and len(rows) > 0:
+            return _row_to_trade(rows[0])
+        return None
+
     def insert_trade(self, trade: dict) -> int:
         if not self.config.is_server_side():
             raise StoreError("insert_trade requires the service-role key.")
@@ -199,6 +229,21 @@ class SupabaseStore(Store):
             timeout=self.HTTP_TIMEOUT,
         )
         self._check(r, "update_trade_exit")
+
+    def update_trade_signal_json(self, trade_id: int, signal_json: str) -> None:
+        """Update the signal_json field of an existing trade (for
+        idempotency key embedding)."""
+        if not self.config.is_server_side():
+            raise StoreError("update_trade_signal_json requires the service-role key.")
+        url = self.config.rest_url("paper_trades")
+        r = requests.patch(
+            url,
+            headers=self.config.headers(use_service=True),
+            json={"signal_json": signal_json},
+            params={"id": f"eq.{trade_id}"},
+            timeout=self.HTTP_TIMEOUT,
+        )
+        self._check(r, "update_trade_signal_json")
 
     def list_trades(self, *, status: Optional[str] = None,
                     limit: int = 500) -> List[dict]:

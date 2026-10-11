@@ -47,7 +47,18 @@ const API = {
   portfolio:     () => API.get("/api/portfolio"),
   trades:        (status, limit) =>
     API.get(`/api/trades?${status ? "status=" + status + "&" : ""}limit=${limit || 200}`),
-  openTrade:     (sig) => API.post("/api/trades", sig),
+  openTrade:     (sig) => {
+    // Idempotency: generate a unique request_key per call so that
+    // retries/double-clicks don't create duplicate trades. The caller
+    // can override by passing sig.request_key explicitly (recommended
+    // for button click handlers — generate once per click, reuse on retry).
+    const body = {...sig};
+    if (!body.request_key) {
+      body.request_key = (crypto.randomUUID && crypto.randomUUID()) ||
+        'rk-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+    }
+    return API.post("/api/trades", body);
+  },
   settings:      () => API.get("/api/settings"),
   saveSettings:  (s) => API.post("/api/settings", s),
   resetPortfolio: () => API.post("/api/portfolio_reset", { confirm: true }),

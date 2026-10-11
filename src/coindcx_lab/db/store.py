@@ -156,6 +156,33 @@ class Store:
             return None
 
     # ------------------------------------------------------------------ trades
+    def find_trade_by_request_key(self, request_key: str) -> Optional[dict]:
+        """Find an existing trade by its idempotency request_key.
+
+        The request_key is stored inside the signal_json JSONB field.
+        For SQLite, we use json_extract to query it.
+        """
+        if not request_key:
+            return None
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT * FROM trades WHERE json_extract(signal_json, '$.request_key') = ? "
+                "ORDER BY id DESC LIMIT 1",
+                (request_key,),
+            ).fetchone()
+        if row is None:
+            return None
+        return dict(row)
+
+    def update_trade_signal_json(self, trade_id: int, signal_json: str) -> None:
+        """Update the signal_json field of an existing trade."""
+        with self._lock:
+            self._conn.execute(
+                "UPDATE trades SET signal_json = ? WHERE id = ?",
+                (signal_json, trade_id),
+            )
+            self._conn.commit()
+
     def insert_trade(self, trade: dict) -> int:
         cols = ("pair", "strategy", "side", "status", "qty", "entry", "stop",
                 "target", "entry_time_ms", "exit_time_ms", "exit_price",

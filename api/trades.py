@@ -62,10 +62,52 @@ class handler(BaseHTTPRequestHandler):
                 if body is None:
                     send_error(self, 400, "bad_request", "empty body")
                     return
+
+                # ---- Idempotency check ----
+                # If the client sends a request_key (UUID), check if a trade
+                # with that key already exists. If so, return the original
+                # trade instead of creating a duplicate. This prevents
+                # double-clicks, retries, and concurrent requests from
+                # creating multiple trades for the same user intent.
+                request_key = body.get("request_key")
+                if request_key:
+                    existing = pe.store.find_trade_by_request_key(request_key)
+                    if existing is not None:
+                        # Return the original trade — idempotent response
+                        from coindcx_lab.engine.paper import PaperTrade, PaperTradeStatus
+                        trade = PaperTrade(
+                            id=existing.get("id"),
+                            pair=existing.get("pair", ""),
+                            strategy=existing.get("strategy", ""),
+                            side=existing.get("side", "long"),
+                            status=PaperTradeStatus(existing.get("status", "OPEN")),
+                            qty=existing.get("qty", 0) or 0,
+                            entry=existing.get("entry", 0) or 0,
+                            stop=existing.get("stop", 0) or 0,
+                            target=existing.get("target", 0) or 0,
+                            entry_time_ms=existing.get("entry_time_ms", 0) or 0,
+                            exit_time_ms=existing.get("exit_time_ms"),
+                            exit_price=existing.get("exit_price"),
+                            pnl_net=existing.get("pnl_net"),
+                            exit_reason=existing.get("exit_reason"),
+                            fee_inr=existing.get("fee_inr", 0) or 0,
+                            slippage_inr=existing.get("slippage_inr", 0) or 0,
+                            signal_json=existing.get("signal_json", "") or "",
+                            created_at_ms=existing.get("created_at_ms", 0) or 0,
+                        )
+                        send_json(self, 200, {
+                            "accepted": True,
+                            "reason": "idempotent: request_key already processed",
+                            "trade": trade.to_dict(),
+                            "idempotent": True,
+                        })
+                        return
+
                 from coindcx_lab.engine.signals import (
                     Signal, SignalState,
                 )
                 from coindcx_lab.engine.risk import RiskError
+                import json as _json
                 state_val = (body.get("state")
                               or "BUY_CANDIDATE").upper()
                 try:
@@ -100,6 +142,19 @@ class handler(BaseHTTPRequestHandler):
                         "accepted": False, "reason": reason, "trade": None,
                     })
                     return
+                # Embed the request_key in the signal_json so future
+                # duplicate requests can find this trade.
+                if request_key:
+                    try:
+                        sig_json = _json.loads(trade.signal_json) \
+                            if trade.signal_json else {}
+                        sig_json["request_key"] = request_key
+                        # Update the trade's signal_json in Supabase
+                        pe.store.update_trade_signal_json(
+                            trade.id, _json.dumps(sig_json))
+                        trade.signal_json = _json.dumps(sig_json)
+                    except Exception:
+                        pass  # best-effort — don't fail the trade
                 send_json(self, 200, {
                     "accepted": True, "reason": reason,
                     "trade": trade.to_dict(),
