@@ -145,12 +145,37 @@ class handler(BaseHTTPRequestHandler):
 
             # ---- Step 3: pre-filter by 24h INR volume, sort desc, take top N
             pairs_with_vol = []
+            pre_filtered_results = []  # results for pairs that failed vol filter
             pre_filtered_out = 0
             for p in pairs:
                 ticker = all_prices.get(p.pair, {})
                 vol24_inr = ticker.get("volume_24h") or 0.0
                 if vol24_inr < settings.min_24h_volume_inr:
                     pre_filtered_out += 1
+                    # Build the excluded result here (with the CORRECT
+                    # reason: "24h volume X < min Y") so the user sees
+                    # why the pair was excluded — instead of the scanner
+                    # later returning "no candles available" for the
+                    # same pair (which is technically true but misleading
+                    # since we deliberately didn't fetch candles for it).
+                    from coindcx_lab.engine.signals import SignalState
+                    pre_filtered_results.append({
+                        "pair": p.pair, "base": p.base, "quote": p.quote,
+                        "last_price": ticker.get("last_price"),
+                        "change_pct_24h": ticker.get("change_pct_24h"),
+                        "volume_24h_inr": vol24_inr,
+                        "trend": "n/a (excluded by volume filter)",
+                        "volatility": None,
+                        "signal_state": SignalState.NO_TRADE.value,
+                        "best_strategy": None, "rr_after_cost": None,
+                        "est_cost_inr": None, "score": 0.0,
+                        "rank": None,
+                        "excluded": True,
+                        "exclusion_reason": (
+                            f"24h volume ₹{vol24_inr:,.0f} < min "
+                            f"₹{settings.min_24h_volume_inr:,.0f}"),
+                        "provenance_label": prices_prov.label(),
+                    })
                 else:
                     pairs_with_vol.append((p, ticker, vol24_inr))
             pairs_with_vol.sort(key=lambda x: -x[2])
@@ -180,24 +205,28 @@ class handler(BaseHTTPRequestHandler):
                         pair_code, candles, prov = f.result()
                         candles_by_pair[pair_code] = (candles, prov)
 
-            # ---- Step 5: run the scanner over all discovered pairs
+            # ---- Step 5: run the scanner over the TOP PAIRS only
+            # (pre-filtered pairs are already in pre_filtered_results)
             signal_engine = SignalEngine(settings=settings)
             scanner = Scanner(settings=settings, signal_engine=signal_engine)
-            results = scanner.scan(
-                pairs=pairs, candles_by_pair=candles_by_pair,
+            top_pair_infos = [p for p, _, _ in top_pairs]
+            scanned_results = scanner.scan(
+                pairs=top_pair_infos, candles_by_pair=candles_by_pair,
                 tickers_by_pair=tickers_by_pair, risk_state=state,
                 interval=interval,
             )
+            # Combine: pre-filtered (excluded by volume) + scanned (top N)
+            results = pre_filtered_results + [r.to_dict() for r in scanned_results]
 
             # ---- Step 6: build the summary
             from collections import Counter
-            excluded = [r for r in results if r.excluded]
-            active = [r for r in results if not r.excluded]
+            # results is a list of dicts (pre_filtered_results are dicts,
+            # scanned_results were .to_dict()'d)
+            excluded = [r for r in results if r.get("excluded")]
+            active = [r for r in results if not r.get("excluded")]
             exclusion_reasons = Counter()
             for r in excluded:
-                # Normalise the reason for counting (strip the numeric values)
-                reason = r.exclusion_reason or "unknown"
-                # Replace specific numbers with placeholders for the breakdown
+                reason = r.get("exclusion_reason") or "unknown"
                 if "24h volume" in reason and "< min" in reason:
                     reason = "24h_volume_below_min"
                 elif "no candles" in reason:
@@ -205,9 +234,9 @@ class handler(BaseHTTPRequestHandler):
                 elif "data UNAVAILABLE" in reason:
                     reason = "data_unavailable"
                 exclusion_reasons[reason] += 1
-            signal_states = Counter(r.signal_state for r in active)
+            signal_states = Counter(r.get("signal_state") for r in active)
             buy_candidates = sum(1 for r in active
-                                  if r.signal_state == "BUY_CANDIDATE")
+                                  if r.get("signal_state") == "BUY_CANDIDATE")
 
             summary = {
                 "total_discovered": len(pairs),
@@ -224,7 +253,7 @@ class handler(BaseHTTPRequestHandler):
 
             send_json(self, 200, {
                 "interval": interval,
-                "results": [r.to_dict() for r in results],
+                "results": results,   # already a list of dicts
                 "count": len(results),
                 "summary": summary,
                 "provenance": {
