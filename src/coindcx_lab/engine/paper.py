@@ -221,12 +221,9 @@ class PaperTradingEngine:
         row = trade.to_dict()
         row["status"] = trade.status.value
         row["created_at_ms"] = now_ms
-        # CRITICAL: for SupabaseStore, signal_json must be a DICT (not a
-        # JSON string) so PostgREST stores it as a JSONB OBJECT. The
-        # ->> operator only works on JSONB objects, not strings or NULL.
-        # _trade_to_row tries to parse it, but we set it directly here
-        # to avoid any parsing issues.
-        row["signal_json"] = signal.to_dict()
+        # Pass request_key from the signal into the row dict so that
+        # _trade_to_row can include it as a dedicated column (migration 0004).
+        row["request_key"] = signal.request_key
         trade_id = self.store.insert_trade(row)
         trade.id = trade_id
 

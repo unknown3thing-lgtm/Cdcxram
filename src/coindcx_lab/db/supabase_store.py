@@ -151,25 +151,21 @@ class SupabaseStore(Store):
     def find_trade_by_request_key(self, request_key: str) -> Optional[dict]:
         """Find an existing trade by its idempotency request_key.
 
-        The request_key is stored inside the signal_json JSONB field.
-        PostgREST supports JSONB path operators: signal_json->>request_key=eq.<value>
-
-        IMPORTANT: we build the URL MANUALLY (not via requests params=)
-        because the requests library URL-encodes '>' as '%3E' in param
-        keys, which PostgREST doesn't parse as the ->> JSONB operator.
+        Uses the dedicated `request_key` column (added by migration 0004)
+        for a simple, reliable text equality query — no JSONB ->> operator
+        needed.
         """
         if not request_key:
             return None
-        # Build URL manually to preserve the ->> JSONB operator
-        url = (
-            f"{self.config.rest_url('paper_trades')}"
-            f"?user_id=eq.{self.user_id}"
-            f"&signal_json->>request_key=eq.{request_key}"
-            f"&limit=1"
-        )
+        url = self.config.rest_url("paper_trades")
         r = requests.get(
             url,
             headers=self.config.headers(use_service=True),
+            params={
+                "user_id": f"eq.{self.user_id}",
+                "request_key": f"eq.{request_key}",
+                "limit": "1",
+            },
             timeout=self.HTTP_TIMEOUT,
         )
         self._check(r, "find_trade_by_request_key")
@@ -609,6 +605,10 @@ def _trade_to_row(trade: dict, user_id: str) -> dict:
         except (json.JSONDecodeError, TypeError):
             sig_json = {"raw": sig_json}
     # Now sig_json is guaranteed to be a dict (JSONB object)
+    # Also extract request_key from the trade dict (set by api/trades.py
+    # before calling open_position). This is a dedicated column added
+    # by migration 0004, separate from signal_json.
+    request_key = trade.get("request_key")
     return {
         "user_id": user_id,
         "pair": trade.get("pair"),
@@ -627,6 +627,7 @@ def _trade_to_row(trade: dict, user_id: str) -> dict:
         "fee_inr": trade.get("fee_inr"),
         "slippage_inr": trade.get("slippage_inr"),
         "signal_json": sig_json,  # always a dict (JSONB object)
+        "request_key": request_key,  # dedicated column for idempotency dedup
         # created_at_ms NOT included — Supabase auto-populates created_at
     }
 
