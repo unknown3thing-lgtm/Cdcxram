@@ -64,14 +64,16 @@ class handler(BaseHTTPRequestHandler):
                     return
 
                 # ---- Idempotency check ----
-                # If the client sends a request_key (UUID), check if a trade
-                # with that key already exists. If so, return the original
-                # trade instead of creating a duplicate. This prevents
-                # double-clicks, retries, and concurrent requests from
-                # creating multiple trades for the same user intent.
                 request_key = body.get("request_key")
+                _debug = {"request_key_provided": bool(request_key),
+                          "request_key_value": request_key[:20] + "..." if request_key else None,
+                          "find_called": False,
+                          "find_result": None}
                 if request_key:
+                    _debug["find_called"] = True
                     existing = pe.store.find_trade_by_request_key(request_key)
+                    _debug["find_result"] = "found" if existing else "None"
+                    _debug["store_type"] = type(pe.store).__name__
                     if existing is not None:
                         # Return the original trade — idempotent response
                         from coindcx_lab.engine.paper import PaperTrade, PaperTradeStatus
@@ -146,6 +148,7 @@ class handler(BaseHTTPRequestHandler):
                 send_json(self, 200, {
                     "accepted": True, "reason": reason,
                     "trade": trade.to_dict(),
+                    "_debug": _debug,
                 })
                 return
             send_error(self, 405, "method_not_allowed",
