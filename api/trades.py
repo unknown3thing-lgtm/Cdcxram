@@ -68,7 +68,8 @@ class handler(BaseHTTPRequestHandler):
                 _debug = {"request_key_provided": bool(request_key),
                           "request_key_value": request_key[:20] + "..." if request_key else None,
                           "find_called": False,
-                          "find_result": None}
+                          "find_result": None,
+                          "signal_json_type": None}
                 if request_key:
                     _debug["find_called"] = True
                     existing = pe.store.find_trade_by_request_key(request_key)
@@ -148,7 +149,9 @@ class handler(BaseHTTPRequestHandler):
                 send_json(self, 200, {
                     "accepted": True, "reason": reason,
                     "trade": trade.to_dict(),
-                    "_debug": _debug,
+                    "_debug": {**_debug,
+                               "signal_json_type": type(trade.signal_json).__name__,
+                               "signal_json_value": str(trade.signal_json)[:100]},
                 })
                 return
             send_error(self, 405, "method_not_allowed",

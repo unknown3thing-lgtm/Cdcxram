@@ -595,13 +595,18 @@ def _trade_to_row(trade: dict, user_id: str) -> dict:
     # auto-populate `created_at` with the current timestamp on INSERT.
     # Also: parse signal_json from string to dict so PostgREST stores it
     # as a JSONB OBJECT (not a JSONB string) — the ->> operator only
-    # works on JSONB objects, not on JSONB strings.
+    # works on JSONB objects, not on JSONB strings or NULL.
     sig_json = trade.get("signal_json")
-    if isinstance(sig_json, str):
+    # Ensure signal_json is NEVER None — PostgREST stores None as NULL,
+    # which breaks the ->> JSONB operator. Use {} as fallback.
+    if sig_json is None:
+        sig_json = {}
+    elif isinstance(sig_json, str):
         try:
             sig_json = json.loads(sig_json)
         except (json.JSONDecodeError, TypeError):
-            pass  # keep as string if not valid JSON
+            sig_json = {"raw": sig_json}
+    # Now sig_json is guaranteed to be a dict (JSONB object)
     return {
         "user_id": user_id,
         "pair": trade.get("pair"),
@@ -619,7 +624,7 @@ def _trade_to_row(trade: dict, user_id: str) -> dict:
         "exit_reason": trade.get("exit_reason"),
         "fee_inr": trade.get("fee_inr"),
         "slippage_inr": trade.get("slippage_inr"),
-        "signal_json": sig_json,  # dict (JSONB object) or string
+        "signal_json": sig_json,  # always a dict (JSONB object)
         # created_at_ms NOT included — Supabase auto-populates created_at
     }
 
