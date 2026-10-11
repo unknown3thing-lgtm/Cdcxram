@@ -201,13 +201,15 @@ class SupabaseStore(Store):
             timeout=self.HTTP_TIMEOUT,
         )
         # If the request_key column doesn't exist (migration 0004 not
-        # applied yet), PostgREST returns error 42703. Retry without
-        # request_key so the trade is still created (idempotency disabled).
+        # applied yet), PostgREST returns error PGRST204 or PostgreSQL
+        # returns 42703. Retry without request_key so the trade is still
+        # created (idempotency disabled).
         if r.status_code >= 400 and "request_key" in body:
             try:
                 err = r.json()
-                if "42703" in str(err.get("code", "")) or \
-                   "does not exist" in str(err.get("message", "")):
+                err_str = str(err.get("code", "")) + " " + str(err.get("message", ""))
+                if "42703" in err_str or "PGRST204" in err_str or \
+                   "does not exist" in err_str or "Could not find" in err_str:
                     body.pop("request_key", None)
                     r = requests.post(
                         url,
