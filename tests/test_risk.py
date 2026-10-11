@@ -194,7 +194,11 @@ class TestCaps:
                                  target=104.0, state=state)
         # Available cash = 500, which should cap
         assert plan.position_value <= 500 + 1e-6
-        assert plan.cap_reason == "cash"
+        # With the equity fix (current_equity no longer includes
+        # open_positions_value), both "cash" and "portfolio_exposure"
+        # caps can produce the same value (500). Either is correct.
+        assert plan.cap_reason in ("cash", "portfolio_exposure"), \
+            f"expected cash or portfolio_exposure, got {plan.cap_reason}"
 
 
 # ---------------------------------------------------------------------------
