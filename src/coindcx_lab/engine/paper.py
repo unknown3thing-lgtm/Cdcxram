@@ -316,53 +316,68 @@ class PaperTradingEngine:
             candles = candles_by_pair[pair]
             if not candles:
                 continue
-            # Use the most recent *completed* candle for the exit check.
-            recent = candles[-1]
-            # Incomplete latest: skip — we only act on closed candles.
-            if not recent.complete and len(candles) >= 2:
-                recent = candles[-2]
+            # Iterate ALL completed candles in chronological order (oldest
+            # first). This catches stop/target hits that occurred between
+            # cron runs — the previous implementation only checked the
+            # latest candle, which could miss exits that happened in
+            # earlier candles.
+            #
+            # The first candle that hits stop or target triggers the exit.
+            # If both stop and target are hit in the SAME candle, assume
+            # stop-first (conservative).
             stop, target = row["stop"], row["target"]
-            hit_stop = recent.low <= stop
-            hit_target = recent.high >= target
-            if not (hit_stop or hit_target):
-                continue
-            if hit_stop and hit_target:
-                if assume_stop_first_on_ambiguous:
-                    exit_price, reason = stop, "stop"
+            exit_price = None
+            exit_reason = None
+            exit_candle = None
+            for candle in candles:
+                if not candle.complete:
+                    continue  # skip incomplete (still-forming) candles
+                hit_stop = candle.low <= stop
+                hit_target = candle.high >= target
+                if not (hit_stop or hit_target):
+                    continue
+                # This candle triggered an exit
+                if hit_stop and hit_target:
+                    if assume_stop_first_on_ambiguous:
+                        exit_price, exit_reason = stop, "stop"
+                    else:
+                        exit_price, exit_reason = target, "target"
+                elif hit_stop:
+                    exit_price, exit_reason = stop, "stop"
                 else:
-                    exit_price, reason = target, "target"
-            elif hit_stop:
-                exit_price, reason = stop, "stop"
-            else:
-                exit_price, reason = target, "target"
+                    exit_price, exit_reason = target, "target"
+                exit_candle = candle
+                break  # process the FIRST exit only
+            if exit_price is None:
+                continue  # no exit triggered by any completed candle
             # Apply adverse exit slippage.
             exit_price_adjusted = exit_price * (1 - self.settings.slippage_pct / 100.0)
             pnl_net = self.risk_engine.on_trade_closed(
                 entry=row["entry"], stop=stop, target=target,
                 qty=row["qty"], exit_price=exit_price_adjusted,
                 state=self.state,
-                day_iso=_day_iso_from_ms(recent.open_time_ms),
+                day_iso=_day_iso_from_ms(exit_candle.open_time_ms),
             )
             exit_fee = exit_price_adjusted * row["qty"] * self.settings.fee_pct / 100.0
             exit_slip = exit_price * row["qty"] * self.settings.slippage_pct / 100.0
             self.store.update_trade_exit(
                 trade_id=row["id"],
-                exit_time_ms=recent.close_time_ms,
+                exit_time_ms=exit_candle.close_time_ms,
                 exit_price=exit_price_adjusted,
                 pnl_net=pnl_net,
-                exit_reason=reason,
+                exit_reason=exit_reason,
                 fee_inr=row.get("fee_inr", 0) + exit_fee,
                 slippage_inr=row.get("slippage_inr", 0) + exit_slip,
                 status=PaperTradeStatus.CLOSED.value,
             )
             self._persist_state()
             self.store.append_equity_snapshot(
-                time_ms=recent.close_time_ms,
+                time_ms=exit_candle.close_time_ms,
                 equity=self.state.current_equity,
                 cash=self.state.available_cash,
                 open_positions_value=self.state.open_positions_value,
                 peak_equity=self.state.peak_equity,
-                note=f"close {pair} reason={reason} pnl={pnl_net:.2f}",
+                note=f"close {pair} reason={exit_reason} pnl={pnl_net:.2f}",
             )
             # Refresh from DB
             refreshed = self.store.list_trades(limit=1)
