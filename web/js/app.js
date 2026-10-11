@@ -196,32 +196,105 @@ async function renderChart() {
     const closes = candles.map(c => c.close);
     const vols = candles.map(c => c.volume);
 
-    const fig = Plotly.makeGraphDiv ? Plotly.makeGraphDiv : Plotly.newPlot;
-    Plotly.newPlot("chart-candles", [
-      { type: "candlestick", x: times, open: opens, high: highs,
-        low: lows, close: closes, name: "OHLC",
+    // Build the candlestick + volume chart in a SINGLE Plotly.newPlot
+    // call using subplots. The old code used Plotly.plot() (removed in
+    // Plotly 2.x) and the non-existent Plotly.makeGraphDiv — both caused
+    // "Plotly.plot is not a function" / "Plotly.makeGraphDiv is not a
+    // function" errors that broke the entire chart.
+    //
+    // Layout uses 2 y-axes:
+    //   y  (left)  → price (candlestick), takes top 70% of height
+    //   y2 (right) → volume (bar),        takes bottom 30% of height
+    // They share a single x-axis so zoom/pan stays in sync.
+    const traces = [
+      {
+        type: "candlestick",
+        x: times, open: opens, high: highs, low: lows, close: closes,
+        name: "OHLC",
         increasing: { line: { color: "#3fb950" } },
-        decreasing: { line: { color: "#f85149" } } },
-    ], {
+        decreasing: { line: { color: "#f85149" } },
+        xaxis: "x", yaxis: "y",
+      },
+      {
+        type: "bar", x: times, y: vols, name: "Volume",
+        marker: { color: "#8b949e" },
+        xaxis: "x", yaxis: "y2",
+      },
+    ];
+    const layout = {
       title: `${pair} · ${interval} · ${r.provenance.label}`,
       dragmode: "zoom",
-      xaxis: { rangeslider: { visible: false } },
-      yaxis: { title: "Price (INR)" },
+      // Top subplot (price) uses y; bottom subplot (volume) uses y2.
+      // domain controls the vertical fraction each axis occupies.
+      xaxis: { rangeslider: { visible: false }, anchor: "y" },
+      yaxis:  { title: "Price (INR)", domain: [0.30, 1.0], anchor: "x" },
+      yaxis2: { title: "Volume",     domain: [0.0,  0.28], anchor: "x" },
       plot_bgcolor: "#161b22", paper_bgcolor: "#161b22",
       font: { color: "#e6edf3" },
-      margin: { l: 50, r: 10, t: 40, b: 20 },
-      height: 400,
-    }, { responsive: true });
+      margin: { l: 60, r: 10, t: 40, b: 20 },
+      height: 500,
+      showlegend: false,
+    };
+    Plotly.newPlot("chart-candles", traces, layout, {
+      responsive: true,
+      displayModeBar: false,
+    });
 
-    // Volume sub-chart
-    Plotly.plot("chart-candles", [
-      { x: times, y: vols, type: "bar", name: "Volume",
-        marker: { color: "#8b949e" },
-        xaxis: "x", yaxis: "y2" },
-    ], {}, { responsive: true });
+    // RSI sub-chart in its own div (separate Plotly.newPlot — single
+    // call, no Plotly.plot). Uses the same `times` array as the OHLC.
+    if (candles.length >= 15) {
+      // Compute RSI14 client-side as a sanity check / overlay
+      // (matches the engine's Wilder smoothing formula).
+      const rsi = computeRSI(closes, 14);
+      const rsiTimes = times.slice(14);  // first 14 are NaN
+      const rsiVals = rsi.slice(14);
+      Plotly.newPlot("chart-rsi", [
+        { x: rsiTimes, y: rsiVals, type: "scatter", mode: "lines",
+          name: "RSI14", line: { color: "#9467bd", width: 1.5 } },
+      ], {
+        title: "RSI (14)",
+        shapes: [
+          { type: "line", x0: rsiTimes[0], x1: rsiTimes[rsiTimes.length-1],
+            y0: 70, y1: 70, line: { color: "#f85149", dash: "dash", width: 1 } },
+          { type: "line", x0: rsiTimes[0], x1: rsiTimes[rsiTimes.length-1],
+            y0: 30, y1: 30, line: { color: "#3fb950", dash: "dash", width: 1 } },
+        ],
+        yaxis: { range: [0, 100] },
+        plot_bgcolor: "#161b22", paper_bgcolor: "#161b22",
+        font: { color: "#e6edf3" },
+        margin: { l: 40, r: 10, t: 30, b: 20 },
+        height: 200,
+      }, { responsive: true, displayModeBar: false });
+    }
   } catch (err) {
     setError(target, err);
   }
+}
+
+// Helper: Wilder RSI14 computation (matches engine/indicators.py).
+function computeRSI(closes, period) {
+  const n = closes.length;
+  const out = new Array(n).fill(NaN);
+  if (n <= period) return out;
+  let gains = 0, losses = 0;
+  for (let i = 1; i <= period; i++) {
+    const d = closes[i] - closes[i-1];
+    if (d > 0) gains += d; else losses += -d;
+  }
+  let avgGain = gains / period;
+  let avgLoss = losses / period;
+  if (avgLoss === 0) { out[period] = 100; }
+  else { out[period] = 100 - 100 / (1 + avgGain / avgLoss); }
+  for (let i = period + 1; i < n; i++) {
+    const d = closes[i] - closes[i-1];
+    const g = d > 0 ? d : 0;
+    const l = d < 0 ? -d : 0;
+    avgGain = (avgGain * (period - 1) + g) / period;
+    avgLoss = (avgLoss * (period - 1) + l) / period;
+    if (avgLoss === 0) { out[i] = 100; }
+    else { out[i] = 100 - 100 / (1 + avgGain / avgLoss); }
+  }
+  return out;
 }
 
 ["chart-pair", "chart-interval"].forEach(id =>

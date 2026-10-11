@@ -174,7 +174,13 @@ class TestCurrentPrices:
             assert ticker["last_price"] == 8214417.0
             assert ticker["high_24h"] == 8225001.0
             assert ticker["low_24h"] == 8139926.0
-            assert ticker["volume_24h"] == 0.0708
+            # WazirX `volume` is in BASE asset (BTC). The client must
+            # convert it to INR turnover (last * base_volume) so the
+            # scanner's min_24h_volume_inr filter works correctly.
+            # 0.0708 BTC * ₹8214417 = ₹581,580.72 INR turnover.
+            assert ticker["volume_24h"] == 8214417.0 * 0.0708
+            # And the raw base-asset volume is also exposed for transparency.
+            assert ticker["volume_24h_base"] == 0.0708
             # change_pct_24h = (last - open) / open * 100
             expected = (8214417.0 - 8225001) / 8225001 * 100
             assert abs(ticker["change_pct_24h"] - expected) < 0.001

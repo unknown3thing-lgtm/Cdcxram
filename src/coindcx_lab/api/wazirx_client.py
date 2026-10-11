@@ -259,7 +259,14 @@ class WazirXClient:
 
         The ticker dict has the same shape CoinDCXClient produces:
             {"last_price": float, "high_24h": float, "low_24h": float,
-             "volume_24h": float, "change_pct_24h": float}
+             "volume_24h": float,        # INR turnover (last * base_volume)
+             "volume_24h_base": float,  # base-asset volume (BTC, ETH, etc.)
+             "change_pct_24h": float}
+
+        IMPORTANT: WazirX's raw `volume` field is the BASE-ASSET volume
+        (e.g. 0.07033 BTC) — NOT INR turnover. The scanner's
+        `min_24h_volume_inr` filter expects INR turnover, so we
+        compute `volume_24h = last * base_volume` here.
         """
         cache_key = "wazirx_current_prices"
         cached = self._cache_get(cache_key)
@@ -287,13 +294,17 @@ class WazirXClient:
                 open_ = float(ticker.get("open", "nan"))
                 high = float(ticker.get("high", "nan"))
                 low = float(ticker.get("low", "nan"))
-                volume = float(ticker.get("volume", "nan"))
+                # WazirX `volume` is in BASE asset (e.g. BTC). Convert to
+                # INR turnover for the scanner's min_24h_volume_inr filter.
+                base_volume = float(ticker.get("volume", "nan"))
+                volume_inr = last * base_volume if last and base_volume else 0.0
                 change_pct = ((last - open_) / open_ * 100.0) if open_ > 0 else 0.0
                 cleaned[cdx_pair] = {
                     "last_price": last,
                     "high_24h": high,
                     "low_24h": low,
-                    "volume_24h": volume,
+                    "volume_24h": volume_inr,         # INR turnover
+                    "volume_24h_base": base_volume,    # base-asset volume (BTC)
                     "change_pct_24h": change_pct,
                 }
             except (TypeError, ValueError):
