@@ -48,6 +48,9 @@ const API = {
   trades:        (status, limit) =>
     API.get(`/api/trades?${status ? "status=" + status + "&" : ""}limit=${limit || 200}`),
   openTrade:     (sig) => API.post("/api/trades", sig),
+  settings:      () => API.get("/api/settings"),
+  saveSettings:  (s) => API.post("/api/settings", s),
+  resetPortfolio: () => API.post("/api/portfolio_reset", { confirm: true }),
 };
 
 // UI helpers ---------------------------------------------------------------

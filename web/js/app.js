@@ -1,6 +1,8 @@
 // CoinDCX Spot Lab — main dashboard orchestrator.
 // Routes between views, fetches data, renders tables & charts.
 
+const CAPITAL_PRESETS = [2000, 5000, 10000, 25000, 50000];
+
 document.addEventListener("DOMContentLoaded", async () => {
   // Wire nav clicks
   for (const a of document.querySelectorAll("nav#nav a")) {
@@ -25,7 +27,151 @@ document.addEventListener("DOMContentLoaded", async () => {
   const initial = window.location.pathname.replace("/", "") || "overview";
   show(initial);
   await loadOverview();
+  // Load settings in the background (don't block initial render)
+  loadSettings().catch(() => null);
   onRouteChange(initial);
+});
+
+// ---------------------------------------------------------------------------
+// Settings (capital + risk configuration)
+// ---------------------------------------------------------------------------
+let appSettings = null;  // global — used by calculator, backtest, portfolio
+
+async function loadSettings() {
+  try {
+    const r = await API.settings();
+    appSettings = r.settings;
+    // Populate the settings form
+    const s = appSettings;
+    // Capital preset dropdown
+    const preset = el("set-capital-preset");
+    if (preset) {
+      const cap = s.initial_inr;
+      if (CAPITAL_PRESETS.includes(cap)) {
+        preset.value = String(cap);
+        el("set-capital-custom").disabled = true;
+        el("set-capital-custom").value = cap;
+      } else {
+        preset.value = "custom";
+        el("set-capital-custom").disabled = false;
+        el("set-capital-custom").value = cap;
+      }
+    }
+    // Other fields
+    setVal("set-risk-pct", s.risk_per_trade_pct);
+    setVal("set-max-pos-pct", s.max_position_pct);
+    setVal("set-max-exp-pct", s.max_portfolio_exposure_pct);
+    setVal("set-rr-target", s.reward_to_risk_target);
+    setVal("set-fee-pct", s.fee_pct);
+    setVal("set-spread-pct", s.spread_pct);
+    setVal("set-slip-pct", s.slippage_pct);
+    setVal("set-min-vol", s.min_24h_volume_inr);
+    setVal("set-max-positions", s.max_open_positions);
+    setVal("set-max-daily-trades", s.max_daily_trades);
+    setVal("set-max-daily-loss", s.max_daily_loss_pct);
+    setVal("set-max-dd", s.max_drawdown_pct);
+    setVal("set-cooldown", s.cooldown_after_consecutive_losses);
+    el("set-overnight").checked = s.allow_overnight;
+    // Also update backtest capital default
+    if (el("bt-capital") && s.initial_inr)
+      el("bt-capital").value = s.initial_inr;
+    return s;
+  } catch (err) {
+    console.warn("settings load failed:", err);
+    return null;
+  }
+}
+
+function setVal(id, v) { const e = el(id); if (e && v !== undefined && v !== null) e.value = v; }
+
+// Capital preset dropdown → enable/disable custom input
+el("set-capital-preset")?.addEventListener("change", (e) => {
+  const custom = el("set-capital-custom");
+  if (e.target.value === "custom") {
+    custom.disabled = false;
+  } else {
+    custom.disabled = true;
+    custom.value = e.target.value;
+  }
+});
+
+// Save settings
+el("set-save")?.addEventListener("click", async () => {
+  const target = el("set-result");
+  setLoading(target, "Saving settings…");
+  // Determine capital from preset or custom
+  let capital;
+  const preset = el("set-capital-preset").value;
+  if (preset === "custom") {
+    capital = parseFloat(el("set-capital-custom").value);
+    if (!capital || capital <= 0) {
+      setError(target, new Error("Custom capital must be a positive number"));
+      return;
+    }
+    if (capital > 10000000) {
+      setError(target, new Error("Capital must be <= ₹1,00,00,000 (₹1 crore)"));
+      return;
+    }
+  } else {
+    capital = parseFloat(preset);
+  }
+  const body = {
+    initial_inr: capital,
+    risk_per_trade_pct: parseFloat(el("set-risk-pct").value),
+    max_position_pct: parseFloat(el("set-max-pos-pct").value),
+    max_portfolio_exposure_pct: parseFloat(el("set-max-exp-pct").value),
+    reward_to_risk_target: parseFloat(el("set-rr-target").value),
+    fee_pct: parseFloat(el("set-fee-pct").value),
+    spread_pct: parseFloat(el("set-spread-pct").value),
+    slippage_pct: parseFloat(el("set-slip-pct").value),
+    min_24h_volume_inr: parseFloat(el("set-min-vol").value),
+    max_open_positions: parseInt(el("set-max-positions").value),
+    max_daily_trades: parseInt(el("set-max-daily-trades").value),
+    max_daily_loss_pct: parseFloat(el("set-max-daily-loss").value),
+    max_drawdown_pct: parseFloat(el("set-max-dd").value),
+    cooldown_after_consecutive_losses: parseInt(el("set-cooldown").value),
+    allow_overnight: el("set-overnight").checked,
+    trading_allocation_pct: 100.0,
+  };
+  try {
+    const r = await API.saveSettings(body);
+    appSettings = r.settings;
+    target.innerHTML = `<div class="card" style="border-color:var(--ok)">
+      <div class="label">✅ Settings Saved</div>
+      <p style="font-size:13px">${r.note}</p>
+      <p style="font-size:13px">Capital: ₹${fmt(capital)} · Risk: ${body.risk_per_trade_pct}% ·
+        R/R: ${body.reward_to_risk_target} · Fee: ${body.fee_pct}%</p>
+    </div>`;
+    // Update backtest capital default
+    el("bt-capital").value = capital;
+  } catch (err) {
+    setError(target, err);
+  }
+});
+
+// Reset confirmation checkbox → enable reset button
+el("set-reset-confirm")?.addEventListener("change", (e) => {
+  el("set-reset-btn").disabled = !e.target.checked;
+});
+
+// Reset portfolio
+el("set-reset-btn")?.addEventListener("click", async () => {
+  const target = el("set-result");
+  if (!confirm("This will WIPE all paper trades and portfolio history. Continue?"))
+    return;
+  setLoading(target, "Resetting portfolio…");
+  try {
+    const r = await API.resetPortfolio();
+    target.innerHTML = `<div class="card" style="border-color:var(--ok)">
+      <div class="label">✅ Portfolio Reset</div>
+      <p style="font-size:13px">${r.note}</p>
+    </div>`;
+    // Uncheck the confirmation box and disable the button
+    el("set-reset-confirm").checked = false;
+    el("set-reset-btn").disabled = true;
+  } catch (err) {
+    setError(target, err);
+  }
 });
 
 async function onRouteChange(route) {
@@ -37,6 +183,7 @@ async function onRouteChange(route) {
     case "backtest":   await loadBacktestPairs(); break;
     case "portfolio":  await loadPortfolio(); break;
     case "trades":     await loadTrades(); break;
+    case "settings":   /* loaded on init, just show the form */ break;
     case "overview":
     default:           await loadOverview(); break;
   }

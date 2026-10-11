@@ -299,6 +299,15 @@ class WazirXClient:
                 base_volume = float(ticker.get("volume", "nan"))
                 volume_inr = last * base_volume if last and base_volume else 0.0
                 change_pct = ((last - open_) / open_ * 100.0) if open_ > 0 else 0.0
+                # Compute spread from best bid (buy) and best ask (sell).
+                # WazirX's `buy` = best bid, `sell` = best ask. If both
+                # are present and > 0, spread_pct = (sell - buy) / last * 100.
+                buy_price = float(ticker.get("buy", "0") or "0")
+                sell_price = float(ticker.get("sell", "0") or "0")
+                if buy_price > 0 and sell_price > 0 and last > 0:
+                    spread_pct = ((sell_price - buy_price) / last * 100.0)
+                else:
+                    spread_pct = 0.0
                 cleaned[cdx_pair] = {
                     "last_price": last,
                     "high_24h": high,
@@ -306,6 +315,9 @@ class WazirXClient:
                     "volume_24h": volume_inr,         # INR turnover
                     "volume_24h_base": base_volume,    # base-asset volume (BTC)
                     "change_pct_24h": change_pct,
+                    "spread_pct": spread_pct,           # bid-ask spread %
+                    "buy_price": buy_price,              # best bid
+                    "sell_price": sell_price,            # best ask
                 }
             except (TypeError, ValueError):
                 continue

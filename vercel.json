@@ -9,6 +9,7 @@
     { "source": "/calc",      "destination": "/web/index.html" },
     { "source": "/backtest",  "destination": "/web/index.html" },
     { "source": "/portfolio", "destination": "/web/index.html" },
-    { "source": "/trades",    "destination": "/web/index.html" }
+    { "source": "/trades",    "destination": "/web/index.html" },
+    { "source": "/settings",  "destination": "/web/index.html" }
   ]
 }
