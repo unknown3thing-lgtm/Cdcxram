@@ -97,12 +97,12 @@ class handler(BaseHTTPRequestHandler):
             # first, falls back to WazirX which is verified LIVE for INR
             # spot pairs. If both live providers fail, fall back to
             # clearly-labelled SIMULATED.)
-            client = MultiProviderClient()
-            pairs_to_cache = ["B-BTCINR", "B-ETHINR", "B-SOLINR", "B-MATICINR",
-                                "B-ADA INR".replace(" ", ""), "B-DOTINR",
-                                "B-LTCINR", "B-XRPINR", "B-LINKINR",
-                                "B-AVAXINR"]
-            pairs_to_cache = [p for p in pairs_to_cache if " " not in p]
+            # skip_coindcx=True because CoinDCX's public API endpoints
+            # return HTTP 404 "Link not found" from Vercel — saving the
+            # ~1-2s of failed-404 time per cron run keeps us under the
+            # Vercel 10s function timeout.
+            from coindcx_lab.api.multi_provider import MultiProviderClient
+            client = MultiProviderClient(skip_coindcx=True)
 
             live_error = None
             try:
@@ -111,8 +111,8 @@ class handler(BaseHTTPRequestHandler):
                     raise CoinDCXAPIError("no prices returned from any provider")
             except CoinDCXAPIError as e:
                 live_error = str(e)
-                # SIMULATED fallback (last resort — only when both CoinDCX
-                # and WazirX fail, AND allow_simulated is True).
+                # SIMULATED fallback (last resort — only when WazirX also
+                # fails, AND allow_simulated is True).
                 from coindcx_lab.api.env import SupabaseConfig
                 allow_sim = True
                 try:
@@ -126,17 +126,22 @@ class handler(BaseHTTPRequestHandler):
                                f"SIMULATED fallback disabled. Last error: "
                                f"{live_error}")
                     return
-                # SIMULATED fallback
+                # SIMULATED fallback — only 10 default pairs (to keep the
+                # SIMULATED path fast; the LIVE path uses the batch upsert
+                # for all 216 WazirX pairs).
+                DEFAULT_SIM_PAIRS = ["B-BTCINR", "B-ETHINR", "B-SOLINR",
+                                      "B-MATICINR", "B-ADAINR", "B-DOTINR",
+                                      "B-LTCINR", "B-XRPINR", "B-LINKINR",
+                                      "B-AVAXINR"]
                 synth = SyntheticGenerator(seed=42)
                 sim_prices = {}
-                for pair in pairs_to_cache:
+                for pair in DEFAULT_SIM_PAIRS:
                     base_price = {
                         "B-BTCINR": 7_000_000, "B-ETHINR": 350_000,
                         "B-SOLINR": 18_000, "B-MATICINR": 90,
                         "B-DOTINR": 700, "B-LTCINR": 8_000,
                         "B-XRPINR": 65, "B-LINKINR": 1_800,
-                        "B-AVAXINR": 4_000,
-                        "B-ADA INR".replace(" ", ""): 65,
+                        "B-AVAXINR": 4_000, "B-ADAINR": 65,
                     }.get(pair, 1000)
                     candles, _ = synth.series(pair=pair, interval="1h",
                                                 count=48, start_price=base_price)
@@ -146,29 +151,35 @@ class handler(BaseHTTPRequestHandler):
                     source=SourceKind.SIMULATED,
                     endpoint="synthetic://cron-fallback",
                     fetched_at_utc=datetime.now(timezone.utc),
-                    note=f"Live CoinDCX API unreachable ({live_error}); "
+                    note=f"All live providers unreachable ({live_error}); "
                          "SIMULATED prices derived from deterministic "
                          "synthetic candles.",
                 )
 
-            # Persist each pair's ticker
-            upserted = 0
-            for pair, ticker in prices.items():
-                try:
-                    store.upsert_market_data(
-                        pair=pair, ticker=ticker,
-                        provenance_note=prov.label(),
-                    )
-                    upserted += 1
-                except Exception as e:
-                    # Log individual failures but continue
-                    store.log_job(
-                        job_name="cron_refresh_pair", status="error",
-                        started_at=started_at,
-                        ended_at=datetime.now(timezone.utc).isoformat(),
-                        duration_ms=0,
-                        error=f"pair={pair} {type(e).__name__}: {e}",
-                    )
+            # Persist all tickers in a SINGLE batched Supabase POST
+            # (was 216 individual POSTs taking 110s total; batched
+            # brings it to ~1-2s — well within Vercel's 10s timeout).
+            try:
+                upserted = store.upsert_market_data_batch(
+                    items=prices,
+                    provenance_note=prov.label(),
+                    endpoint=("wazirx_public" if prov.source is SourceKind.LIVE
+                              else "synthetic_fallback"),
+                )
+            except Exception as e:
+                # If the batch upsert fails, log the error and return 500
+                # (don't pretend success).
+                store.log_job(
+                    job_name="cron_refresh", status="error",
+                    started_at=started_at,
+                    ended_at=datetime.now(timezone.utc).isoformat(),
+                    duration_ms=int(
+                        (datetime.now(timezone.utc).timestamp() * 1000) - t0_ms),
+                    error=f"batch upsert failed: {type(e).__name__}: {e}",
+                )
+                send_error(self, 500, "persist_failed",
+                           f"Supabase batch upsert failed: {e}")
+                return
 
             ended_at = datetime.now(timezone.utc).isoformat()
             duration_ms = int(

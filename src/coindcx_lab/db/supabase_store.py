@@ -339,6 +339,55 @@ class SupabaseStore(Store):
         )
         self._check(r, "upsert_market_data")
 
+    def upsert_market_data_batch(self, items: dict, provenance_note: str,
+                                  endpoint: str = "wazirx_public") -> int:
+        """Batch upsert many tickers in a single Supabase POST.
+
+        `items` is a dict of {pair_code: ticker_dict}. Returns the number
+        of rows actually upserted.
+
+        PostgREST supports bulk insert by POSTing an array of objects
+        with `Prefer: resolution=merge-duplicates` — much faster than
+        216 individual POSTs (which was taking 110s; this brings it
+        down to ~1-2s).
+        """
+        if not self.config.is_server_side():
+            raise StoreError("upsert_market_data_batch requires the service-role key.")
+        if not items:
+            return 0
+        now_iso = _now_iso()
+        body = [
+            {
+                "pair": pair,
+                "last_price": t.get("last_price"),
+                "high_24h": t.get("high_24h"),
+                "low_24h": t.get("low_24h"),
+                "volume_24h": t.get("volume_24h"),
+                "change_pct_24h": t.get("change_pct_24h"),
+                "source": provenance_note,
+                "endpoint": endpoint,
+                "fetched_at": now_iso,
+                "note": provenance_note,
+            }
+            for pair, t in items.items()
+        ]
+        url = self.config.rest_url("market_data_cache")
+        r = requests.post(
+            url,
+            headers={**self.config.headers(use_service=True),
+                      "Prefer": "resolution=merge-duplicates"},
+            json=body,
+            params={"on_conflict": "pair"},
+            timeout=max(self.HTTP_TIMEOUT, 15.0),  # longer timeout for batch
+        )
+        self._check(r, "upsert_market_data_batch")
+        # PostgREST returns the inserted rows (or empty if return=representation
+        # was not requested). Count rows from response if available.
+        try:
+            return len(r.json()) if r.json() else len(body)
+        except (ValueError, json.JSONDecodeError):
+            return len(body)
+
     def list_market_data(self) -> List[dict]:
         url = self.config.rest_url("market_data_cache")
         r = requests.get(
