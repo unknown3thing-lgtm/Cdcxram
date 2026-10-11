@@ -151,7 +151,9 @@ class handler(BaseHTTPRequestHandler):
                     "trade": trade.to_dict(),
                     "_debug": {**_debug,
                                "signal_json_type": type(trade.signal_json).__name__,
-                               "signal_json_value": str(trade.signal_json)[:100]},
+                               "signal_json_value": str(trade.signal_json)[:100],
+                               "insert_body_signal_json_type": type(getattr(pe.store, '_last_insert_body', {}).get('signal_json', 'MISSING')).__name__ if hasattr(pe.store, '_last_insert_body') else 'no_last_body',
+                               "insert_body_signal_json": str(getattr(pe.store, '_last_insert_body', {}).get('signal_json', 'MISSING'))[:100] if hasattr(pe.store, '_last_insert_body') else 'no_last_body'},
                 })
                 return
             send_error(self, 405, "method_not_allowed",

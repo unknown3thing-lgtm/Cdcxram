@@ -182,6 +182,8 @@ class SupabaseStore(Store):
         if not self.config.is_server_side():
             raise StoreError("insert_trade requires the service-role key.")
         body = _trade_to_row(trade, self.user_id)
+        # Debug: save the last INSERT body for inspection
+        self._last_insert_body = body
         url = self.config.rest_url("paper_trades")
         r = requests.post(
             url,
