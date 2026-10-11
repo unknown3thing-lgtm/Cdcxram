@@ -68,9 +68,10 @@ class Signal:
     est_entry_cost_inr: Optional[float] = None
     est_exit_cost_inr: Optional[float] = None
     explanation: str = ""
+    request_key: Optional[str] = None  # for idempotency dedup
 
     def to_dict(self) -> dict:
-        return {
+        d = {
             "pair": self.pair, "interval": self.interval,
             "strategy": self.strategy, "state": self.state.value,
             "entry": self.entry, "stop": self.stop, "target": self.target,
@@ -83,6 +84,9 @@ class Signal:
             "est_exit_cost_inr": self.est_exit_cost_inr,
             "explanation": self.explanation,
         }
+        if self.request_key:
+            d["request_key"] = self.request_key
+        return d
 
 
 # ---------------------------------------------------------------------------

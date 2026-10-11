@@ -128,6 +128,7 @@ class handler(BaseHTTPRequestHandler):
                     est_entry_cost_inr=body.get("est_entry_cost_inr"),
                     est_exit_cost_inr=body.get("est_exit_cost_inr"),
                     explanation=body.get("explanation", ""),
+                    request_key=request_key,  # embedded in signal_json at INSERT
                 )
                 try:
                     trade, reason = pe.open_position(
@@ -142,19 +143,6 @@ class handler(BaseHTTPRequestHandler):
                         "accepted": False, "reason": reason, "trade": None,
                     })
                     return
-                # Embed the request_key in the signal_json so future
-                # duplicate requests can find this trade.
-                if request_key:
-                    try:
-                        sig_json = _json.loads(trade.signal_json) \
-                            if trade.signal_json else {}
-                        sig_json["request_key"] = request_key
-                        # Update the trade's signal_json in Supabase
-                        pe.store.update_trade_signal_json(
-                            trade.id, _json.dumps(sig_json))
-                        trade.signal_json = _json.dumps(sig_json)
-                    except Exception:
-                        pass  # best-effort — don't fail the trade
                 send_json(self, 200, {
                     "accepted": True, "reason": reason,
                     "trade": trade.to_dict(),
