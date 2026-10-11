@@ -2,6 +2,8 @@
   "$schema": "https://openapi.vercel.sh/vercel/release.json",
   "installCommand": "pip install -r requirements-vercel.txt",
   "rewrites": [
+    { "source": "/api/settings",        "destination": "/api/health?action=settings" },
+    { "source": "/api/portfolio_reset", "destination": "/api/portfolio?action=reset" },
     { "source": "/",          "destination": "/web/index.html" },
     { "source": "/scan",      "destination": "/web/index.html" },
     { "source": "/chart",     "destination": "/web/index.html" },

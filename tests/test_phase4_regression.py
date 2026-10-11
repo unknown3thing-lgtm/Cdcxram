@@ -30,7 +30,7 @@ import pytest
 # ---------------------------------------------------------------------------
 class TestSettingsValidation:
     def test_valid_settings_pass(self):
-        from api.settings import _validate_settings
+        from coindcx_lab.server.settings_handler import _validate_settings
         body = {
             "initial_inr": 5000,
             "risk_per_trade_pct": 1.0,
@@ -54,37 +54,37 @@ class TestSettingsValidation:
         assert validated["initial_inr"] == 5000
 
     def test_zero_capital_rejected(self):
-        from api.settings import _validate_settings
+        from coindcx_lab.server.settings_handler import _validate_settings
         _, err = _validate_settings({"initial_inr": 0})
         assert err is not None
         assert "must be > 0" in err
 
     def test_negative_capital_rejected(self):
-        from api.settings import _validate_settings
+        from coindcx_lab.server.settings_handler import _validate_settings
         _, err = _validate_settings({"initial_inr": -1000})
         assert err is not None
         assert "must be > 0" in err
 
     def test_excessively_large_capital_rejected(self):
-        from api.settings import _validate_settings
+        from coindcx_lab.server.settings_handler import _validate_settings
         _, err = _validate_settings({"initial_inr": 100_000_000})
         assert err is not None
         assert "must be <=" in err
 
     def test_non_numeric_capital_rejected(self):
-        from api.settings import _validate_settings
+        from coindcx_lab.server.settings_handler import _validate_settings
         _, err = _validate_settings({"initial_inr": "abc"})
         assert err is not None
         assert "must be a number" in err
 
     def test_risk_pct_too_high_rejected(self):
-        from api.settings import _validate_settings
+        from coindcx_lab.server.settings_handler import _validate_settings
         _, err = _validate_settings({"risk_per_trade_pct": 10.0})
         assert err is not None
         assert "risk_per_trade_pct" in err
 
     def test_negative_fee_rejected(self):
-        from api.settings import _validate_settings
+        from coindcx_lab.server.settings_handler import _validate_settings
         _, err = _validate_settings({"fee_pct": -0.5})
         assert err is not None
         assert "fee_pct" in err
@@ -92,7 +92,7 @@ class TestSettingsValidation:
     def test_all_presets_are_valid(self):
         """All 5 capital presets (₹2k/₹5k/₹10k/₹25k/₹50k) must pass
         validation."""
-        from api.settings import _validate_settings, CAPITAL_PRESETS
+        from coindcx_lab.server.settings_handler import _validate_settings, CAPITAL_PRESETS
         assert CAPITAL_PRESETS == [2000, 5000, 10000, 25000, 50000]
         for cap in CAPITAL_PRESETS:
             body = {"initial_inr": cap}
@@ -102,7 +102,7 @@ class TestSettingsValidation:
 
     def test_custom_capital_within_range_accepted(self):
         """Custom capital ₹3,333 (not a preset) should be accepted."""
-        from api.settings import _validate_settings
+        from coindcx_lab.server.settings_handler import _validate_settings
         validated, err = _validate_settings({"initial_inr": 3333})
         assert err is None
         assert validated["initial_inr"] == 3333
@@ -247,7 +247,7 @@ class TestSettingsPersistence:
 class TestPortfolioReset:
     def test_reset_without_confirm_returns_400(self):
         """POST /api/portfolio_reset without {"confirm": true} → 400."""
-        from api.portfolio_reset import handler
+        from api.portfolio import handler
         import socketserver, threading, time
         import requests as _rq
 

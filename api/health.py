@@ -1,7 +1,14 @@
-"""GET /api/health
+"""GET /api/health          — service health + non-secret env status
+GET/POST /api/settings     — load/save capital + risk config
 
-Returns service health + non-secret environment status. NEVER logs
-secrets; NEVER returns secret values in the response.
+Consolidated from api/health.py + api/settings.py to reduce the Vercel
+serverless function count (Hobby plan limit: 12).
+
+The vercel.json rewrite maps:
+  /api/settings → /api/health?action=settings
+
+Inside the handler, we check the 'action' query param to distinguish
+settings (GET/POST + action=settings) from health (GET, no action).
 """
 
 import os, sys
@@ -13,7 +20,7 @@ if _SRC not in sys.path:
 from http.server import BaseHTTPRequestHandler
 
 from coindcx_lab.server.common import (
-    cors_headers, handle_preflight, send_error, send_json,
+    handle_preflight, send_error, send_json,
 )
 
 
@@ -23,8 +30,16 @@ class handler(BaseHTTPRequestHandler):
         if handle_preflight(method, self):
             return
         try:
-            # Check env vars are set (without revealing values).
-            import os
+            # Check if this is a settings request (action=settings query
+            # param, injected by vercel.json rewrite from /api/settings)
+            from coindcx_lab.server.common import parse_query
+            q = parse_query(self.path)
+            if q.get("action") == "settings":
+                from coindcx_lab.server.settings_handler import handle_settings
+                handle_settings(self, method)
+                return
+
+            # Default: health check
             env_status = {
                 "SUPABASE_URL":          bool(os.environ.get("SUPABASE_URL")),
                 "SUPABASE_PUBLISHABLE_KEY": bool(os.environ.get("SUPABASE_PUBLISHABLE_KEY")),
@@ -57,7 +72,6 @@ class handler(BaseHTTPRequestHandler):
         from datetime import datetime, timezone
         return datetime.now(timezone.utc).isoformat()
 
-    # CORS-friendly logger (suppress default noisy stderr output)
     def log_message(self, *args, **kwargs):
         pass
 
