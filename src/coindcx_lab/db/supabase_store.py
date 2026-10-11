@@ -152,8 +152,8 @@ class SupabaseStore(Store):
         """Find an existing trade by its idempotency request_key.
 
         Uses the dedicated `request_key` column (added by migration 0004)
-        for a simple, reliable text equality query — no JSONB ->> operator
-        needed.
+        for a simple, reliable text equality query. If the column doesn't
+        exist yet (migration not applied), returns None gracefully.
         """
         if not request_key:
             return None
@@ -168,7 +168,18 @@ class SupabaseStore(Store):
             },
             timeout=self.HTTP_TIMEOUT,
         )
-        self._check(r, "find_trade_by_request_key")
+        # If the request_key column doesn't exist (migration 0004 not
+        # applied yet), PostgREST returns error 42703. Treat as "not
+        # found" — idempotency is disabled until the migration is applied.
+        if r.status_code >= 400:
+            try:
+                err = r.json()
+                if "42703" in str(err.get("code", "")) or \
+                   "does not exist" in str(err.get("message", "")):
+                    return None  # column not added yet — idempotency disabled
+            except (ValueError, json.JSONDecodeError):
+                pass
+            self._check(r, "find_trade_by_request_key")
         rows = r.json()
         if rows and isinstance(rows, list) and len(rows) > 0:
             return _row_to_trade(rows[0])
@@ -608,8 +619,10 @@ def _trade_to_row(trade: dict, user_id: str) -> dict:
     # Also extract request_key from the trade dict (set by api/trades.py
     # before calling open_position). This is a dedicated column added
     # by migration 0004, separate from signal_json.
+    # Only include if non-None — if the migration hasn't been applied yet,
+    # including request_key would cause PostgREST error 42703.
     request_key = trade.get("request_key")
-    return {
+    row = {
         "user_id": user_id,
         "pair": trade.get("pair"),
         "strategy": trade.get("strategy"),
@@ -627,9 +640,11 @@ def _trade_to_row(trade: dict, user_id: str) -> dict:
         "fee_inr": trade.get("fee_inr"),
         "slippage_inr": trade.get("slippage_inr"),
         "signal_json": sig_json,  # always a dict (JSONB object)
-        "request_key": request_key,  # dedicated column for idempotency dedup
         # created_at_ms NOT included — Supabase auto-populates created_at
     }
+    if request_key:
+        row["request_key"] = request_key
+    return row
 
 
 def _row_to_trade(row: dict) -> dict:
