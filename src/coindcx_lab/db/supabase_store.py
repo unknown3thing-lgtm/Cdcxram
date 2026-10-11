@@ -152,24 +152,24 @@ class SupabaseStore(Store):
         """Find an existing trade by its idempotency request_key.
 
         The request_key is stored inside the signal_json JSONB field.
-        PostgREST supports JSONB path operators for filtering:
-        signal_json->>request_key=eq.<value>
+        PostgREST supports JSONB path operators: signal_json->>request_key=eq.<value>
 
-        Returns the trade dict if found, None otherwise.
+        IMPORTANT: we build the URL MANUALLY (not via requests params=)
+        because the requests library URL-encodes '>' as '%3E' in param
+        keys, which PostgREST doesn't parse as the ->> JSONB operator.
         """
         if not request_key:
             return None
-        url = self.config.rest_url("paper_trades")
-        # Use PostgREST's JSONB path operator to filter on the request_key
-        # inside signal_json. The ->> operator extracts as text.
+        # Build URL manually to preserve the ->> JSONB operator
+        url = (
+            f"{self.config.rest_url('paper_trades')}"
+            f"?user_id=eq.{self.user_id}"
+            f"&signal_json->>request_key=eq.{request_key}"
+            f"&limit=1"
+        )
         r = requests.get(
             url,
             headers=self.config.headers(use_service=True),
-            params={
-                "user_id": f"eq.{self.user_id}",
-                "signal_json->>request_key": f"eq.{request_key}",
-                "limit": "1",
-            },
             timeout=self.HTTP_TIMEOUT,
         )
         self._check(r, "find_trade_by_request_key")
