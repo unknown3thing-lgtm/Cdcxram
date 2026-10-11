@@ -534,6 +534,10 @@ def _row_to_state(row: dict) -> dict:
 
 
 def _trade_to_row(trade: dict, user_id: str) -> dict:
+    # NOTE: the Supabase paper_trades table has `created_at TIMESTAMPTZ
+    # DEFAULT now()` — it does NOT have a `created_at_ms` column (unlike
+    # the SQLite schema). We omit `created_at_ms` here and let Postgres
+    # auto-populate `created_at` with the current timestamp on INSERT.
     return {
         "user_id": user_id,
         "pair": trade.get("pair"),
@@ -552,11 +556,22 @@ def _trade_to_row(trade: dict, user_id: str) -> dict:
         "fee_inr": trade.get("fee_inr"),
         "slippage_inr": trade.get("slippage_inr"),
         "signal_json": trade.get("signal_json"),
-        "created_at_ms": trade.get("created_at_ms"),
+        # created_at_ms NOT included — Supabase auto-populates created_at
     }
 
 
 def _row_to_trade(row: dict) -> dict:
+    # Convert Supabase `created_at` (ISO timestamp) to `created_at_ms`
+    # (epoch milliseconds) for compatibility with the Store interface.
+    created_at = row.get("created_at")
+    created_at_ms = 0
+    if created_at:
+        try:
+            from datetime import datetime, timezone
+            dt = datetime.fromisoformat(str(created_at).replace("Z", "+00:00"))
+            created_at_ms = int(dt.timestamp() * 1000)
+        except Exception:
+            created_at_ms = 0
     return {
         "id": row.get("id"),
         "pair": row.get("pair"),
@@ -575,7 +590,7 @@ def _row_to_trade(row: dict) -> dict:
         "fee_inr": float(row.get("fee_inr", 0)) if row.get("fee_inr") is not None else 0,
         "slippage_inr": float(row.get("slippage_inr", 0)) if row.get("slippage_inr") is not None else 0,
         "signal_json": row.get("signal_json") or "",
-        "created_at_ms": int(row.get("created_at_ms", 0)),
+        "created_at_ms": created_at_ms,
     }
 
 
