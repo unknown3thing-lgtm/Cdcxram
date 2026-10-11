@@ -43,9 +43,10 @@ if _PKG_ROOT not in sys.path:
     sys.path.insert(0, _PKG_ROOT)
 
 from coindcx_lab.api import (  # noqa: E402
-    Candle, CoinDCXClient, CoinDCXAPIError, DataProvenance, PairInfo,
+    Candle, CoinDCXAPIError, DataProvenance, PairInfo,
     SourceKind, SyntheticGenerator,
 )
+from coindcx_lab.api.multi_provider import MultiProviderClient  # noqa: E402
 from coindcx_lab.engine import (  # noqa: E402
     BacktestConfig, Backtester, IndicatorSet, PaperTrade, PaperTradingEngine,
     RiskSettings, RiskState, Scanner, ScanResult, Signal, SignalEngine,
@@ -86,7 +87,7 @@ IST = timezone(timedelta(hours=5, minutes=30))
 # ---------------------------------------------------------------------------
 def _init_session_state() -> None:
     if "client" not in st.session_state:
-        st.session_state.client = CoinDCXClient()
+        st.session_state.client = MultiProviderClient()
     if "synth" not in st.session_state:
         st.session_state.synth = SyntheticGenerator(seed=42)
     if "store" not in st.session_state:
@@ -148,7 +149,7 @@ def _live_pairs_or_sim() -> Tuple[List[PairInfo], DataProvenance, str]:
     """Try to fetch pairs list live; fall back to a clearly-labelled
     SIMULATED pairs list if the CoinDCX public API is unreachable.
     """
-    client: CoinDCXClient = st.session_state.client
+    client: MultiProviderClient = st.session_state.client
     try:
         pairs, prov = client.list_inr_spot_pairs()
         if pairs:
@@ -186,7 +187,7 @@ def _live_candles_or_sim(pair: str, interval: str,
                 ).total_seconds() < 60:
             return candles, prov, "cached"
 
-    client: CoinDCXClient = st.session_state.client
+    client: MultiProviderClient = st.session_state.client
     try:
         candles, prov = client.candles(pair=pair, interval=interval, limit=limit)
         if candles:
@@ -224,7 +225,7 @@ def _live_candles_or_sim(pair: str, interval: str,
 
 
 def _live_prices_or_sim() -> Tuple[dict, DataProvenance, str]:
-    client: CoinDCXClient = st.session_state.client
+    client: MultiProviderClient = st.session_state.client
     try:
         prices, prov = client.current_prices()
         if prices:

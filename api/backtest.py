@@ -44,7 +44,8 @@ class handler(BaseHTTPRequestHandler):
             starting_capital = float(body.get("starting_capital_inr", 2000.0))
             walk_forward = bool(body.get("walk_forward", True))
 
-            from coindcx_lab.api.client import CoinDCXClient, CoinDCXAPIError
+            from coindcx_lab.api.multi_provider import MultiProviderClient
+            from coindcx_lab.api.client import CoinDCXAPIError
             from coindcx_lab.api.models import DataProvenance, SourceKind
             from coindcx_lab.api.synthetic import SyntheticGenerator
             from coindcx_lab.engine.backtest import (
@@ -73,7 +74,7 @@ class handler(BaseHTTPRequestHandler):
             strat = strategies[strategy_name]
 
             # Fetch candles
-            client = CoinDCXClient(timeout=8, max_retries=1, cache_ttl_seconds=0)
+            client = MultiProviderClient()
             try:
                 candles, prov = client.candles(pair=pair, interval=interval,
                                                    limit=800)

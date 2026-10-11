@@ -78,11 +78,11 @@ class handler(BaseHTTPRequestHandler):
                     note="candles supplied in request body",
                 )
             else:
-                # Reuse the candles endpoint logic
-                from api.candles import handler as CandlesHandler
-                # We can't easily reuse the handler class. Instead, fetch
-                # candles directly via the CoinDCXClient + synth fallback.
-                from coindcx_lab.api.client import CoinDCXClient, CoinDCXAPIError
+                # Fetch candles via MultiProviderClient (tries CoinDCX
+                # first, falls back to WazirX which is verified LIVE for
+                # INR spot pairs).
+                from coindcx_lab.api.multi_provider import MultiProviderClient
+                from coindcx_lab.api.client import CoinDCXAPIError
                 from coindcx_lab.api.synthetic import SyntheticGenerator
                 base_price = {
                     "B-BTCINR": 7_000_000, "B-ETHINR": 350_000,
@@ -92,7 +92,7 @@ class handler(BaseHTTPRequestHandler):
                     "B-AVAXINR": 4_000,
                     "B-ADA INR".replace(" ", ""): 65,
                 }.get(pair, 1000)
-                client = CoinDCXClient(timeout=8, max_retries=1)
+                client = MultiProviderClient()
                 try:
                     candles, prov = client.candles(pair=pair, interval=interval,
                                                        limit=300)

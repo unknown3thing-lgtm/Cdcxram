@@ -30,11 +30,12 @@ class handler(BaseHTTPRequestHandler):
         if handle_preflight(method, self):
             return
         try:
-            from coindcx_lab.api.client import CoinDCXClient, CoinDCXAPIError
+            from coindcx_lab.api.multi_provider import MultiProviderClient
+            from coindcx_lab.api.client import CoinDCXAPIError
             from coindcx_lab.api.models import DataProvenance, PairInfo, SourceKind
             from datetime import datetime, timezone
 
-            client = CoinDCXClient(timeout=8, max_retries=1)
+            client = MultiProviderClient()
             try:
                 pairs, prov = client.list_inr_spot_pairs()
                 if pairs:

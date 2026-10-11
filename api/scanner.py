@@ -43,7 +43,8 @@ class handler(BaseHTTPRequestHandler):
             interval = body.get("interval", "1h")
             pairs_list = body.get("pairs") or DEFAULT_PAIRS
 
-            from coindcx_lab.api.client import CoinDCXClient, CoinDCXAPIError
+            from coindcx_lab.api.multi_provider import MultiProviderClient
+            from coindcx_lab.api.client import CoinDCXAPIError
             from coindcx_lab.api.models import DataProvenance, PairInfo, SourceKind
             from coindcx_lab.api.synthetic import SyntheticGenerator
             from coindcx_lab.engine.risk import RiskSettings, RiskState, DailyLossState
@@ -81,7 +82,7 @@ class handler(BaseHTTPRequestHandler):
             # Fetch candles for each pair (live or SIMULATED fallback)
             candles_by_pair = {}
             prices_by_pair = {}
-            client = CoinDCXClient(timeout=8, max_retries=1, cache_ttl_seconds=0)
+            client = MultiProviderClient()
             synth = SyntheticGenerator(seed=42)
             for pair in pairs_list:
                 base_price = {

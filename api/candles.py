@@ -22,7 +22,8 @@ class handler(BaseHTTPRequestHandler):
             return
         try:
             from coindcx_lab.server.common import parse_query
-            from coindcx_lab.api.client import CoinDCXClient, CoinDCXAPIError
+            from coindcx_lab.api.multi_provider import MultiProviderClient
+            from coindcx_lab.api.client import CoinDCXAPIError
             from coindcx_lab.api.models import DataProvenance, SourceKind
             from coindcx_lab.api.synthetic import SyntheticGenerator
             from coindcx_lab.api.validate import validate_candles
@@ -39,8 +40,9 @@ class handler(BaseHTTPRequestHandler):
                            "limit must be an integer")
                 return
 
-            # Try live
-            client = CoinDCXClient(timeout=8, max_retries=1)
+            # Try live (MultiProviderClient tries CoinDCX first, falls back
+            # to WazirX which is verified LIVE for INR spot pairs).
+            client = MultiProviderClient()
             live_error = None
             try:
                 candles, prov = client.candles(pair=pair, interval=interval,

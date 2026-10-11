@@ -27,13 +27,13 @@ class handler(BaseHTTPRequestHandler):
         if handle_preflight(method, self):
             return
         try:
-            from coindcx_lab.api.client import CoinDCXClient, CoinDCXAPIError
+            from coindcx_lab.api.multi_provider import MultiProviderClient
+            from coindcx_lab.api.client import CoinDCXAPIError
             from coindcx_lab.api.models import DataProvenance, SourceKind
             from coindcx_lab.api.synthetic import SyntheticGenerator
             from datetime import datetime, timezone
 
-            client = CoinDCXClient(timeout=8, max_retries=1, cache_ttl_seconds=0)
-            live_error = None
+            client = MultiProviderClient()
             try:
                 prices, prov = client.current_prices()
                 if prices:

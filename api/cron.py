@@ -54,7 +54,8 @@ class handler(BaseHTTPRequestHandler):
                 ConfigError, SupabaseConfig, cron_secret_matches,
             )
             from coindcx_lab.db.supabase_store import SupabaseStore
-            from coindcx_lab.api.client import CoinDCXClient, CoinDCXAPIError
+            from coindcx_lab.api.multi_provider import MultiProviderClient
+            from coindcx_lab.api.client import CoinDCXAPIError
             from coindcx_lab.api.models import DataProvenance, SourceKind
             from coindcx_lab.api.synthetic import SyntheticGenerator
             from datetime import datetime, timezone
@@ -92,8 +93,11 @@ class handler(BaseHTTPRequestHandler):
                 send_error(self, 500, "config_error", str(e))
                 return
 
-            # Fetch prices (live or simulated fallback)
-            client = CoinDCXClient(timeout=10, max_retries=2, cache_ttl_seconds=0)
+            # Fetch prices (live via MultiProviderClient — tries CoinDCX
+            # first, falls back to WazirX which is verified LIVE for INR
+            # spot pairs. If both live providers fail, fall back to
+            # clearly-labelled SIMULATED.)
+            client = MultiProviderClient()
             pairs_to_cache = ["B-BTCINR", "B-ETHINR", "B-SOLINR", "B-MATICINR",
                                 "B-ADA INR".replace(" ", ""), "B-DOTINR",
                                 "B-LTCINR", "B-XRPINR", "B-LINKINR",
@@ -104,9 +108,24 @@ class handler(BaseHTTPRequestHandler):
             try:
                 prices, prov = client.current_prices()
                 if not prices:
-                    raise CoinDCXAPIError("no prices returned")
+                    raise CoinDCXAPIError("no prices returned from any provider")
             except CoinDCXAPIError as e:
                 live_error = str(e)
+                # SIMULATED fallback (last resort — only when both CoinDCX
+                # and WazirX fail, AND allow_simulated is True).
+                from coindcx_lab.api.env import SupabaseConfig
+                allow_sim = True
+                try:
+                    cfg = SupabaseConfig.from_env()
+                    allow_sim = cfg.allow_simulated
+                except Exception:
+                    pass
+                if not allow_sim:
+                    send_error(self, 502, "live_data_unavailable",
+                               f"All market-data providers failed and "
+                               f"SIMULATED fallback disabled. Last error: "
+                               f"{live_error}")
+                    return
                 # SIMULATED fallback
                 synth = SyntheticGenerator(seed=42)
                 sim_prices = {}
