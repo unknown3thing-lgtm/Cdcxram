@@ -155,14 +155,24 @@ class SupabaseStore(Store):
         url = self.config.rest_url("paper_trades")
         r = requests.post(
             url,
-            headers=self.config.headers(use_service=True),
+            headers={**self.config.headers(use_service=True),
+                      "Prefer": "return=representation"},
             json=body,
             params={"select": "id"},
             timeout=self.HTTP_TIMEOUT,
         )
         self._check(r, "insert_trade")
-        rows = r.json()
-        return int(rows[0]["id"]) if rows else 0
+        # PostgREST may return an empty body even with return=representation
+        # (depends on RLS and column visibility). Handle gracefully — the
+        # INSERT succeeded if _check passed (HTTP 201), we just may not
+        # have the generated ID.
+        try:
+            rows = r.json()
+            if rows and isinstance(rows, list) and rows[0].get("id"):
+                return int(rows[0]["id"])
+        except (ValueError, json.JSONDecodeError, IndexError, TypeError):
+            pass
+        return 0
 
     def update_trade_exit(self, trade_id: int, *,
                           exit_time_ms: int, exit_price: float,
