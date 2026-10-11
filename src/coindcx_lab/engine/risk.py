@@ -73,6 +73,7 @@ class RiskSettings:
     # Liquidity / volume minimums
     min_24h_volume_inr: float = 5_000_000.0
     min_24h_trades: int = 1000
+    max_spread_pct: float = 1.0       # max bid-ask spread % for scanner filter
 
     # Trading allocation (separate from per-trade risk). The total value
     # that may be deployed into paper positions as a fraction of equity.

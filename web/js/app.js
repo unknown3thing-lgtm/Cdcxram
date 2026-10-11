@@ -66,6 +66,7 @@ async function loadSettings() {
     setVal("set-spread-pct", s.spread_pct);
     setVal("set-slip-pct", s.slippage_pct);
     setVal("set-min-vol", s.min_24h_volume_inr);
+    setVal("set-max-spread", s.max_spread_pct);
     setVal("set-max-positions", s.max_open_positions);
     setVal("set-max-daily-trades", s.max_daily_trades);
     setVal("set-max-daily-loss", s.max_daily_loss_pct);
@@ -125,6 +126,7 @@ el("set-save")?.addEventListener("click", async () => {
     spread_pct: parseFloat(el("set-spread-pct").value),
     slippage_pct: parseFloat(el("set-slip-pct").value),
     min_24h_volume_inr: parseFloat(el("set-min-vol").value),
+    max_spread_pct: parseFloat(el("set-max-spread").value),
     max_open_positions: parseInt(el("set-max-positions").value),
     max_daily_trades: parseInt(el("set-max-daily-trades").value),
     max_daily_loss_pct: parseFloat(el("set-max-daily-loss").value),

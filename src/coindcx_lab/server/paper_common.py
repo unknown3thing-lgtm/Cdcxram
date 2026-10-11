@@ -27,4 +27,9 @@ def build_paper_engine(request):
     loaded = store.load_settings("risk")
     settings = RiskSettings(**loaded) if loaded else RiskSettings()
     pe = PaperTradingEngine(settings=settings, store=store)
+    # Auto-reconcile: fix any state inconsistencies caused by external
+    # DB modifications (e.g., direct trade deletes that bypass the engine).
+    # This is safe — it only recalculates derived values, never deletes
+    # trades or changes settings.
+    pe.reconcile_state()
     return pe

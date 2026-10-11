@@ -87,6 +87,16 @@ def _validate_settings(body: dict) -> Tuple[dict, str]:
     except (TypeError, ValueError):
         errors.append("min_24h_volume_inr must be a number")
 
+    # max_spread_pct — maximum bid-ask spread for scanner filter
+    try:
+        v = float(body.get("max_spread_pct", 1.0))
+        if v < 0 or v > 10:
+            errors.append("max_spread_pct must be in [0, 10]")
+        else:
+            validated["max_spread_pct"] = v
+    except (TypeError, ValueError):
+        errors.append("max_spread_pct must be a number")
+
     for field, default, lo, hi in [
         ("max_open_positions", 5, 1, 20),
         ("max_daily_trades", 10, 1, 100),
@@ -156,6 +166,7 @@ def handle_settings(request, method: str) -> bool:
                 "slippage_pct": settings.slippage_pct,
                 "min_24h_volume_inr": settings.min_24h_volume_inr,
                 "min_24h_trades": settings.min_24h_trades,
+                "max_spread_pct": settings.max_spread_pct,
                 "trading_allocation_pct": settings.trading_allocation_pct,
             },
             "presets": CAPITAL_PRESETS,

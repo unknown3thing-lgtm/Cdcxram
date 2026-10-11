@@ -121,6 +121,59 @@ class PaperTradingEngine:
     def _persist_state(self) -> None:
         self.store.save_state(_state_to_blob(self.state))
 
+    def reconcile_state(self) -> dict:
+        """Reconcile paper_state with the actual trades in the database.
+
+        This fixes inconsistencies caused by external modifications to
+        the paper_trades table (e.g., direct DB deletes that bypass the
+        PaperTradingEngine). It recalculates:
+          - open_positions_value = sum of (entry * qty) for OPEN trades
+          - open_positions_risk = sum of (entry - stop) * qty for OPEN trades
+          - peak_equity = max of all equity_snapshots (or initial_inr)
+
+        This does NOT delete trades, reset history, or change settings.
+        It only corrects derived state values to match reality.
+        """
+        open_trades = self.store.get_open_trades()
+        actual_opv = sum(float(t["entry"]) * float(t["qty"]) for t in open_trades)
+        actual_opr = sum((float(t["entry"]) - float(t["stop"])) * float(t["qty"])
+                         for t in open_trades)
+
+        changes = {}
+        if abs(self.state.open_positions_value - actual_opv) > 0.01:
+            changes["open_positions_value"] = {
+                "from": self.state.open_positions_value,
+                "to": actual_opv}
+            self.state.open_positions_value = actual_opv
+
+        if abs(self.state.open_positions_risk - actual_opr) > 0.01:
+            changes["open_positions_risk"] = {
+                "from": self.state.open_positions_risk,
+                "to": actual_opr}
+            self.state.open_positions_risk = actual_opr
+
+        # Recalculate peak_equity from snapshots
+        snapshots = self.store.list_equity_snapshots(limit=1000)
+        if snapshots:
+            actual_peak = max(float(s["equity"]) for s in snapshots)
+        else:
+            actual_peak = self.state.initial_inr
+        # Also consider current equity
+        actual_peak = max(actual_peak, self.state.current_equity)
+        if abs(self.state.peak_equity - actual_peak) > 0.01:
+            changes["peak_equity"] = {
+                "from": self.state.peak_equity,
+                "to": actual_peak}
+            self.state.peak_equity = actual_peak
+
+        if changes:
+            self._persist_state()
+
+        return {"reconciled": bool(changes), "changes": changes,
+                "open_trades_count": len(open_trades),
+                "open_positions_value": actual_opv,
+                "open_positions_risk": actual_opr}
+
     # ---------------------------------------------------------- queries
     def portfolio_summary(self) -> dict:
         st = self.state
@@ -433,5 +486,6 @@ def _settings_to_dict(s: RiskSettings) -> dict:
         "slippage_pct": s.slippage_pct,
         "min_24h_volume_inr": s.min_24h_volume_inr,
         "min_24h_trades": s.min_24h_trades,
+        "max_spread_pct": s.max_spread_pct,
         "trading_allocation_pct": s.trading_allocation_pct,
     }

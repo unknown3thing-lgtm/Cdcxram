@@ -143,27 +143,25 @@ class handler(BaseHTTPRequestHandler):
                            f"Cannot fetch current prices: {e}")
                 return
 
-            # ---- Step 3: pre-filter by 24h INR volume, sort desc, take top N
+            # ---- Step 3: pre-filter by 24h INR volume AND spread
             pairs_with_vol = []
-            pre_filtered_results = []  # results for pairs that failed vol filter
+            pre_filtered_results = []
             pre_filtered_out = 0
+            spread_filtered_out = 0
             for p in pairs:
                 ticker = all_prices.get(p.pair, {})
                 vol24_inr = ticker.get("volume_24h") or 0.0
+                spread_pct = ticker.get("spread_pct") or 0.0
+                # Volume filter
                 if vol24_inr < settings.min_24h_volume_inr:
                     pre_filtered_out += 1
-                    # Build the excluded result here (with the CORRECT
-                    # reason: "24h volume X < min Y") so the user sees
-                    # why the pair was excluded — instead of the scanner
-                    # later returning "no candles available" for the
-                    # same pair (which is technically true but misleading
-                    # since we deliberately didn't fetch candles for it).
                     from coindcx_lab.engine.signals import SignalState
                     pre_filtered_results.append({
                         "pair": p.pair, "base": p.base, "quote": p.quote,
                         "last_price": ticker.get("last_price"),
                         "change_pct_24h": ticker.get("change_pct_24h"),
                         "volume_24h_inr": vol24_inr,
+                        "spread_pct": spread_pct,
                         "trend": "n/a (excluded by volume filter)",
                         "volatility": None,
                         "signal_state": SignalState.NO_TRADE.value,
@@ -176,8 +174,31 @@ class handler(BaseHTTPRequestHandler):
                             f"₹{settings.min_24h_volume_inr:,.0f}"),
                         "provenance_label": prices_prov.label(),
                     })
-                else:
-                    pairs_with_vol.append((p, ticker, vol24_inr))
+                    continue
+                # Spread filter (only if max_spread_pct > 0)
+                if settings.max_spread_pct > 0 and spread_pct > settings.max_spread_pct:
+                    spread_filtered_out += 1
+                    from coindcx_lab.engine.signals import SignalState
+                    pre_filtered_results.append({
+                        "pair": p.pair, "base": p.base, "quote": p.quote,
+                        "last_price": ticker.get("last_price"),
+                        "change_pct_24h": ticker.get("change_pct_24h"),
+                        "volume_24h_inr": vol24_inr,
+                        "spread_pct": spread_pct,
+                        "trend": "n/a (excluded by spread filter)",
+                        "volatility": None,
+                        "signal_state": SignalState.NO_TRADE.value,
+                        "best_strategy": None, "rr_after_cost": None,
+                        "est_cost_inr": None, "score": 0.0,
+                        "rank": None,
+                        "excluded": True,
+                        "exclusion_reason": (
+                            f"spread {spread_pct:.2f}% > max "
+                            f"{settings.max_spread_pct:.2f}%"),
+                        "provenance_label": prices_prov.label(),
+                    })
+                    continue
+                pairs_with_vol.append((p, ticker, vol24_inr))
             pairs_with_vol.sort(key=lambda x: -x[2])
             top_pairs = pairs_with_vol[:max_pairs]
 
@@ -229,6 +250,8 @@ class handler(BaseHTTPRequestHandler):
                 reason = r.get("exclusion_reason") or "unknown"
                 if "24h volume" in reason and "< min" in reason:
                     reason = "24h_volume_below_min"
+                elif "spread" in reason and "> max" in reason:
+                    reason = "excessive_spread"
                 elif "no candles" in reason:
                     reason = "no_candles_available"
                 elif "data UNAVAILABLE" in reason:
@@ -241,6 +264,7 @@ class handler(BaseHTTPRequestHandler):
             summary = {
                 "total_discovered": len(pairs),
                 "pre_filtered_by_volume": pre_filtered_out,
+                "spread_filtered_out": spread_filtered_out,
                 "candles_fetched_for": len(top_pairs),
                 "active": len(active),
                 "excluded_total": len(excluded),
@@ -248,6 +272,7 @@ class handler(BaseHTTPRequestHandler):
                 "signal_breakdown": dict(signal_states),
                 "buy_candidates": buy_candidates,
                 "min_24h_volume_inr": settings.min_24h_volume_inr,
+                "max_spread_pct": settings.max_spread_pct,
                 "max_pairs": max_pairs,
             }
 
