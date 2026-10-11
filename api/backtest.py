@@ -95,7 +95,11 @@ class handler(BaseHTTPRequestHandler):
                                        fee_pct=0.1, spread_pct=0.05,
                                        slippage_pct=0.05)
             signal_engine = SignalEngine(settings=settings, strategies=[strat])
-            cfg = BacktestConfig(starting_capital_inr=starting_capital)
+            # Use the strategy's own warmup_candles as the skip count,
+            # not a fixed 200. This lets short-warmup strategies (like
+            # baseline_sma with warmup=60) work on shorter history.
+            cfg = BacktestConfig(starting_capital_inr=starting_capital,
+                                  warmup_skip_bars=max(strat.warmup_candles, 50))
             bt = Backtester(settings=settings, strategy=strat,
                              signal_engine=signal_engine, config=cfg)
 
