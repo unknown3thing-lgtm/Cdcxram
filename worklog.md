@@ -1325,3 +1325,55 @@ Stage Summary:
   unavailable. Last known working deployment preserved at 34c80dc.
 - Phase 17 is PARTIALLY COMPLETE per the mandatory rule.
 - Honest blocker reported per the mandatory rule.
+
+---
+Task ID: phase-18-final
+Agent: main (super-z)
+Task: Phase 18 final — commit, push, Vercel deployment attempt
+
+Work Log:
+- Phase 18 baseline: local main was at bc53650 (Phase 12 state —
+  context reset). Fetched from GitHub, reset to 6a388eb (Phase 17
+  final). All Phase 13-17 files restored. 365 tests passing.
+- Implemented SimpleBreakoutStrategy (src/coindcx_lab/engine/
+  simple_strategy.py) — minimal-filter trend-breakout:
+    * Trend filter: close > EMA50
+    * Entry: close > max(high of last 20 bars)
+    * Stop: entry - 2*ATR(14)
+    * Target: 3R (NOT 2R — see root cause below)
+    * Warmup: 50 bars
+- ROOT CAUSE identified: 2R target is mathematically impossible to
+  pass the 2.0 R/R-after-cost gate with positive costs (0.3%
+  round-trip). Proof: (2R-cost)/(R+cost) < 2 for any cost > 0.
+  This explains why ALL Phase 14/15 regime-aware candidates (2R
+  target) produced 0 trades — the risk gate rejected every setup.
+  Fix: 3R target. For R >= 1% of price, 3R gives rr >= 2.0.
+- Phase 18 comparison (8 pairs × 1000 1h candles × 3 segments):
+    simple_breakout: 75 trades, 26.7% WR, +₹23.37 net, PF=1.039
+    breakout_retest: 55 trades, 16.4% WR, +₹12.58 net, PF=1.068
+    buy-hold avg:    +3.72%
+  Both strategies barely above breakeven (PF ~1.04-1.07).
+  Both underperform buy-hold. Sample too small. UNVALIDATED.
+- 3 regression tests added (368 total). Migrations unchanged.
+  11 functions. Paper-only. Research NOT connected to /api/signals.
+- Committed: SHA d313463. Pushed: 6a388eb..d313463 fast-forward.
+  GitHub main verified at d313463.
+- Vercel deployment verification:
+    * Vercel CLI reinstalled (npm install -g vercel, v63.1.2).
+    * VERCEL_TOKEN, VERCEL_PROJECT_ID, VERCEL_ORG_ID env vars
+      EXIST but have LENGTH 0 (empty strings — not actually set
+      with values).
+    * `vercel whoami --token` fails: "missing a value".
+    * Cannot verify deployed SHA, cannot deploy, cannot smoke-test.
+    * Last known working deployment: 34c80dc (Phase 16). Preserving.
+    * Per mandatory rule: "If deployment fails, report the exact
+      blocker honestly." — Vercel credentials are empty strings,
+      not usable.
+
+Stage Summary:
+- Phase 18 ROOT CAUSE found: 2R target impossible with positive costs.
+- SimpleBreakoutStrategy (3R) produces 75 trades with marginal
+  positive PnL — UNVALIDATED.
+- Committed at d313463. Pushed to GitHub main. Verified.
+- Vercel deployment verification BLOCKED — credentials are empty.
+- Honest blocker reported.
