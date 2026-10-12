@@ -1,0 +1,573 @@
+{
+  "phase": 13,
+  "started_at_utc": "2026-10-12T10:32:24.301324+00:00",
+  "data_source": "WazirX public tickers + klines",
+  "candidates_vetted": 26,
+  "eligible_count": 6,
+  "selected_top_15": [
+    {
+      "pair": "B-USDTINR",
+      "turnover_inr": 16709002.130099999,
+      "spread_pct": 0.7573462587094819,
+      "history_500_count": 500,
+      "history_first_iso": "2026-09-21T15:00:00+00:00",
+      "history_last_iso": "2026-10-12T10:00:00+00:00"
+    },
+    {
+      "pair": "B-BTCINR",
+      "turnover_inr": 1832984.4432800007,
+      "spread_pct": 0.5702296633405392,
+      "history_500_count": 500,
+      "history_first_iso": "2026-09-21T15:00:00+00:00",
+      "history_last_iso": "2026-10-12T10:00:00+00:00"
+    },
+    {
+      "pair": "B-WRXINR",
+      "turnover_inr": 947723.2680000003,
+      "spread_pct": 0.8771929824561412,
+      "history_500_count": 500,
+      "history_first_iso": "2026-09-21T15:00:00+00:00",
+      "history_last_iso": "2026-10-12T10:00:00+00:00"
+    },
+    {
+      "pair": "B-ETHINR",
+      "turnover_inr": 879963.5310399998,
+      "spread_pct": 0.3529823146567181,
+      "history_500_count": 500,
+      "history_first_iso": "2026-09-21T15:00:00+00:00",
+      "history_last_iso": "2026-10-12T10:00:00+00:00"
+    },
+    {
+      "pair": "B-PEPEINR",
+      "turnover_inr": 579305.381328,
+      "spread_pct": 0.8860153256704936,
+      "history_500_count": 500,
+      "history_first_iso": "2026-09-21T15:00:00+00:00",
+      "history_last_iso": "2026-10-12T10:00:00+00:00"
+    },
+    {
+      "pair": "B-XRPINR",
+      "turnover_inr": 118331.577,
+      "spread_pct": 0.9695467930761984,
+      "history_500_count": 500,
+      "history_first_iso": "2026-09-21T15:00:00+00:00",
+      "history_last_iso": "2026-10-12T10:00:00+00:00"
+    }
+  ],
+  "excluded": [
+    {
+      "pair": "B-INJINR",
+      "status": "fresh",
+      "reason": "ineligible"
+    },
+    {
+      "pair": "B-DENTINR",
+      "status": "fresh",
+      "reason": "ineligible"
+    },
+    {
+      "pair": "B-CKBINR",
+      "status": "fresh",
+      "reason": "ineligible"
+    },
+    {
+      "pair": "B-TRXINR",
+      "status": "fresh",
+      "reason": "ineligible"
+    },
+    {
+      "pair": "B-SHIBINR",
+      "status": "fresh",
+      "reason": "ineligible"
+    },
+    {
+      "pair": "B-SOLINR",
+      "status": "fresh",
+      "reason": "ineligible"
+    },
+    {
+      "pair": "B-NEARINR",
+      "status": "fresh",
+      "reason": "ineligible"
+    },
+    {
+      "pair": "B-FETINR",
+      "status": "fresh",
+      "reason": "ineligible"
+    },
+    {
+      "pair": "B-SKYINR",
+      "status": "fresh",
+      "reason": "ineligible"
+    },
+    {
+      "pair": "B-BATINR",
+      "status": "fresh",
+      "reason": "ineligible"
+    },
+    {
+      "pair": "B-HNTINR",
+      "status": "fresh",
+      "reason": "ineligible"
+    },
+    {
+      "pair": "B-CELRINR",
+      "status": "fresh",
+      "reason": "ineligible"
+    },
+    {
+      "pair": "B-COTIINR",
+      "status": "fresh",
+      "reason": "ineligible"
+    },
+    {
+      "pair": "B-ZECINR",
+      "status": "fresh",
+      "reason": "ineligible"
+    },
+    {
+      "pair": "B-LINKINR",
+      "status": "fresh",
+      "reason": "ineligible"
+    },
+    {
+      "pair": "B-MATICINR",
+      "status": "stale",
+      "reason": "latest candle is 8453.5h old \u2014 pair likely delisted or has no recent trades"
+    },
+    {
+      "pair": "B-DOTINR",
+      "status": "fresh",
+      "reason": "ineligible"
+    },
+    {
+      "pair": "B-LTCINR",
+      "status": "fresh",
+      "reason": "ineligible"
+    },
+    {
+      "pair": "B-AVAXINR",
+      "status": "fresh",
+      "reason": "ineligible"
+    },
+    {
+      "pair": "B-ADAINR",
+      "status": "fresh",
+      "reason": "ineligible"
+    }
+  ],
+  "all_vetted": [
+    {
+      "pair": "B-USDTINR",
+      "latest_candle_open_ms": 1791799200000,
+      "latest_candle_iso": "2026-10-12T10:00:00+00:00",
+      "age_hours": 0.52,
+      "source": "live",
+      "status": "fresh",
+      "history_500_count": 500,
+      "history_500_first_iso": "2026-09-21T15:00:00+00:00",
+      "history_500_last_iso": "2026-10-12T10:00:00+00:00",
+      "ticker": {
+        "turnover_inr": 16709002.130099999,
+        "spread_pct": 0.7573462587094819,
+        "last_price": 99.03
+      }
+    },
+    {
+      "pair": "B-BTCINR",
+      "latest_candle_open_ms": 1791799200000,
+      "latest_candle_iso": "2026-10-12T10:00:00+00:00",
+      "age_hours": 0.52,
+      "source": "live",
+      "status": "fresh",
+      "history_500_count": 500,
+      "history_500_first_iso": "2026-09-21T15:00:00+00:00",
+      "history_500_last_iso": "2026-10-12T10:00:00+00:00",
+      "ticker": {
+        "turnover_inr": 1832984.4432800007,
+        "spread_pct": 0.5702296633405392,
+        "last_price": 8247028.0
+      }
+    },
+    {
+      "pair": "B-ETHINR",
+      "latest_candle_open_ms": 1791799200000,
+      "latest_candle_iso": "2026-10-12T10:00:00+00:00",
+      "age_hours": 0.52,
+      "source": "live",
+      "status": "fresh",
+      "history_500_count": 500,
+      "history_500_first_iso": "2026-09-21T15:00:00+00:00",
+      "history_500_last_iso": "2026-10-12T10:00:00+00:00",
+      "ticker": {
+        "turnover_inr": 879963.5310399998,
+        "spread_pct": 0.3529823146567181,
+        "last_price": 253950.4
+      }
+    },
+    {
+      "pair": "B-WRXINR",
+      "latest_candle_open_ms": 1791799200000,
+      "latest_candle_iso": "2026-10-12T10:00:00+00:00",
+      "age_hours": 0.52,
+      "source": "live",
+      "status": "fresh",
+      "history_500_count": 500,
+      "history_500_first_iso": "2026-09-21T15:00:00+00:00",
+      "history_500_last_iso": "2026-10-12T10:00:00+00:00",
+      "ticker": {
+        "turnover_inr": 947723.2680000003,
+        "spread_pct": 0.8771929824561412,
+        "last_price": 2.28
+      }
+    },
+    {
+      "pair": "B-INJINR",
+      "latest_candle_open_ms": 1791799200000,
+      "latest_candle_iso": "2026-10-12T10:00:00+00:00",
+      "age_hours": 0.52,
+      "source": "live",
+      "status": "fresh",
+      "history_500_count": 500,
+      "history_500_first_iso": "2026-09-21T15:00:00+00:00",
+      "history_500_last_iso": "2026-10-12T10:00:00+00:00",
+      "ticker": {
+        "turnover_inr": 845992.0,
+        "spread_pct": 16.25,
+        "last_price": 800.0
+      }
+    },
+    {
+      "pair": "B-PEPEINR",
+      "latest_candle_open_ms": 1791799200000,
+      "latest_candle_iso": "2026-10-12T10:00:00+00:00",
+      "age_hours": 0.52,
+      "source": "live",
+      "status": "fresh",
+      "history_500_count": 500,
+      "history_500_first_iso": "2026-09-21T15:00:00+00:00",
+      "history_500_last_iso": "2026-10-12T10:00:00+00:00",
+      "ticker": {
+        "turnover_inr": 579305.381328,
+        "spread_pct": 0.8860153256704936,
+        "last_price": 0.0004176
+      }
+    },
+    {
+      "pair": "B-DENTINR",
+      "latest_candle_open_ms": 1791799200000,
+      "latest_candle_iso": "2026-10-12T10:00:00+00:00",
+      "age_hours": 0.52,
+      "source": "live",
+      "status": "fresh",
+      "history_500_count": 500,
+      "history_500_first_iso": "2026-09-21T15:00:00+00:00",
+      "history_500_last_iso": "2026-10-12T10:00:00+00:00",
+      "ticker": {
+        "turnover_inr": 517575.30693,
+        "spread_pct": 5.347593582887699,
+        "last_price": 0.00561
+      }
+    },
+    {
+      "pair": "B-CKBINR",
+      "latest_candle_open_ms": 1791799200000,
+      "latest_candle_iso": "2026-10-12T10:00:00+00:00",
+      "age_hours": 0.52,
+      "source": "live",
+      "status": "fresh",
+      "history_500_count": 500,
+      "history_500_first_iso": "2026-09-21T15:00:00+00:00",
+      "history_500_last_iso": "2026-10-12T10:00:00+00:00",
+      "ticker": {
+        "turnover_inr": 506646.0135,
+        "spread_pct": 12.43243243243243,
+        "last_price": 0.1665
+      }
+    },
+    {
+      "pair": "B-TRXINR",
+      "latest_candle_open_ms": 1791799200000,
+      "latest_candle_iso": "2026-10-12T10:00:00+00:00",
+      "age_hours": 0.52,
+      "source": "live",
+      "status": "fresh",
+      "history_500_count": 500,
+      "history_500_first_iso": "2026-09-21T15:00:00+00:00",
+      "history_500_last_iso": "2026-10-12T10:00:00+00:00",
+      "ticker": {
+        "turnover_inr": 700970.61021,
+        "spread_pct": 1.241100487421824,
+        "last_price": 32.6001
+      }
+    },
+    {
+      "pair": "B-SHIBINR",
+      "latest_candle_open_ms": 1791799200000,
+      "latest_candle_iso": "2026-10-12T10:00:00+00:00",
+      "age_hours": 0.53,
+      "source": "live",
+      "status": "fresh",
+      "history_500_count": 500,
+      "history_500_first_iso": "2026-09-21T15:00:00+00:00",
+      "history_500_last_iso": "2026-10-12T10:00:00+00:00",
+      "ticker": {
+        "turnover_inr": 529938.143145,
+        "spread_pct": 1.2891344383057006,
+        "last_price": 0.000543
+      }
+    },
+    {
+      "pair": "B-SOLINR",
+      "latest_candle_open_ms": 1791799200000,
+      "latest_candle_iso": "2026-10-12T10:00:00+00:00",
+      "age_hours": 0.53,
+      "source": "live",
+      "status": "fresh",
+      "history_500_count": 500,
+      "history_500_first_iso": "2026-09-21T15:00:00+00:00",
+      "history_500_last_iso": "2026-10-12T10:00:00+00:00",
+      "ticker": {
+        "turnover_inr": 447930.08063999994,
+        "spread_pct": 2.6918401154868206,
+        "last_price": 10751.01
+      }
+    },
+    {
+      "pair": "B-NEARINR",
+      "latest_candle_open_ms": 1791799200000,
+      "latest_candle_iso": "2026-10-12T10:00:00+00:00",
+      "age_hours": 0.53,
+      "source": "live",
+      "status": "fresh",
+      "history_500_count": 500,
+      "history_500_first_iso": "2026-09-21T15:00:00+00:00",
+      "history_500_last_iso": "2026-10-12T10:00:00+00:00",
+      "ticker": {
+        "turnover_inr": 351878.9084159999,
+        "spread_pct": 4.7533810660302365,
+        "last_price": 563.136
+      }
+    },
+    {
+      "pair": "B-FETINR",
+      "latest_candle_open_ms": 1791799200000,
+      "latest_candle_iso": "2026-10-12T10:00:00+00:00",
+      "age_hours": 0.53,
+      "source": "live",
+      "status": "fresh",
+      "history_500_count": 500,
+      "history_500_first_iso": "2026-09-21T15:00:00+00:00",
+      "history_500_last_iso": "2026-10-12T10:00:00+00:00",
+      "ticker": {
+        "turnover_inr": 351903.0,
+        "spread_pct": 6.048780487804875,
+        "last_price": 24.6
+      }
+    },
+    {
+      "pair": "B-SKYINR",
+      "latest_candle_open_ms": 1791799200000,
+      "latest_candle_iso": "2026-10-12T10:00:00+00:00",
+      "age_hours": 0.53,
+      "source": "live",
+      "status": "fresh",
+      "history_500_count": 500,
+      "history_500_first_iso": "2026-09-21T15:00:00+00:00",
+      "history_500_last_iso": "2026-10-12T10:00:00+00:00",
+      "ticker": {
+        "turnover_inr": 330607.9799999999,
+        "spread_pct": 2.577777777777768,
+        "last_price": 8.1
+      }
+    },
+    {
+      "pair": "B-BATINR",
+      "latest_candle_open_ms": 1791799200000,
+      "latest_candle_iso": "2026-10-12T10:00:00+00:00",
+      "age_hours": 0.53,
+      "source": "live",
+      "status": "fresh",
+      "history_500_count": 500,
+      "history_500_first_iso": "2026-09-21T15:00:00+00:00",
+      "history_500_last_iso": "2026-10-12T10:00:00+00:00",
+      "ticker": {
+        "turnover_inr": 290604.77874000004,
+        "spread_pct": 15.809675071140225,
+        "last_price": 15.111
+      }
+    },
+    {
+      "pair": "B-HNTINR",
+      "latest_candle_open_ms": 1791799200000,
+      "latest_candle_iso": "2026-10-12T10:00:00+00:00",
+      "age_hours": 0.53,
+      "source": "live",
+      "status": "fresh",
+      "history_500_count": 500,
+      "history_500_first_iso": "2026-09-21T15:00:00+00:00",
+      "history_500_last_iso": "2026-10-12T10:00:00+00:00",
+      "ticker": {
+        "turnover_inr": 229659.4386,
+        "spread_pct": 6.815075180628787,
+        "last_price": 51.21
+      }
+    },
+    {
+      "pair": "B-CELRINR",
+      "latest_candle_open_ms": 1791799200000,
+      "latest_candle_iso": "2026-10-12T10:00:00+00:00",
+      "age_hours": 0.53,
+      "source": "live",
+      "status": "fresh",
+      "history_500_count": 500,
+      "history_500_first_iso": "2026-09-21T15:00:00+00:00",
+      "history_500_last_iso": "2026-10-12T10:00:00+00:00",
+      "ticker": {
+        "turnover_inr": 168381.22319999998,
+        "spread_pct": 1.421188630490961,
+        "last_price": 0.3096
+      }
+    },
+    {
+      "pair": "B-COTIINR",
+      "latest_candle_open_ms": 1791799200000,
+      "latest_candle_iso": "2026-10-12T10:00:00+00:00",
+      "age_hours": 0.53,
+      "source": "live",
+      "status": "fresh",
+      "history_500_count": 500,
+      "history_500_first_iso": "2026-09-21T15:00:00+00:00",
+      "history_500_last_iso": "2026-10-12T10:00:00+00:00",
+      "ticker": {
+        "turnover_inr": 170246.08039999998,
+        "spread_pct": 1.0518407212622098,
+        "last_price": 1.331
+      }
+    },
+    {
+      "pair": "B-ZECINR",
+      "latest_candle_open_ms": 1791799200000,
+      "latest_candle_iso": "2026-10-12T10:00:00+00:00",
+      "age_hours": 0.53,
+      "source": "live",
+      "status": "fresh",
+      "history_500_count": 500,
+      "history_500_first_iso": "2026-09-21T15:00:00+00:00",
+      "history_500_last_iso": "2026-10-12T10:00:00+00:00",
+      "ticker": {
+        "turnover_inr": 110429.99182,
+        "spread_pct": 6.411785660132264,
+        "last_price": 134999.99
+      }
+    },
+    {
+      "pair": "B-LINKINR",
+      "latest_candle_open_ms": 1791799200000,
+      "latest_candle_iso": "2026-10-12T10:00:00+00:00",
+      "age_hours": 0.53,
+      "source": "live",
+      "status": "fresh",
+      "history_500_count": 500,
+      "history_500_first_iso": "2026-09-21T15:00:00+00:00",
+      "history_500_last_iso": "2026-10-12T10:00:00+00:00",
+      "ticker": {
+        "turnover_inr": 159212.59199999998,
+        "spread_pct": 1.963155652914685,
+        "last_price": 1314.72
+      }
+    },
+    {
+      "pair": "B-XRPINR",
+      "latest_candle_open_ms": 1791799200000,
+      "latest_candle_iso": "2026-10-12T10:00:00+00:00",
+      "age_hours": 0.53,
+      "source": "live",
+      "status": "fresh",
+      "history_500_count": 500,
+      "history_500_first_iso": "2026-09-21T15:00:00+00:00",
+      "history_500_last_iso": "2026-10-12T10:00:00+00:00",
+      "ticker": {
+        "turnover_inr": 118331.577,
+        "spread_pct": 0.9695467930761984,
+        "last_price": 139.23
+      }
+    },
+    {
+      "pair": "B-MATICINR",
+      "latest_candle_open_ms": 1761368400000,
+      "latest_candle_iso": "2025-10-25T05:00:00+00:00",
+      "age_hours": 8453.54,
+      "source": "live",
+      "status": "stale",
+      "exclusion_reason": "latest candle is 8453.5h old \u2014 pair likely delisted or has no recent trades",
+      "history_500_count": 500,
+      "history_500_first_iso": "2025-10-04T10:00:00+00:00",
+      "history_500_last_iso": "2025-10-25T05:00:00+00:00"
+    },
+    {
+      "pair": "B-DOTINR",
+      "latest_candle_open_ms": 1791799200000,
+      "latest_candle_iso": "2026-10-12T10:00:00+00:00",
+      "age_hours": 0.54,
+      "source": "live",
+      "status": "fresh",
+      "history_500_count": 500,
+      "history_500_first_iso": "2026-09-21T15:00:00+00:00",
+      "history_500_last_iso": "2026-10-12T10:00:00+00:00",
+      "ticker": {
+        "turnover_inr": 103090.371,
+        "spread_pct": 5.817652940641752,
+        "last_price": 110.01
+      }
+    },
+    {
+      "pair": "B-LTCINR",
+      "latest_candle_open_ms": 1791799200000,
+      "latest_candle_iso": "2026-10-12T10:00:00+00:00",
+      "age_hours": 0.54,
+      "source": "live",
+      "status": "fresh",
+      "history_500_count": 500,
+      "history_500_first_iso": "2026-09-21T15:00:00+00:00",
+      "history_500_last_iso": "2026-10-12T10:00:00+00:00",
+      "ticker": {
+        "turnover_inr": 59977.936099999984,
+        "spread_pct": 6.522634162464957,
+        "last_price": 6897.98
+      }
+    },
+    {
+      "pair": "B-AVAXINR",
+      "latest_candle_open_ms": 1791799200000,
+      "latest_candle_iso": "2026-10-12T10:00:00+00:00",
+      "age_hours": 0.54,
+      "source": "live",
+      "status": "fresh",
+      "history_500_count": 500,
+      "history_500_first_iso": "2026-09-21T15:00:00+00:00",
+      "history_500_last_iso": "2026-10-12T10:00:00+00:00",
+      "ticker": {
+        "turnover_inr": 5980.8,
+        "spread_pct": 5.3040178571428545,
+        "last_price": 1120.0
+      }
+    },
+    {
+      "pair": "B-ADAINR",
+      "latest_candle_open_ms": 1791799200000,
+      "latest_candle_iso": "2026-10-12T10:00:00+00:00",
+      "age_hours": 0.54,
+      "source": "live",
+      "status": "fresh",
+      "history_500_count": 500,
+      "history_500_first_iso": "2026-09-21T15:00:00+00:00",
+      "history_500_last_iso": "2026-10-12T10:00:00+00:00",
+      "ticker": {
+        "turnover_inr": 40072.298,
+        "spread_pct": 4.928770393951459,
+        "last_price": 25.13
+      }
+    }
+  ]
+}

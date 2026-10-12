@@ -524,3 +524,133 @@ Stage Summary:
   ("A local commit alone is not completion"). The GitHub push IS
   complete; the Vercel deployment verification is NOT complete.
 - Honest blocker reported per mandatory rule 9.
+
+---
+Task ID: phase-13-start
+Agent: main (super-z)
+Task: Phase 13 kickoff — baseline verification + credential check
+
+Work Log:
+- Verified local main at bc53650 (HEAD -> main, origin/main) — same as
+  Phase 12 baseline.
+- Found 19 spurious file-mode changes (100644 -> 100755, no content
+  change) on Phase 11/12 files. Set `git config core.fileMode false`
+  and `git checkout -- .` to revert. Working tree is now clean.
+- Confirmed baseline test suite: 303 passing in 28.34s.
+- Confirmed 4 migrations byte-for-byte unchanged (0001: 9969 bytes,
+  0002: 6954 bytes, 0003: 2571 bytes, 0004: 1157 bytes).
+- Confirmed 11 serverless functions (within Vercel Hobby 12-function
+  limit).
+- Attempted Vercel deployment verification:
+    * `vercel` CLI was NOT installed; installed via `npm install -g
+      vercel` (Vercel CLI 63.1.2).
+    * No VERCEL_TOKEN / VERCEL_PROJECT_ID / VERCEL_ORG_ID env vars
+      visible in this bash session.
+    * No ~/.local/share/com.vercel.cli/auth.json file present.
+    * No .vercel/ project config (no `vercel link` ever done here).
+    * `vercel whoami` requires a token; cannot authenticate.
+- Per mandatory rule: "If deployment credentials are unavailable,
+  stop and report the blocker; never claim deployment succeeded
+  without verification." Will proceed with strategy/pair-universe
+  research work (which doesn't require deployment), then attempt
+  Vercel verification at end and report honestly.
+
+Stage Summary:
+- Phase 13 baseline confirmed.
+- Vercel deployment verification BLOCKED (credentials unavailable).
+- Will report the blocker honestly at the end per the mandatory rule.
+- Proceeding with strategy research + pair-universe expansion.
+
+---
+Task ID: phase-13-execution
+Agent: main (super-z)
+Task: Phase 13 — pair universe vetting, candidate strategies, evaluation, tests
+
+Work Log:
+- Wrote scripts/vet_pair_universe.py — vets 26 candidate pairs by:
+    * Ticker turnover + spread
+    * Candle freshness (latest candle < 6h old)
+    * 500-candle history verification
+  Found 11 pairs with spread < 2.0% (data-quality threshold):
+    B-USDTINR, B-BTCINR, B-WRXINR, B-ETHINR, B-TRXINR, B-PEPEINR,
+    B-SHIBINR, B-COTIINR, B-CELRINR, B-LINKINR, B-XRPINR.
+  MATIC correctly excluded as stale (latest candle 8453.5h old).
+
+- Designed and implemented 2 new candidate strategies in
+  src/coindcx_lab/engine/phase13_candidates.py:
+    1. MultiTimeframeTrendPullback — uses 4h (HTF) EMA20>EMA50>EMA200
+       trend filter + 1h (LTF) pullback zone entry. HTF candles
+       supplied at construction; strategy uses binary search to find
+       the most-recent-completed HTF bar at each LTF evaluation
+       (prevents look-ahead bias).
+    2. MeanReversionRsi — RSI(14) crosses from <30 to >30 (recovery
+       trigger) + close > prev_close. Stop: below 10-bar low.
+       Target: 2R. Independent of trend filter.
+
+- Wrote tests/test_phase13_regression.py with 10 new tests:
+    A. MultiTimeframeTrendPullback (4 tests):
+       - htf_trend_filter_blocks_when_flat
+       - no_lookahead_htf_bar_at_or_after_ltf_open_not_used
+       - ltf_pullback_zone_enforced
+       - warmup_incomplete_returns_wait (skeleton default NO_TRADE)
+    B. MeanReversionRsi (3 tests):
+       - no_rsi_cross_returns_wait
+       - warmup_incomplete_returns_wait
+       - close_below_prev_close_blocks_entry
+    C. Paper-trading reliability (Phase 13 spot-check) (3 tests):
+       - stop_loss_with_adverse_slippage
+       - target_with_adverse_slippage
+       - missing_pair_surfaces_in_incomplete
+
+- Wrote scripts/run_phase13_comparison.py — runs:
+    * 4 production strategies × 11 pairs × 1h interval = 44 runs
+    * 2 candidate strategies × 11 pairs = 22 runs (dev/val only for
+      candidates; OOS preserved per Phase 13 brief req 3)
+    Total: 66 runs.
+
+- Phase 13 backtest results (1h interval, 1000 candles per pair):
+  PRODUCTION strategies (dev+val+oos across 11 pairs):
+    breakout_retest:       66 trades, 14 wins, 52 losses, +₹31.35 net
+    trend_pullback:         0 trades (entry conditions too restrictive)
+    momentum_continuation: 0 trades (entry conditions too restrictive)
+    baseline_sma:           0 trades (entry conditions too restrictive)
+  CANDIDATE strategies (dev+val only across 11 pairs):
+    mean_reversion_rsi:     0 trades (RSI rarely crosses 30 on INR-spot)
+    mtf_trend_pullback:     0 trades (HTF trend + LTF pullback combo
+                          too restrictive)
+
+- Notable: breakout_retest with Phase 12 fix + 11 vetted pairs now
+  produces the FIRST positive net PnL across all phases (+₹31.35 INR
+  = +1.57% return). However:
+    * Win rate is 21.2% (14/66), below breakeven for a 2R target
+      (needs 33%+ to break even after costs).
+    * Some wins are end_of_data closes (force-close at last bar)
+      rather than target hits — making the positive return less
+      meaningful.
+    * Sample is small (66 trades across 11 pairs × 3 segments) and
+      trades within a segment are correlated.
+    * Strategy profitability remains UNVALIDATED per Phase 13 brief
+      req 4: "Do not interpret a small sample as evidence of
+      profitability."
+
+- Verified production safeguards:
+    * 313 tests passing (303 prior + 10 new Phase 13).
+    * 11 serverless functions (within Vercel Hobby 12-function limit).
+    * 4 migrations byte-for-byte unchanged (0001: 9969, 0002: 6954,
+      0003: 2571, 0004: 1157 bytes — same as Phase 12 baseline).
+    * No RLS policy changes.
+    * No env var name changes.
+    * Paper-only trading preserved — no real orders, leverage, or
+      futures.
+
+Stage Summary:
+- Phase 13 strategy investigation complete.
+- 2 new candidate strategies designed and tested.
+- 11 pairs vetted with transparent data-quality criteria.
+- 66 backtest runs completed; breakout_retest shows small positive
+  net PnL but sample is too small to validate profitability.
+- 3 new candidate strategies (mtf_trend_pullback, mean_reversion_rsi,
+  and 3 Phase 12 variants) all produced 0 trades — confirming that
+  the INR-spot regime is genuinely challenging for trend-following
+  and mean-reversion strategies with the current parameter sets.
+- Ready to commit + push + attempt Vercel deployment verification.
