@@ -711,3 +711,153 @@ Stage Summary:
 - The GitHub push IS complete; the Vercel deployment verification
   is NOT complete.
 - Honest blocker reported per the mandatory rule.
+
+---
+Task ID: phase-14-start
+Agent: main (super-z)
+Task: Phase 14 kickoff — audit existing strategies, design regime classifier
+
+Work Log:
+- Verified baseline: local + GitHub main at 9f226d7 (matches Phase 13
+  end). Working tree clean. 313 tests passing. 11 serverless
+  functions. 4 migrations byte-for-byte unchanged (0001: 9969,
+  0002: 6954, 0003: 2571, 0004: 1157 bytes). Vercel credentials
+  STILL NOT SET (consistent with Phase 12/13 blocker).
+- Audited existing strategies per Phase 14 brief req 1:
+    * breakout_retest (Phase 12 fix): now produces trades (66 in
+      Phase 13). 21.2% win rate, +₹31.35 net (small sample).
+    * trend_pullback: 0 trades. Blocked by strict EMA stack + RSI
+      [40, 55] + risk gate (R/R after cost 1.42 < 2.0 target).
+    * momentum_continuation: 0 trades. Blocked by UP trend + MACD
+      + RSI>55 + relvol>1.2 — all four rarely align.
+    * baseline_sma: 0 trades. Surprising — entry conditions are
+      just close>EMA50 AND EMA50 rising. Investigated code: 478
+      NO_TRADE cases — risk gate rejected because stop = EMA50 - 1*ATR
+      is only 1 ATR below entry; with fees+slippage, R/R after cost
+      falls below 2.0 target. So even the simplest strategy fails
+      the risk gate due to tight stop geometry, not the entry logic.
+    * MultiTimeframeTrendPullback: 0 trades. HTF (4h) trend + LTF
+      (1h) pullback combo too restrictive.
+    * MeanReversionRsi: 0 trades. RSI rarely crosses 30 on INR-spot
+      pairs (low volatility regime).
+
+Root cause analysis (Phase 14 brief req 1 — "Identify actual blocking
+conditions before changing strategy rules"):
+  1. The risk gate's reward_to_risk_target=2.0 is hard to achieve
+     after fees (0.1% per side) + slippage (0.05% per side) ≈ 0.3%
+     round-trip cost. With tight stops (1 ATR or less), the post-cost
+     R/R is barely above 1.5, so the gate rejects most setups.
+  2. The strict EMA20 > EMA50 > EMA200 trend filter is rarely
+     satisfied on choppier INR-spot pairs. The 4h candles often have
+     mixed EMA alignment.
+  3. Mean reversion's RSI < 30 threshold is too low — INR-spot pairs
+     rarely hit oversold conditions.
+
+Phase 14 design plan:
+  1. Build a market-regime classifier that doesn't depend on strict
+     EMA stack — use ATR/price ratio for volatility regime + EMA50
+     slope for trend regime.
+  2. Build regime-aware variants:
+     - RegimeTrendPullback: only fire in Trending UP regime; use
+       wider stop (2 ATR) so R/R after cost is more favorable.
+     - RegimeBreakoutRetest: only fire in Trending UP or transitioning
+       regime; require recent retest.
+     - RegimeMeanReversion: only fire in Range-bound regime; relax
+       RSI threshold to < 35 (instead of < 30) but add regime filter.
+     - RegimeMultiTimeframe: HTF trend + LTF entry, only when both
+       timeframes agree on regime.
+  3. Adjust stop geometry to give R/R after cost >= 2.0 even with
+     tight stops — use 2 ATR stops instead of 1 ATR.
+
+Stage Summary:
+- Phase 14 audit complete. Root causes identified.
+- Ready to build regime classifier + regime-aware candidates.
+
+---
+Task ID: phase-14-execution
+Agent: main (super-z)
+Task: Phase 14 — regime classifier + 4 regime-aware candidates + evaluation
+
+Work Log:
+- Built RegimeClassifier (src/coindcx_lab/engine/regime.py) with 5
+  classifications: TRENDING_UP, TRENDING_DOWN, RANGE_BOUND,
+  HIGH_VOLATILITY, UNCERTAIN. Uses EMA stack + EMA50 slope + ATR/price
+  ratio. HIGH_VOLATILITY (ATR/price >= 2.5%) takes priority over trend.
+  All other thresholds documented as class attributes for testing.
+
+- Built 4 regime-aware candidates (src/coindcx_lab/engine/regime_strategies.py):
+    A. RegimeTrendPullback — only fires in TRENDING_UP; 2-ATR stop
+       (wider than production 1.5 ATR); RSI [35,60] (relaxed from
+       [40,55]).
+    B. RegimeBreakoutRetest — fires in TRENDING_UP or UNCERTAIN;
+       blocked in HIGH_VOLATILITY; uses min(breakout-0.5%, 2*ATR)
+       stop.
+    C. RegimeMeanReversion — only fires in RANGE_BOUND; RSI cross 35
+       (relaxed from 30); 2-ATR stop.
+    D. RegimeMultiTimeframe — requires BOTH HTF (4h) and LTF (1h)
+       regime TRENDING_UP; 2-ATR stop; inherits Phase 13 no-lookahead
+       HTF binary search.
+
+- Wrote tests/test_phase14_regression.py with 16 new tests:
+    A. RegimeClassifier (6): TRENDING_UP/DOWN/RANGE_BOUND/HIGH_VOL/
+       UNCERTAIN/EMA-not-initialized.
+    B. Regime-aware strategies (8): each candidate's regime filter
+       behavior, RSI threshold relaxed, 2-ATR stop geometry, MTF no-
+       lookahead HTF.
+    C. Paper-trading reliability spot-check (1): equity snapshot
+       persistence after close.
+    D. Regime counts summary (1): regime_counts() returns dict with
+       all 5 regimes.
+
+- Phase 14 evaluation backtest (scripts/run_phase14_comparison.py):
+    * 4 regime candidates × 11 pairs (dev/val only — OOS preserved)
+    * Production breakout_retest × 11 pairs (full dev/val/oos)
+    * Total: 55 runs.
+
+  Results:
+    regime_candidates: 0 trades (all 4 candidates × 11 pairs × dev+val)
+    production_breakout_retest: 66 trades, 14W/52L (21.2% win rate),
+      +₹31.35 net (₹0.47/trade expectancy, profit_factor=1.139,
+      avg_hold=6.9h). Exit breakdown: 52 stop, 11 target, 3 EOD.
+
+- Analyzed regime distribution on live data:
+    B-BTCINR: UP=27%, DOWN=24%, RANGE=31%, HIGH_VOL=0%, UNCERT=18%
+    B-ETHINR: UP=31%, DOWN=17%, RANGE=30%, HIGH_VOL=0%, UNCERT=22%
+    B-SOLINR: UP=34%, DOWN=19%, RANGE=19%, HIGH_VOL=0%, UNCERT=29%
+    B-XRPINR: UP=22%, DOWN=36%, RANGE=22%, HIGH_VOL=0%, UNCERT=21%
+    B-TRXINR: UP=22%, DOWN=37%, RANGE=36%, HIGH_VOL=0%, UNCERT=5%
+    B-SHIBINR: UP=29%, DOWN=24%, RANGE=18%, HIGH_VOL=0%, UNCERT=29%
+
+  Finding: regime filter (TRENDING_UP, RANGE_BOUND) passes ~25-50%
+  of bars, but the OTHER entry conditions (pullback zone, RSI range,
+  breakout+retest, close > prev close) still rarely align within
+  those regimes. So even with the regime filter, the strategies
+  produce 0 trades.
+
+  This is the HONEST outcome per Phase 14 brief req 4: "If the
+  available data produces too few trades, report that profitability
+  is unvalidated." The 80% win-rate research target was NOT achieved
+  and NOT claimed — none of the candidates produced enough trades
+  to compute a meaningful win rate.
+
+- Verified production safeguards:
+    * 329 tests passing (313 prior + 16 new Phase 14).
+    * 11 serverless functions (within Vercel Hobby 12-function limit).
+    * 4 migrations byte-for-byte unchanged (0001: 9969, 0002: 6954,
+      0003: 2571, 0004: 1157 bytes — same as Phase 13 baseline).
+    * No RLS policy changes.
+    * No env var name changes.
+    * Paper-only trading preserved — no real orders, leverage, or
+      futures.
+    * Production strategy defaults UNCHANGED.
+
+Stage Summary:
+- Phase 14 regime classifier + 4 regime-aware candidates built.
+- All 4 regime candidates produced 0 trades on dev/val — the INR-spot
+  regime is genuinely challenging; the entry conditions are too
+  restrictive even with the regime filter.
+- Production breakout_retest unchanged from Phase 13: 66 trades,
+  21.2% win rate, +₹31.35 net.
+- Strategy profitability remains UNVALIDATED. 80% win-rate target
+  NOT achieved (and not claimed).
+- Ready to commit + push + attempt Vercel deployment verification.
