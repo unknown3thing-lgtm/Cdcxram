@@ -654,3 +654,60 @@ Stage Summary:
   the INR-spot regime is genuinely challenging for trend-following
   and mean-reversion strategies with the current parameter sets.
 - Ready to commit + push + attempt Vercel deployment verification.
+
+---
+Task ID: phase-13-final
+Agent: main (super-z)
+Task: Phase 13 final — commit, push, Vercel deployment verification attempt
+
+Work Log:
+- Final pre-commit verification:
+    * Full test suite: 313 passing (303 prior + 10 new Phase 13).
+    * Serverless function count: 11 (within Vercel Hobby 12-function
+      limit).
+    * Migrations: 4 byte-for-byte unchanged (0001: 9969, 0002: 6954,
+      0003: 2571, 0004: 1157 bytes — same as Phase 12 baseline).
+    * Working tree: clean (after reverting spurious file-mode changes
+      via `git config core.fileMode false` + `git checkout -- .`).
+- Committed Phase 13 changes: SHA 6242109 on local main.
+    * 7 files changed, 8574 insertions(+), including:
+      - src/coindcx_lab/engine/phase13_candidates.py (NEW — 2 candidates)
+      - tests/test_phase13_regression.py (NEW — 10 tests)
+      - scripts/vet_pair_universe.py (NEW — pair vetting)
+      - scripts/run_phase13_comparison.py (NEW — backtest runner)
+      - download/phase13_*.json (2 diagnostic results files)
+- Pushed to GitHub main: bc53650..6242109 fast-forward succeeded.
+- Verified post-push: origin/main == local main == 6242109.
+- Attempted Vercel Production deployment verification:
+    * `vercel` CLI installed via `npm install -g vercel` (Vercel CLI
+      63.1.2) in this Phase 13 session.
+    * No VERCEL_TOKEN / VERCEL_PROJECT_ID / VERCEL_ORG_ID env vars
+      visible in this bash session.
+    * No ~/.local/share/com.vercel.cli/auth.json file present.
+    * No .vercel/ project config (no `vercel link` ever done here).
+    * `vercel whoami` returns "Logged out."
+    * `vercel project ls` returns "No existing credentials found."
+    * Per mandatory rule: "If deployment credentials are unavailable,
+      stop and report the blocker; never claim deployment succeeded
+      without verification."
+    * Cannot verify Vercel Production deployment SHA matches the
+      GitHub commit, cannot deploy via CLI, cannot smoke-test routes.
+
+Stage Summary:
+- Phase 13 code + tests committed locally at 6242109.
+- Pushed to GitHub main successfully (fast-forward bc53650..6242109).
+- GitHub main verified at 6242109 (matches local main).
+- Vercel Production deployment status: CANNOT VERIFY — credentials
+  unavailable in this session. The Vercel-GitHub integration (if
+  enabled on the project) should auto-trigger a deployment from
+  the push, but I cannot query the Vercel API or CLI to confirm the
+  deployment SHA, readiness, or smoke-test results.
+- Phase 13 is PARTIALLY COMPLETE per the mandatory rule
+  ("At the end of the phase, commit and push the verified code and
+  tests to GitHub main, deploy the intended commit to Vercel
+  Production, and verify that the deployed SHA matches GitHub main.
+  If deployment credentials are unavailable, stop and report the
+  blocker; never claim deployment succeeded without verification.").
+- The GitHub push IS complete; the Vercel deployment verification
+  is NOT complete.
+- Honest blocker reported per the mandatory rule.
