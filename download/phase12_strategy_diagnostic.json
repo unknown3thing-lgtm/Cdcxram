@@ -1,0 +1,401 @@
+{
+  "phase": 12,
+  "started_at_utc": "2026-10-12T09:07:32.916992+00:00",
+  "interval": "1h",
+  "candle_limit": 1000,
+  "strategies": [
+    "trend_pullback",
+    "breakout_retest",
+    "momentum_continuation",
+    "baseline_sma"
+  ],
+  "pairs": [
+    "B-BTCINR",
+    "B-ETHINR",
+    "B-SOLINR",
+    "B-XRPINR"
+  ],
+  "diagnostics": [
+    {
+      "pair": "B-BTCINR",
+      "strategy": "trend_pullback",
+      "n_candles": 1000,
+      "n_evaluated": 800,
+      "n_buy_candidates": 0,
+      "state_counts": {
+        "WAIT": 768,
+        "NO_TRADE": 32
+      },
+      "top_reasons": {
+        "BLOCK: R/R after cost 1.42": 7,
+        "SUPPORT: RSI 48.0 within [40,55]": 6,
+        "BLOCK: R/R after cost 1.39": 5,
+        "SUPPORT: RSI 49.8 within [40,55]": 5,
+        "SUPPORT: price 8470000.00 pulled back": 4,
+        "SUPPORT: target 8683803.43 = 2R": 4,
+        "SUPPORT: RSI 49.6 within [40,55]": 3,
+        "SUPPORT: RSI 49.4 within [40,55]": 3,
+        "SUPPORT: price 7826007.00 pulled back": 2,
+        "SUPPORT: target 8009021.00 = 2R": 2,
+        "SUPPORT: RSI 51.6 within [40,55]": 2,
+        "BLOCK: R/R after cost 1.20": 2,
+        "SUPPORT: price 7962006.00 pulled back": 2,
+        "SUPPORT: target 8061041.38 = 2R": 2,
+        "BLOCK: R/R after cost 1.02": 2
+      }
+    },
+    {
+      "pair": "B-ETHINR",
+      "strategy": "trend_pullback",
+      "n_candles": 1000,
+      "n_evaluated": 800,
+      "n_buy_candidates": 0,
+      "state_counts": {
+        "WAIT": 764,
+        "NO_TRADE": 36
+      },
+      "top_reasons": {
+        "BLOCK: R/R after cost 0.93": 5,
+        "SUPPORT: price 250000.00 pulled back": 4,
+        "SUPPORT: RSI 49.2 within [40,55]": 4,
+        "SUPPORT: target 264760.22 = 2R": 4,
+        "BLOCK: R/R after cost 1.72": 4,
+        "SUPPORT: RSI 49.8 within [40,55]": 3,
+        "SUPPORT: RSI 50.7 within [40,55]": 3,
+        "SUPPORT: RSI 47.3 within [40,55]": 3,
+        "SUPPORT: RSI 48.6 within [40,55]": 2,
+        "SUPPORT: price 250500.00 pulled back": 2,
+        "SUPPORT: RSI 50.4 within [40,55]": 2,
+        "SUPPORT: target 266260.22 = 2R": 2,
+        "BLOCK: R/R after cost 1.74": 2,
+        "BLOCK: R/R after cost 1.00": 2,
+        "BLOCK: R/R after cost 1.01": 2
+      }
+    },
+    {
+      "pair": "B-SOLINR",
+      "strategy": "trend_pullback",
+      "n_candles": 1000,
+      "n_evaluated": 800,
+      "n_buy_candidates": 0,
+      "state_counts": {
+        "WAIT": 769,
+        "NO_TRADE": 31
+      },
+      "top_reasons": {
+        "BLOCK: R/R after cost 1.89": 5,
+        "SUPPORT: RSI 47.5 within [40,55]": 5,
+        "SUPPORT: price 10800.00 pulled back": 4,
+        "SUPPORT: target 12432.02 = 2R": 4,
+        "SUPPORT: RSI 50.6 within [40,55]": 4,
+        "BLOCK: R/R after cost 1.85": 4,
+        "BLOCK: R/R after cost 1.77": 3,
+        "BLOCK: R/R after cost 1.82": 3,
+        "SUPPORT: RSI 48.9 within [40,55]": 3,
+        "SUPPORT: price 11495.00 pulled back": 3,
+        "SUPPORT: price 10873.06 pulled back": 2,
+        "SUPPORT: RSI 50.2 within [40,55]": 2,
+        "SUPPORT: target 11661.16 = 2R": 2,
+        "SUPPORT: RSI 48.8 within [40,55]": 2,
+        "BLOCK: R/R after cost 1.78": 2
+      }
+    },
+    {
+      "pair": "B-XRPINR",
+      "strategy": "trend_pullback",
+      "n_candles": 1000,
+      "n_evaluated": 800,
+      "n_buy_candidates": 0,
+      "state_counts": {
+        "WAIT": 768,
+        "NO_TRADE": 32
+      },
+      "top_reasons": {
+        "BLOCK: R/R after cost 1.65": 5,
+        "SUPPORT: price 140.05 pulled back": 4,
+        "SUPPORT: RSI 50.5 within [40,55]": 4,
+        "SUPPORT: target 146.47 = 2R": 4,
+        "BLOCK: R/R after cost 1.72": 3,
+        "SUPPORT: price 138.10 pulled back": 3,
+        "SUPPORT: RSI 49.8 within [40,55]": 2,
+        "BLOCK: R/R after cost 1.73": 2,
+        "SUPPORT: price 140.66 pulled back": 2,
+        "SUPPORT: RSI 49.3 within [40,55]": 2,
+        "SUPPORT: target 148.81 = 2R": 2,
+        "BLOCK: R/R after cost 1.83": 2,
+        "SUPPORT: RSI 47.4 within [40,55]": 2,
+        "SUPPORT: target 144.58 = 2R": 2,
+        "BLOCK: R/R after cost 1.66": 2
+      }
+    },
+    {
+      "pair": "B-BTCINR",
+      "strategy": "breakout_retest",
+      "n_candles": 1000,
+      "n_evaluated": 940,
+      "n_buy_candidates": 0,
+      "state_counts": {
+        "WAIT": 940
+      },
+      "top_reasons": {}
+    },
+    {
+      "pair": "B-ETHINR",
+      "strategy": "breakout_retest",
+      "n_candles": 1000,
+      "n_evaluated": 940,
+      "n_buy_candidates": 0,
+      "state_counts": {
+        "WAIT": 940
+      },
+      "top_reasons": {}
+    },
+    {
+      "pair": "B-SOLINR",
+      "strategy": "breakout_retest",
+      "n_candles": 1000,
+      "n_evaluated": 940,
+      "n_buy_candidates": 0,
+      "state_counts": {
+        "WAIT": 940
+      },
+      "top_reasons": {}
+    },
+    {
+      "pair": "B-XRPINR",
+      "strategy": "breakout_retest",
+      "n_candles": 1000,
+      "n_evaluated": 940,
+      "n_buy_candidates": 0,
+      "state_counts": {
+        "WAIT": 940
+      },
+      "top_reasons": {}
+    },
+    {
+      "pair": "B-BTCINR",
+      "strategy": "momentum_continuation",
+      "n_candles": 1000,
+      "n_evaluated": 940,
+      "n_buy_candidates": 0,
+      "state_counts": {
+        "WAIT": 858,
+        "NO_TRADE": 82
+      },
+      "top_reasons": {
+        "SUPPORT: trend UP": 274,
+        "SUPPORT: stop = entry -": 82,
+        "BLOCK: relative volume 0.00 <": 8,
+        "BLOCK: relative volume 0.07 <": 6,
+        "BLOCK: R/R after cost 1.52": 6,
+        "BLOCK: R/R after cost 1.50": 6,
+        "BLOCK: R/R after cost 1.46": 6,
+        "BLOCK: R/R after cost 1.48": 5,
+        "BLOCK: R/R after cost 1.49": 4,
+        "BLOCK: R/R after cost 1.51": 4,
+        "BLOCK: relative volume 0.02 <": 4,
+        "BLOCK: R/R after cost 1.41": 4,
+        "BLOCK: relative volume 0.06 <": 3,
+        "BLOCK: R/R after cost 1.38": 3,
+        "BLOCK: relative volume 0.04 <": 3
+      }
+    },
+    {
+      "pair": "B-ETHINR",
+      "strategy": "momentum_continuation",
+      "n_candles": 1000,
+      "n_evaluated": 940,
+      "n_buy_candidates": 0,
+      "state_counts": {
+        "WAIT": 841,
+        "NO_TRADE": 99
+      },
+      "top_reasons": {
+        "SUPPORT: trend UP": 339,
+        "SUPPORT: stop = entry -": 99,
+        "BLOCK: relative volume 0.00 <": 15,
+        "BLOCK: R/R after cost 1.47": 7,
+        "BLOCK: R/R after cost 1.50": 6,
+        "BLOCK: R/R after cost 1.48": 5,
+        "BLOCK: R/R after cost 1.31": 5,
+        "BLOCK: R/R after cost 1.53": 5,
+        "BLOCK: R/R after cost 1.55": 5,
+        "BLOCK: R/R after cost 1.36": 4,
+        "BLOCK: R/R after cost 1.35": 4,
+        "BLOCK: R/R after cost 1.44": 4,
+        "BLOCK: R/R after cost 1.40": 3,
+        "BLOCK: R/R after cost 1.37": 3,
+        "BLOCK: relative volume 0.03 <": 3
+      }
+    },
+    {
+      "pair": "B-SOLINR",
+      "strategy": "momentum_continuation",
+      "n_candles": 1000,
+      "n_evaluated": 940,
+      "n_buy_candidates": 0,
+      "state_counts": {
+        "WAIT": 818,
+        "NO_TRADE": 122
+      },
+      "top_reasons": {
+        "SUPPORT: trend UP": 359,
+        "SUPPORT: stop = entry -": 122,
+        "BLOCK: relative volume 0.00 <": 30,
+        "BLOCK: relative volume 0.01 <": 9,
+        "BLOCK: R/R after cost 1.60": 7,
+        "BLOCK: R/R after cost 1.52": 6,
+        "BLOCK: R/R after cost 1.61": 6,
+        "BLOCK: R/R after cost 1.59": 6,
+        "BLOCK: R/R after cost 1.68": 6,
+        "BLOCK: R/R after cost 1.65": 6,
+        "BLOCK: R/R after cost 1.63": 6,
+        "BLOCK: R/R after cost 1.72": 6,
+        "BLOCK: relative volume 0.02 <": 6,
+        "BLOCK: relative volume 0.05 <": 5,
+        "BLOCK: relative volume 0.09 <": 5
+      }
+    },
+    {
+      "pair": "B-XRPINR",
+      "strategy": "momentum_continuation",
+      "n_candles": 1000,
+      "n_evaluated": 940,
+      "n_buy_candidates": 0,
+      "state_counts": {
+        "WAIT": 859,
+        "NO_TRADE": 81
+      },
+      "top_reasons": {
+        "SUPPORT: trend UP": 227,
+        "SUPPORT: stop = entry -": 81,
+        "BLOCK: relative volume 0.00 <": 9,
+        "BLOCK: R/R after cost 1.53": 9,
+        "BLOCK: R/R after cost 1.66": 6,
+        "BLOCK: R/R after cost 1.52": 5,
+        "BLOCK: R/R after cost 1.54": 5,
+        "BLOCK: R/R after cost 1.31": 5,
+        "BLOCK: relative volume 0.05 <": 4,
+        "BLOCK: R/R after cost 1.45": 4,
+        "BLOCK: relative volume 0.03 <": 4,
+        "BLOCK: relative volume 0.04 <": 3,
+        "BLOCK: R/R after cost 1.46": 3,
+        "BLOCK: R/R after cost 1.50": 3,
+        "BLOCK: R/R after cost 1.57": 3
+      }
+    },
+    {
+      "pair": "B-BTCINR",
+      "strategy": "baseline_sma",
+      "n_candles": 1000,
+      "n_evaluated": 940,
+      "n_buy_candidates": 0,
+      "state_counts": {
+        "WAIT": 462,
+        "NO_TRADE": 478
+      },
+      "top_reasons": {
+        "SUPPORT: stop = EMA50 -": 478,
+        "BLOCK: R/R after cost 1.48": 15,
+        "BLOCK: R/R after cost 1.47": 14,
+        "BLOCK: R/R after cost 1.63": 14,
+        "BLOCK: R/R after cost 1.46": 13,
+        "SUPPORT: close 8214417.00 > EMA50": 13,
+        "BLOCK: R/R after cost 1.50": 11,
+        "BLOCK: R/R after cost 1.57": 10,
+        "BLOCK: R/R after cost 1.72": 10,
+        "BLOCK: R/R after cost 1.62": 10,
+        "BLOCK: R/R after cost 1.49": 10,
+        "BLOCK: R/R after cost 1.39": 10,
+        "BLOCK: R/R after cost 1.45": 10,
+        "BLOCK: R/R after cost 1.30": 9,
+        "BLOCK: R/R after cost 1.71": 9
+      }
+    },
+    {
+      "pair": "B-ETHINR",
+      "strategy": "baseline_sma",
+      "n_candles": 1000,
+      "n_evaluated": 940,
+      "n_buy_candidates": 0,
+      "state_counts": {
+        "WAIT": 449,
+        "NO_TRADE": 491
+      },
+      "top_reasons": {
+        "SUPPORT: stop = EMA50 -": 491,
+        "BLOCK: R/R after cost 1.63": 17,
+        "BLOCK: R/R after cost 1.52": 17,
+        "BLOCK: R/R after cost 1.64": 16,
+        "BLOCK: R/R after cost 1.56": 15,
+        "BLOCK: R/R after cost 1.48": 14,
+        "BLOCK: R/R after cost 1.61": 13,
+        "BLOCK: R/R after cost 1.71": 13,
+        "BLOCK: R/R after cost 1.53": 12,
+        "BLOCK: R/R after cost 1.57": 11,
+        "BLOCK: R/R after cost 1.49": 11,
+        "BLOCK: R/R after cost 1.51": 11,
+        "SUPPORT: close 268350.00 > EMA50": 11,
+        "BLOCK: R/R after cost 1.59": 10,
+        "BLOCK: R/R after cost 1.41": 10
+      }
+    },
+    {
+      "pair": "B-SOLINR",
+      "strategy": "baseline_sma",
+      "n_candles": 1000,
+      "n_evaluated": 940,
+      "n_buy_candidates": 0,
+      "state_counts": {
+        "WAIT": 422,
+        "NO_TRADE": 518
+      },
+      "top_reasons": {
+        "SUPPORT: stop = EMA50 -": 518,
+        "BLOCK: R/R after cost 1.76": 22,
+        "BLOCK: R/R after cost 1.83": 19,
+        "BLOCK: R/R after cost 1.80": 19,
+        "BLOCK: R/R after cost 1.66": 19,
+        "BLOCK: R/R after cost 1.86": 18,
+        "BLOCK: R/R after cost 1.78": 18,
+        "BLOCK: R/R after cost 1.79": 17,
+        "BLOCK: R/R after cost 1.74": 16,
+        "BLOCK: R/R after cost 1.84": 15,
+        "BLOCK: R/R after cost 1.77": 15,
+        "BLOCK: R/R after cost 1.73": 15,
+        "BLOCK: R/R after cost 1.81": 14,
+        "BLOCK: R/R after cost 1.67": 14,
+        "BLOCK: R/R after cost 1.58": 14
+      }
+    },
+    {
+      "pair": "B-XRPINR",
+      "strategy": "baseline_sma",
+      "n_candles": 1000,
+      "n_evaluated": 940,
+      "n_buy_candidates": 0,
+      "state_counts": {
+        "NO_TRADE": 425,
+        "WAIT": 515
+      },
+      "top_reasons": {
+        "SUPPORT: stop = EMA50 -": 425,
+        "BLOCK: R/R after cost 1.85": 25,
+        "SUPPORT: close 140.00 > EMA50": 14,
+        "BLOCK: R/R after cost 1.84": 13,
+        "BLOCK: R/R after cost 1.83": 11,
+        "BLOCK: R/R after cost 1.82": 11,
+        "BLOCK: R/R after cost 1.32": 11,
+        "BLOCK: R/R after cost 1.72": 11,
+        "SUPPORT: close 142.00 > EMA50": 10,
+        "BLOCK: R/R after cost 1.87": 10,
+        "BLOCK: R/R after cost 1.86": 10,
+        "BLOCK: R/R after cost 1.71": 10,
+        "SUPPORT: close 152.00 > EMA50": 10,
+        "BLOCK: R/R after cost 1.65": 9,
+        "BLOCK: R/R after cost 1.48": 9
+      }
+    }
+  ],
+  "ended_at_utc": "2026-10-12T09:09:55.330390+00:00"
+}

@@ -361,3 +361,113 @@ Stage Summary:
 - No duplicate API files created.
 - No secrets or env var values printed.
 - No production portfolio data, migrations, or RLS policies modified.
+
+---
+Task ID: phase-12-start
+Agent: main (super-z)
+Task: Phase 12 kickoff — baseline check, deployment capability check
+
+Work Log:
+- Verified local main at bca5781 (HEAD -> main, origin/main) — same as
+  GitHub main after the Phase 11 sync push.
+- Confirmed baseline test suite: 289 passing in 24.91s (no regressions
+  from Phase 11 baseline).
+- Confirmed 4 migrations unchanged (0001-0004; no content changes,
+  file-mode preserved from prior phases).
+- Confirmed 11 serverless functions (within Vercel Hobby 12-function
+  limit).
+- Checked Vercel deployment capability:
+    * `vercel` CLI is NOT installed in this environment.
+    * However VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID env vars
+      ARE set (values not printed per rule 6).
+    * Plan: push to GitHub main → triggers auto-deploy via Vercel-
+      GitHub integration → verify via Vercel REST API using curl +
+      VERCEL_TOKEN (no CLI needed).
+
+Stage Summary:
+- Phase 12 work plan ready.
+- Strategy investigation is the next major step (trace each strategy's
+  entry conditions to identify blocking rules).
+- Vercel deployment verification will use the REST API after the
+  GitHub push triggers auto-deploy.
+
+---
+Task ID: phase-12-progress
+Agent: main (super-z)
+Task: Phase 12 strategy investigation + pair universe scan
+
+Work Log:
+- Wrote scripts/diagnose_strategy_entries.py to trace each strategy's
+  entry conditions against historical candles.
+- Pre-fix diagnostic showed breakout_retest produced 0 BUY_CANDIDATE
+  signals across 940 evaluations on BTC 1h (full 1000-candle series).
+- Investigated breakout_retest indicator (src/coindcx_lab/engine/
+  indicators.py). CONFIRMED DEFECT: the function used `break` +
+  `breakout_idx is None` check to find only the FIRST breakout in
+  the entire series. If the first breakout was DOWN (as on BTC 1h
+  where the first breakout at bar 41 was a down-move), the long-only
+  strategy could NEVER fire for the rest of the series.
+  This explained the Phase 11 paradox: my diagnostic on the full
+  series showed 0 BUY_CANDIDATE, but Phase 11's per-segment runs
+  produced 20 trades because each segment's prefix+segment series
+  happened to start with an up-move.
+- Fixed breakout_retest to scan ALL bars and track the MOST RECENT
+  UP breakout (matching the existing docstring which already said
+  "most recent bar"). The long-only strategy only cares about up-
+  breakouts, so down-breakouts are no longer tracked. The previous
+  behavior of returning direction="down" is removed — the strategy
+  never used it (it always returned WAIT on direction != "up"), so
+  no behavior change for the strategy.
+- Wrote tests/test_phase12_regression.py with 14 tests covering:
+  A. breakout_retest defect fix (4 tests):
+     - no_down_breakout_blocks_up_breakout_detection
+     - no_up_breakout_returns_has_breakout_false
+     - most_recent_up_breakout_preferred_over_earlier
+     - strategy_can_fire_after_early_down_breakout (integration)
+  B. Fee/slippage/net-PnL calculation (3 tests):
+     - test_entry_fee_applied_on_open
+     - test_exit_fee_added_on_close
+     - test_net_pnl_includes_fees_and_slippage
+  C. Equity snapshot persistence (2 tests):
+     - test_multiple_closes_append_multiple_snapshots
+     - test_snapshots_survive_engine_reinstantiation
+  D. Portfolio reconciliation (1 test):
+     - test_reconcile_fixes_open_positions_value
+  E. Provenance status reporting (4 tests):
+     - LIVE / CACHED / SIMULATED / UNAVAILABLE labels verified
+- Post-fix diagnostic shows breakout_retest now produces:
+    BTC: 11 BUY_CANDIDATE (was 0)
+    ETH: 15 BUY_CANDIDATE (was 0)
+    SOL: 10 BUY_CANDIDATE (was 0)
+    XRP: 32 BUY_CANDIDATE (was 0)
+  Total: 68 BUY_CANDIDATE signals (was 0).
+- Other 3 strategies (trend_pullback, momentum_continuation,
+  baseline_sma) still produce 0 BUY_CANDIDATE — but these are
+  NOT bugs. Their entry conditions are genuinely restrictive:
+    * trend_pullback: requires strict UP trend (EMA20>EMA50>EMA200)
+      AND price in pullback zone [EMA50, EMA20] AND RSI in [40, 55].
+      The 32 NO_TRADE cases on BTC had BLOCK reason "R/R after cost
+      1.42" — setups were found but the risk gate rejected them
+      because R/R after costs (1.42) was below the 2.0 target.
+    * momentum_continuation: 274 trend-UP supporting reasons but
+      82 NO_TRADE (risk gate rejected).
+    * baseline_sma: 478 NO_TRADE out of 940 (risk gate rejected).
+- Wrote scripts/scan_pair_universe.py to scan WazirX all-tickers.
+  Found 216 pairs total, 96 active (positive 24h INR turnover).
+  Top 20 active pairs include the existing BTC/ETH/SOL/LINK plus
+  new candidates: USDT, WRX, INJ, PEPE, DENT, CKB, TRX, SHIB, NEAR,
+  FET, SKY, BAT, HNT, CELR, COTI, ZEC.
+  Note: staleness cannot be reliably detected from the ticker alone
+  (WazirX doesn't return last_trade_at in the normalized fields).
+  The MATIC pair had bh=0% in Phase 11 because its latest candle is
+  from 2025-10-25 — pair was delisted from WazirX around Oct 2025.
+
+Stage Summary:
+- Phase 12 confirmed defect (breakout_retest first-breakout bug) FIXED.
+- Phase 12 regression tests (14 new) all pass.
+- Full test suite: 303 passing (289 prior + 14 new).
+- Strategy investigation complete — root cause of Phase 11's 0-trade
+  result for breakout_retest on the full series is fixed.
+- Pair universe expanded to 96 active pairs (from 5 in Phase 11).
+- Ready to proceed to: candidate variants research + Phase 12
+  backtest runner + commit/push/deploy.

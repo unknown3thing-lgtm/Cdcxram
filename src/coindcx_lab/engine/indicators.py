@@ -248,51 +248,66 @@ class BreakoutRetestSignal:
 
 def breakout_retest(candles: List[Candle], lookback: int = 20
                     ) -> BreakoutRetestSignal:
-    """Detect a recent breakout above resistance and a subsequent retest.
+    """Detect a recent upside breakout and a subsequent retest.
 
-    A breakout-up is registered at the most recent bar where the close moves
-    above the highest high of the prior `lookback` bars. A retest is
-    registered if, after the breakout, price returns to within 0.5% of the
-    breakout level without breaking below it.
+    Phase 12 BUG FIX: the previous implementation found only the FIRST
+    breakout in the entire series (whether up or down). If the first
+    breakout was DOWN, the long-only strategy could NEVER fire for the
+    rest of the series — even when later UP breakouts occurred.
+
+    The docstring already said "most recent bar" but the code used
+    `break` + `breakout_idx is None`, capturing only the earliest
+    breakout. This was a confirmed defect traced in Phase 12 via the
+    strategy diagnostic script: breakout_retest on a 1000-candle BTC
+    1h series returned direction="down" (first breakout at bar 41 was
+    a down-move), causing 940/940 evaluations to return WAIT — yet
+    Phase 11's per-segment runs DID produce 20 trades because each
+    segment's prefix+segment series happened to start with an up-move.
+
+    Phase 12 fix: find the MOST RECENT UP breakout in the series
+    (long-only strategy only cares about up-breakouts). If a retest
+    follows that most-recent up-breakout, return has_retest=True.
+
+    Backward compatibility:
+      * If at least one UP breakout exists, returns has_breakout=True,
+        direction="up", with the most-recent up-breakout's idx/level.
+      * If no UP breakout exists, returns has_breakout=False (so the
+        long-only strategy returns WAIT, same as before).
+      * The previous behavior of returning direction="down" is removed
+        — the strategy never used it (it always returned WAIT on
+        direction != "up"), so no behavior change for the strategy.
     """
     n = len(candles)
     if n < lookback + 3:
         return BreakoutRetestSignal(False, False)
-    # Find latest breakout index
-    breakout_idx: Optional[int] = None
-    breakout_level: Optional[float] = None
-    direction = "none"
+    # Phase 12: scan ALL bars (no `break`), tracking the most recent
+    # UP breakout. We no longer track down-breakouts because the
+    # long-only strategy ignores them.
+    most_recent_up_breakout_idx: Optional[int] = None
+    most_recent_up_breakout_level: Optional[float] = None
     for i in range(lookback, n):
         window_high = max(c.high for c in candles[i - lookback:i])
-        window_low  = min(c.low  for c in candles[i - lookback:i])
-        if candles[i].close > window_high and breakout_idx is None:
-            breakout_idx = i
-            breakout_level = window_high
-            direction = "up"
-            break
-        if candles[i].close < window_low and breakout_idx is None:
-            breakout_idx = i
-            breakout_level = window_low
-            direction = "down"
-            break
-    if breakout_idx is None:
+        if candles[i].close > window_high:
+            # Found an UP breakout at bar i. Keep scanning — we want
+            # the MOST RECENT one, not the first.
+            most_recent_up_breakout_idx = i
+            most_recent_up_breakout_level = window_high
+    if most_recent_up_breakout_idx is None:
+        # No UP breakout anywhere in the series.
         return BreakoutRetestSignal(False, False, direction="none")
-    # Look for retest in the bars AFTER the breakout (but not at the breakout bar)
+    # Look for retest in the bars AFTER the most-recent up-breakout.
+    breakout_idx = most_recent_up_breakout_idx
+    breakout_level = most_recent_up_breakout_level
+    direction = "up"
     retest_idx: Optional[int] = None
     if breakout_idx < n - 1:
         for j in range(breakout_idx + 1, n):
             c = candles[j]
-            if direction == "up":
-                # price comes back near the level
-                if abs(c.low - breakout_level) / breakout_level < 0.005 \
-                        and c.close > breakout_level:
-                    retest_idx = j
-                    break
-            elif direction == "down":
-                if abs(c.high - breakout_level) / breakout_level < 0.005 \
-                        and c.close < breakout_level:
-                    retest_idx = j
-                    break
+            # price comes back near the level without breaking below
+            if abs(c.low - breakout_level) / breakout_level < 0.005 \
+                    and c.close > breakout_level:
+                retest_idx = j
+                break
     return BreakoutRetestSignal(
         has_breakout=True,
         has_retest=(retest_idx is not None),
