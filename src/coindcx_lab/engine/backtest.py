@@ -112,6 +112,16 @@ class BacktestResult:
     buy_hold_return_pct: float
     trades: List[Trade]
     equity_curve: List[Tuple[int, float]]   # [(close_time_ms, equity)]
+    # Phase 10: warm-up bookkeeping. Bars at i < segment_start_idx are
+    # warm-up prefix bars (used for indicator init only). Only bars at
+    # i >= segment_start_idx are eligible for signal evaluation / trade
+    # scoring / equity recording.
+    segment_start_idx: int = 0
+    total_bars: int = 0          # bars in the segment window (excluding prefix)
+    eligible_bars: int = 0       # bars where signal eval was actually permitted
+                                 # (= bars where i >= segment_start_idx AND
+                                 #  warm-up gates passed)
+    warmup_prefix_len: int = 0   # length of the warm-up prefix (0 for full)
     warnings: List[str] = field(default_factory=list)
 
     def to_summary(self) -> dict:
@@ -134,6 +144,10 @@ class BacktestResult:
             "est_fees_inr": self.est_fees_inr,
             "est_slippage_inr": self.est_slippage_inr,
             "buy_hold_return_pct": self.buy_hold_return_pct,
+            "segment_start_idx": self.segment_start_idx,
+            "total_bars": self.total_bars,
+            "eligible_bars": self.eligible_bars,
+            "warmup_prefix_len": self.warmup_prefix_len,
             "warnings": list(self.warnings),
         }
 
@@ -156,8 +170,34 @@ class Backtester:
     # ------------------------------------------------------------------ run
     def run(self, *, pair: str, candles: List[Candle],
             provenance: Optional[DataProvenance] = None,
-            segment: str = "full") -> BacktestResult:
-        """Run a backtest over `candles` (chronologically ordered)."""
+            segment: str = "full",
+            warmup_prefix: Optional[List[Candle]] = None,
+            segment_start_idx: int = 0) -> BacktestResult:
+        """Run a backtest over `candles` (chronologically ordered).
+
+        Phase 10 — warm-up prefix support
+        --------------------------------
+        If `warmup_prefix` is provided (a list of OLDER candles from the
+        previous segment), the engine PREPENDS it to `candles` for
+        indicator initialization. `segment_start_idx` MUST equal
+        `len(warmup_prefix)` and marks the first bar of the actual
+        scored segment.
+
+        Behaviour:
+          * Indicators at bar `i` see candles[0..i] (prefix + segment).
+            No future-data leakage.
+          * Signal evaluation is permitted only when:
+                i + 1 >= cfg.warmup_skip_bars
+              AND i + 1 >= strategy.warmup_candles
+            AND i >= segment_start_idx      (the bar is INSIDE the segment)
+          * Trades whose entry_idx < segment_start_idx are NEVER scored
+            (warm-up leakage prevention). Because the loop starts with
+            `pos = None`, no carried-in position exists.
+          * Equity curve records only bars at i >= segment_start_idx.
+          * Buy-and-hold uses the segment's first/last prices
+            (candles[segment_start_idx].open and candles[-1].close),
+            so the benchmark reflects only the segment.
+        """
         if provenance is None:
             provenance = DataProvenance(
                 source=SourceKind.SIMULATED,
@@ -165,49 +205,67 @@ class Backtester:
                 fetched_at_utc=datetime.now(timezone.utc),
                 note="backtest fixture",
             )
-        # Defensive copy & sort. We drop incomplete latest so that signals
-        # never look at a still-forming bar.
-        candles = sorted(candles, key=lambda c: c.open_time_ms)
-        candles = drop_incomplete_latest(candles) if candles and not candles[-1].complete else candles
+
+        # ----- assemble (warmup_prefix + candles) -----
+        # Both lists are sorted by open_time_ms. We must NOT duplicate
+        # any candle that appears in both (e.g., the boundary candle).
+        if warmup_prefix:
+            # Defensive copies & sort
+            prefix_sorted = sorted(warmup_prefix, key=lambda c: c.open_time_ms)
+            seg_sorted = sorted(candles, key=lambda c: c.open_time_ms)
+            # De-duplicate by open_time_ms (segment wins over prefix if overlap)
+            prefix_times = {c.open_time_ms for c in seg_sorted}
+            prefix_clean = [c for c in prefix_sorted
+                            if c.open_time_ms not in prefix_times]
+            all_candles = prefix_clean + seg_sorted
+            # Verify segment_start_idx points at the first SEGMENT candle.
+            # We rely on the caller to pass the correct value, but we
+            # also defensively re-derive it from timestamps if there's
+            # a mismatch.
+            actual_seg_start = len(all_candles) - len(seg_sorted)
+            if segment_start_idx <= 0:
+                segment_start_idx = actual_seg_start
+        else:
+            all_candles = sorted(candles, key=lambda c: c.open_time_ms)
+            if segment_start_idx < 0:
+                segment_start_idx = 0
+
+        # Drop incomplete latest (still-forming bar). Only drops at most
+        # one bar at the END of the series (whether it's a segment or
+        # prefix+segment).
+        all_candles = drop_incomplete_latest(all_candles) \
+            if all_candles and not all_candles[-1].complete else all_candles
 
         cfg = self.config
         s = self.settings
         risk_engine = self.risk_engine_for(cfg.starting_capital_inr)
         state = RiskState(initial_inr=cfg.starting_capital_inr)
-        state.daily = DailyLossState(day_iso=_day_iso_from_ms(candles[0].open_time_ms)
-                                     if candles else "")
+        state.daily = DailyLossState(
+            day_iso=_day_iso_from_ms(all_candles[0].open_time_ms)
+            if all_candles else "")
 
         trades: List[Trade] = []
         equity_curve: List[Tuple[int, float]] = []
+        eligible_bars = 0   # bars where signal eval was permitted (segment only)
 
-        # Position state
-        pos = None    # dict with keys: entry, stop, target, qty, entry_idx, entry_time_ms, strategy, position_value
-        open_at_idx = -1
+        # Position state — always None at segment start (no carried-in pos).
+        pos = None
         # Risk gating flags
         paused_today = False
         paused_entirely = False
 
-        # Pre-compute indicators incrementally? Simplest is to recompute
-        # IndicatorSet on the prefix candles[:i+1] only when we want to
-        # evaluate a signal. To keep the test suite fast we recompute only
-        # at bar i when (i+1) >= strategy.warmup_candles. For real-time this
-        # would be O(N^2); for backtests on <= 2000 bars it's fine.
-        for i in range(len(candles)):
+        for i in range(len(all_candles)):
             # New day reset?
-            today_iso = _day_iso_from_ms(candles[i].open_time_ms)
+            today_iso = _day_iso_from_ms(all_candles[i].open_time_ms)
             if state.daily.day_iso != today_iso:
                 state.daily.reset(today_iso)
                 paused_today = False
 
-            # If in a position, check stop/target on THIS bar (using
-            # high/low, which are now "past" — we are evaluating at bar i's
-            # close after the bar closed).
+            # If in a position, check stop/target on THIS bar.
             if pos is not None:
-                exit_price, exit_reason = self._check_exit(pos, candles[i],
-                                                           cfg)
+                exit_price, exit_reason = self._check_exit(
+                    pos, all_candles[i], cfg)
                 if exit_reason is not None:
-                    # Exit fill at exit_price (next bar's open OR this bar's
-                    # stop/target depending on reason).
                     exit_idx = i
                     pnl = risk_engine.on_trade_closed(
                         entry=pos["entry"], stop=pos["stop"],
@@ -223,7 +281,7 @@ class Backtester:
                         pair=pair, strategy=pos["strategy"],
                         entry_idx=pos["entry_idx"], exit_idx=exit_idx,
                         entry_time_ms=pos["entry_time_ms"],
-                        exit_time_ms=candles[i].close_time_ms,
+                        exit_time_ms=all_candles[i].close_time_ms,
                         entry=pos["entry"], stop=pos["stop"],
                         target=pos["target"], exit_price=exit_price,
                         qty=pos["qty"], position_value=pos["position_value"],
@@ -233,7 +291,6 @@ class Backtester:
                         exit_reason=exit_reason,
                     ))
                     pos = None
-                    # Daily-loss & drawdown re-checks after the close.
                     if cfg.enforce_risk_limits:
                         day_loss_pct = (state.daily.realized_pnl_day /
                                         max(state.peak_equity, 1.0)) * 100.0
@@ -243,44 +300,43 @@ class Backtester:
                             paused_entirely = True
 
             # Evaluate signal at bar i's close (using only candles[:i+1]).
-            if pos is None and not paused_today and not paused_entirely \
-                    and i + 1 >= cfg.warmup_skip_bars \
-                    and i + 1 >= self.strategy.warmup_candles:
-                # No look-ahead: pass only candles up to and including i.
-                prefix = candles[:i + 1]
-                # Mark only the LAST bar as incomplete would be wrong —
-                # by definition at this point in the loop, bar i IS closed
-                # (we are processing AFTER it closed).
+            # Phase 10: signals are evaluated ONLY inside the segment
+            # (i >= segment_start_idx). The warm-up prefix supplies
+            # indicator history but cannot generate scored trades.
+            in_segment = (i >= segment_start_idx)
+            warmup_ok = (i + 1 >= cfg.warmup_skip_bars
+                         and i + 1 >= self.strategy.warmup_candles)
+            if in_segment and warmup_ok:
+                eligible_bars += 1
+
+            if (pos is None and not paused_today and not paused_entirely
+                    and in_segment and warmup_ok):
+                prefix = all_candles[:i + 1]
                 sigs = self.signal_engine.evaluate(
                     pair=pair, interval="1h",
                     candles=prefix, provenance=provenance,
                     risk_state=state)
-                buy_sigs = [s for s in sigs if s.state is SignalState.BUY_CANDIDATE]
+                buy_sigs = [s for s in sigs
+                            if s.state is SignalState.BUY_CANDIDATE]
                 if buy_sigs:
                     best = max(buy_sigs,
                                key=lambda x: x.rr_after_cost or 0.0)
-                    # Try to enter at next bar's OPEN. If i is the last bar,
-                    # we cannot enter — end of data.
-                    if i + 1 < len(candles):
-                        entry = candles[i + 1].open
-                        # Apply adverse entry slippage.
+                    if i + 1 < len(all_candles):
+                        entry = all_candles[i + 1].open
                         entry_adjusted = entry * (1 + s.slippage_pct / 100.0)
                         stop = best.stop
                         target = best.target
-                        # Validate geometry after slippage.
                         if stop >= entry_adjusted or target <= entry_adjusted:
-                            # Skip this signal.
                             pass
                         else:
                             plan = risk_engine.plan_position(
                                 pair=pair, entry=entry_adjusted,
                                 stop=stop, target=target, state=state)
                             if plan.decision is RiskDecision.ACCEPTED:
-                                # Cash check: must have enough cash to pay
-                                # entry_value + entry_fee + entry_slippage.
-                                required = plan.position_value + plan.est_entry_cost + plan.est_slippage_cost / 2
+                                required = (plan.position_value
+                                            + plan.est_entry_cost
+                                            + plan.est_slippage_cost / 2)
                                 if state.available_cash < required:
-                                    # Skip — would push cash negative.
                                     pass
                                 else:
                                     risk_engine.on_trade_opened(
@@ -291,31 +347,29 @@ class Backtester:
                                         "stop": stop, "target": target,
                                         "qty": plan.qty,
                                         "entry_idx": i + 1,
-                                        "entry_time_ms": candles[i + 1].open_time_ms,
+                                        "entry_time_ms": all_candles[i + 1].open_time_ms,
                                         "strategy": best.strategy,
                                         "position_value": plan.position_value,
                                     }
-                                    open_at_idx = i + 1
 
-            # End-of-bar equity mark
-            # Mark-to-market: if position is open, equity = cash + qty * close
-            # where cash = available_cash = initial + realized - open_positions_value
-            # So: mtm_equity = (initial + realized - entry*qty) + qty*close
-            #                    = initial + realized + qty*(close - entry)
-            if pos is not None:
-                cur_equity = state.available_cash + pos["qty"] * candles[i].close
-            else:
-                cur_equity = state.current_equity
-            equity_curve.append((candles[i].close_time_ms, cur_equity))
+            # End-of-bar equity mark — recorded ONLY for segment bars.
+            if in_segment:
+                if pos is not None:
+                    cur_equity = (state.available_cash
+                                  + pos["qty"] * all_candles[i].close)
+                else:
+                    cur_equity = state.current_equity
+                equity_curve.append(
+                    (all_candles[i].close_time_ms, cur_equity))
 
         # End of data: force-close any open position at last close.
-        if pos is not None and candles:
-            exit_price = candles[-1].close
-            exit_idx = len(candles) - 1
+        if pos is not None and all_candles:
+            exit_price = all_candles[-1].close
+            exit_idx = len(all_candles) - 1
             pnl = risk_engine.on_trade_closed(
                 entry=pos["entry"], stop=pos["stop"], target=pos["target"],
                 qty=pos["qty"], exit_price=exit_price, state=state,
-                day_iso=_day_iso_from_ms(candles[-1].open_time_ms))
+                day_iso=_day_iso_from_ms(all_candles[-1].open_time_ms))
             entry_fee = pos["entry"] * pos["qty"] * s.fee_pct / 100.0
             exit_fee  = exit_price * pos["qty"] * s.fee_pct / 100.0
             slip      = (pos["entry"] * pos["qty"] * s.slippage_pct / 100.0
@@ -325,7 +379,7 @@ class Backtester:
                 pair=pair, strategy=pos["strategy"],
                 entry_idx=pos["entry_idx"], exit_idx=exit_idx,
                 entry_time_ms=pos["entry_time_ms"],
-                exit_time_ms=candles[-1].close_time_ms,
+                exit_time_ms=all_candles[-1].close_time_ms,
                 entry=pos["entry"], stop=pos["stop"],
                 target=pos["target"], exit_price=exit_price,
                 qty=pos["qty"], position_value=pos["position_value"],
@@ -335,9 +389,20 @@ class Backtester:
                 exit_reason="end_of_data",
             ))
             pos = None
+            # Equity snapshot for the final bar already recorded above
+            # (in-segment branch), but the force-close changed realized
+            # PnL AFTER the snapshot was taken. Patch the last equity
+            # point to reflect post-close equity.
+            if equity_curve:
+                last_ts = equity_curve[-1][0]
+                equity_curve[-1] = (last_ts, state.current_equity)
 
-        return self._summarise(cfg, segment, pair, candles, trades,
-                               equity_curve, state)
+        return self._summarise(cfg, segment, pair, all_candles, trades,
+                               equity_curve, state,
+                               segment_start_idx=segment_start_idx,
+                               warmup_prefix_len=(segment_start_idx
+                                                  if warmup_prefix else 0),
+                               eligible_bars=eligible_bars)
 
     # ------------------------------------------------------------------
     def _check_exit(self, pos, bar: Candle, cfg: BacktestConfig
@@ -386,7 +451,10 @@ class Backtester:
     def _summarise(self, cfg: BacktestConfig, segment: str, pair: str,
                    candles: List[Candle], trades: List[Trade],
                    equity_curve: List[Tuple[int, float]],
-                   state: RiskState) -> BacktestResult:
+                   state: RiskState,
+                   *, segment_start_idx: int = 0,
+                   warmup_prefix_len: int = 0,
+                   eligible_bars: int = 0) -> BacktestResult:
         starting = cfg.starting_capital_inr
         ending = state.current_equity
         if equity_curve:
@@ -396,13 +464,20 @@ class Backtester:
         total_inr = ending - starting
         total_pct = (total_inr / starting) * 100.0 if starting > 0 else 0.0
 
-        # Buy-and-hold benchmark: buy at first candle open, sell at last close.
-        if candles:
-            bh_entry = candles[0].open
-            bh_exit  = candles[-1].close
+        # Buy-and-hold benchmark: segment-only first/last prices.
+        # Phase 10: previously the function used candles[0]/candles[-1],
+        # which contaminated the benchmark with warm-up prefix data.
+        # Now uses candles[segment_start_idx]/candles[-1] so the benchmark
+        # reflects only the segment being evaluated.
+        seg_candles = candles[segment_start_idx:] if segment_start_idx > 0 \
+            else candles
+        if seg_candles:
+            bh_entry = seg_candles[0].open
+            bh_exit  = seg_candles[-1].close
             units = starting / bh_entry if bh_entry > 0 else 0.0
             bh_ending = units * bh_exit
-            bh_pct = ((bh_ending - starting) / starting) * 100.0 if starting > 0 else 0.0
+            bh_pct = ((bh_ending - starting) / starting) * 100.0 \
+                if starting > 0 else 0.0
         else:
             bh_pct = 0.0
 
@@ -425,18 +500,38 @@ class Backtester:
         avg_loss = (sum(t.pnl_net for t in losses) / len(losses)) if losses else 0.0
         gross_profit = sum(t.pnl_net for t in wins)
         gross_loss_abs = -sum(t.pnl_net for t in losses)
-        profit_factor = (gross_profit / gross_loss_abs) if gross_loss_abs > 0 else float("inf") if gross_profit > 0 else 0.0
-        expectancy = (sum(t.pnl_net for t in trades) / len(trades)) if trades else 0.0
+        profit_factor = (gross_profit / gross_loss_abs) \
+            if gross_loss_abs > 0 else (float("inf")
+                                         if gross_profit > 0 else 0.0)
+        expectancy = (sum(t.pnl_net for t in trades) / len(trades)) \
+            if trades else 0.0
 
-        # Exposure (sum of holding bars / total bars)
+        # Exposure (sum of holding bars / total bars) — segment bars only.
         total_holding_bars = sum(t.holding_bars for t in trades)
-        total_bars = max(len(candles), 1)
+        total_bars = max(len(seg_candles), 1)
         exposure_pct = (total_holding_bars / total_bars) * 100.0
 
         # Turnover
         turnover_inr = sum(t.position_value for t in trades)
         est_fees = sum(t.entry_fee + t.exit_fee for t in trades)
         est_slip = sum(t.slippage_cost for t in trades)
+
+        warnings = []
+        # Distinguish zero-trade outcome from missing-data / calc failure.
+        if not seg_candles:
+            warnings.append("empty_segment: no candles in segment window")
+        elif eligible_bars == 0 and not trades:
+            warnings.append(
+                f"no_eligible_bars: segment had {len(seg_candles)} bars "
+                f"but 0 were eligible for signal evaluation "
+                f"(warmup_skip_bars={cfg.warmup_skip_bars}, "
+                f"strategy.warmup_candles={self.strategy.warmup_candles})")
+        elif not trades and eligible_bars > 0:
+            # Eligible bars existed but no BUY signals fired — record
+            # this so callers can distinguish "no signals" from "no data".
+            warnings.append(
+                f"zero_trades_with_eligible_bars: {eligible_bars} eligible "
+                f"bars evaluated but no BUY signals fired")
 
         return BacktestResult(
             config=cfg, segment=segment,
@@ -455,14 +550,45 @@ class Backtester:
             buy_hold_return_pct=bh_pct,
             trades=trades,
             equity_curve=equity_curve,
-            warnings=[],
+            segment_start_idx=segment_start_idx,
+            total_bars=len(seg_candles),
+            eligible_bars=eligible_bars,
+            warmup_prefix_len=warmup_prefix_len,
+            warnings=warnings,
         )
 
     # ---------------------------------------------------- walk-forward split
     def walk_forward(self, *, pair: str, candles: List[Candle],
                      dev_end_iso: str, val_end_iso: str) -> Dict[str, BacktestResult]:
-        """Run dev/val/oos splits by ISO date boundaries."""
-        # Partition candles
+        """Run dev/val/oos splits by ISO date boundaries.
+
+        Phase 10 — warm-up prefix
+        -------------------------
+        Each non-dev segment is run with a warm-up prefix taken from
+        the END of the immediately-preceding segment, of length
+        `strategy.warmup_candles`. This allows EMA200 (which needs 200
+        bars to seed its SMA) to initialise BEFORE the scored segment
+        begins, so trend-following strategies can actually fire on
+        short segments (e.g., a 125-bar val window).
+
+        Guarantees:
+          * Indicators at bar i in segment N see only bars 0..i (prefix
+            from segment N-1 + segment N). No future-data leakage.
+          * Trades whose entry_idx < segment_start_idx are NOT scored
+            (the run() loop enforces this via the `in_segment` gate).
+          * Each segment starts with `pos = None` (no carried-in
+            position). This means a trade that would have straddled
+            a segment boundary is not represented — instead the
+            segment evaluates signals on its own bars only.
+          * Buy-and-hold uses each segment's own first/last prices.
+          * Equity curve records only bars inside the segment.
+
+        If the dev segment is itself shorter than warmup_candles,
+        no prefix is available for val/oos — in that case we fall
+        back to running the segment without a prefix and emit a
+        warning (the segment will report 0 eligible bars).
+        """
+        # Partition candles chronologically by date boundary.
         dev, val, oos = [], [], []
         for c in candles:
             day = _day_iso_from_ms(c.open_time_ms)
@@ -473,25 +599,68 @@ class Backtester:
             else:
                 oos.append(c)
 
+        # Required warm-up length per strategy.
+        warmup_n = max(self.strategy.warmup_candles,
+                       self.config.warmup_skip_bars)
+
+        def _prefix_for(prior_segs: List[List[Candle]]) -> List[Candle]:
+            """Take the last `warmup_n` candles from prior segments
+            (in chronological order). Returns [] if not enough data."""
+            combined: List[Candle] = []
+            for seg in prior_segs:
+                combined.extend(seg)
+            combined.sort(key=lambda c: c.open_time_ms)
+            if len(combined) < warmup_n:
+                return []  # signal: no usable prefix
+            return combined[-warmup_n:]
+
         out: Dict[str, BacktestResult] = {}
-        for name, seg in (("dev", dev), ("val", val), ("oos", oos)):
-            if len(seg) < max(self.strategy.warmup_candles, 50):
-                out[name] = BacktestResult(
-                    config=self.config, segment=name,
-                    starting_capital=self.config.starting_capital_inr,
-                    ending_equity=self.config.starting_capital_inr,
-                    total_return_inr=0.0, total_return_pct=0.0,
-                    net_pnl_after_costs=0.0, max_drawdown_pct=0.0,
-                    win_rate_pct=0.0, avg_win_inr=0.0, avg_loss_inr=0.0,
-                    profit_factor=0.0, expectancy_inr=0.0,
-                    num_trades=0, exposure_pct=0.0, turnover_inr=0.0,
-                    est_fees_inr=0.0, est_slippage_inr=0.0,
-                    buy_hold_return_pct=0.0,
-                    trades=[], equity_curve=[],
-                    warnings=[f"segment {name} too short: {len(seg)} bars"])
-                continue
-            out[name] = self.run(pair=pair, candles=seg, segment=name)
+        # DEV: first segment — no prefix available by definition.
+        out["dev"] = self._run_segment(pair=pair, seg=dev, segment="dev",
+                                        warmup_prefix=[], prior_segs=[])
+        # VAL: prefix = last warmup_n of dev.
+        out["val"] = self._run_segment(pair=pair, seg=val, segment="val",
+                                       warmup_prefix=_prefix_for([dev]),
+                                       prior_segs=[dev])
+        # OOS: prefix = last warmup_n of (dev + val).
+        out["oos"] = self._run_segment(pair=pair, seg=oos, segment="oos",
+                                       warmup_prefix=_prefix_for([dev, val]),
+                                       prior_segs=[dev, val])
         return out
+
+    def _run_segment(self, *, pair: str, seg: List[Candle],
+                     segment: str, warmup_prefix: List[Candle],
+                     prior_segs: List[List[Candle]]) -> BacktestResult:
+        """Run one walk-forward segment. If the segment itself is too
+        short to produce ANY scored bars (with or without prefix), emit
+        an explicit empty BacktestResult with a warning."""
+        warmup_n = max(self.strategy.warmup_candles,
+                       self.config.warmup_skip_bars)
+        # Minimum segment size for any scoring: must have at least 1 bar.
+        if not seg:
+            return BacktestResult(
+                config=self.config, segment=segment,
+                starting_capital=self.config.starting_capital_inr,
+                ending_equity=self.config.starting_capital_inr,
+                total_return_inr=0.0, total_return_pct=0.0,
+                net_pnl_after_costs=0.0, max_drawdown_pct=0.0,
+                win_rate_pct=0.0, avg_win_inr=0.0, avg_loss_inr=0.0,
+                profit_factor=0.0, expectancy_inr=0.0,
+                num_trades=0, exposure_pct=0.0, turnover_inr=0.0,
+                est_fees_inr=0.0, est_slippage_inr=0.0,
+                buy_hold_return_pct=0.0,
+                trades=[], equity_curve=[],
+                segment_start_idx=0, total_bars=0,
+                eligible_bars=0, warmup_prefix_len=len(warmup_prefix),
+                warnings=[f"segment {segment} empty: 0 bars"])
+        # If no prefix is available AND the segment is shorter than
+        # warmup, signal eval will yield 0 eligible bars — still run
+        # (so the equity curve and buy-hold are reported) but the
+        # warning will be emitted by _summarise.
+        result = self.run(pair=pair, candles=seg, segment=segment,
+                          warmup_prefix=warmup_prefix or None,
+                          segment_start_idx=len(warmup_prefix))
+        return result
 
 
 def _day_iso_from_ms(ms: int) -> str:

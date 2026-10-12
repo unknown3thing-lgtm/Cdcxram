@@ -74,12 +74,13 @@ class TestLifecycle:
         s = _settings_for_paper()
         pe = PaperTradingEngine(settings=s, store=tmp_store)
         sig = _buy_signal(entry=100.0, stop=98.0, target=104.0)
-        pe.open_position(signal=sig)
-        # Make a candle that hits the target (high >= 104)
-        candle = Candle(open_time_ms=1_700_000_000_000,
+        trade, _ = pe.open_position(signal=sig)
+        # Phase 10: candle must be AFTER entry time (matches real cron
+        # behaviour — cron always fetches recent candles).
+        candle = Candle(open_time_ms=trade.entry_time_ms + 3_600_000,
                         open=100, high=105, low=99, close=104,
                         volume=10,
-                        close_time_ms=1_700_000_003_600 - 1,
+                        close_time_ms=trade.entry_time_ms + 7_200_000 - 1,
                         complete=True)
         closed = pe.check_exits(candles_by_pair={"B-BTCINR": [candle]})
         assert len(closed) == 1
@@ -96,11 +97,11 @@ class TestLifecycle:
         s = _settings_for_paper()
         pe = PaperTradingEngine(settings=s, store=tmp_store)
         sig = _buy_signal(entry=100.0, stop=98.0, target=104.0)
-        pe.open_position(signal=sig)
-        candle = Candle(open_time_ms=1_700_000_000_000,
+        trade, _ = pe.open_position(signal=sig)
+        candle = Candle(open_time_ms=trade.entry_time_ms + 3_600_000,
                         open=100, high=101, low=97, close=98,
                         volume=10,
-                        close_time_ms=1_700_000_003_600 - 1,
+                        close_time_ms=trade.entry_time_ms + 7_200_000 - 1,
                         complete=True)
         closed = pe.check_exits(candles_by_pair={"B-BTCINR": [candle]})
         assert len(closed) == 1
@@ -112,12 +113,12 @@ class TestLifecycle:
         s = _settings_for_paper()
         pe = PaperTradingEngine(settings=s, store=tmp_store)
         sig = _buy_signal(entry=100.0, stop=98.0, target=104.0)
-        pe.open_position(signal=sig)
+        trade, _ = pe.open_position(signal=sig)
         # A bar whose range covers BOTH stop and target
-        candle = Candle(open_time_ms=1_700_000_000_000,
+        candle = Candle(open_time_ms=trade.entry_time_ms + 3_600_000,
                         open=100, high=105, low=97, close=99,
                         volume=10,
-                        close_time_ms=1_700_000_003_600 - 1,
+                        close_time_ms=trade.entry_time_ms + 7_200_000 - 1,
                         complete=True)
         closed = pe.check_exits(candles_by_pair={"B-BTCINR": [candle]},
                                   assume_stop_first_on_ambiguous=True)
@@ -127,18 +128,18 @@ class TestLifecycle:
         s = _settings_for_paper()
         pe = PaperTradingEngine(settings=s, store=tmp_store)
         sig = _buy_signal(entry=100.0, stop=98.0, target=104.0)
-        pe.open_position(signal=sig)
+        trade, _ = pe.open_position(signal=sig)
         # Latest bar is INCOMPLETE and would hit the target — but should be
         # ignored because we only act on completed bars.
-        candle_complete = Candle(open_time_ms=1_700_000_000_000,
+        candle_complete = Candle(open_time_ms=trade.entry_time_ms + 3_600_000,
                                   open=100, high=101, low=99, close=100,
                                   volume=10,
-                                  close_time_ms=1_700_000_003_600 - 1,
+                                  close_time_ms=trade.entry_time_ms + 7_200_000 - 1,
                                   complete=True)
-        candle_incomplete = Candle(open_time_ms=1_700_000_003_600,
+        candle_incomplete = Candle(open_time_ms=trade.entry_time_ms + 7_200_000,
                                     open=100, high=105, low=99, close=104,
                                     volume=10,
-                                    close_time_ms=1_700_000_007_200 - 1,
+                                    close_time_ms=trade.entry_time_ms + 10_800_000 - 1,
                                     complete=False)
         closed = pe.check_exits(
             candles_by_pair={"B-BTCINR": [candle_complete, candle_incomplete]})

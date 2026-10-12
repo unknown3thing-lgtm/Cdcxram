@@ -98,6 +98,12 @@ class PaperTradingEngine:
     """Single shared paper-trading engine. Backed by SQLite."""
 
     DEFAULT_STARTING_CAPITAL = 2000.0
+    # Phase 10: gap-detection threshold. If the time since the last
+    # successful exit check exceeds this many hours, we treat the
+    # situation as a "delayed cron run" and try to recover by fetching
+    # more candles (caller-side) and processing all eligible completed
+    # candles since the last check.
+    DEFAULT_GAP_THRESHOLD_HOURS = 5.0
 
     def __init__(self, *, settings: RiskSettings, store: Store):
         self.settings = settings
@@ -111,15 +117,23 @@ class PaperTradingEngine:
             self.state.daily = DailyLossState(
                 day_iso=_day_iso_from_ms(int(datetime.now(timezone.utc).timestamp() * 1000))
             )
+            self.last_exit_check_ms = 0
             self._persist_state()
         else:
             self.state = _state_from_blob(blob, settings)
+            # Phase 10: last_exit_check_ms is persisted at the top
+            # level of the state blob (NOT inside RiskState, which
+            # remains a pure risk-accounting dataclass).
+            self.last_exit_check_ms = int(blob.get("last_exit_check_ms", 0))
         # Persist latest settings (does not touch history)
         store.save_settings("risk", _settings_to_dict(settings))
 
     # ---------------------------------------------------------- persistence
     def _persist_state(self) -> None:
-        self.store.save_state(_state_to_blob(self.state))
+        blob = _state_to_blob(self.state)
+        # Phase 10: persist last_exit_check_ms alongside RiskState.
+        blob["last_exit_check_ms"] = getattr(self, "last_exit_check_ms", 0)
+        self.store.save_state(blob)
 
     def reconcile_state(self) -> dict:
         """Reconcile paper_state with the actual trades in the database.
@@ -299,44 +313,133 @@ class PaperTradingEngine:
     # ---------------------------------------------------------- exit
     def check_exits(self, *,
                     candles_by_pair: Dict[str, List[Candle]],
-                    assume_stop_first_on_ambiguous: bool = True
+                    assume_stop_first_on_ambiguous: bool = True,
+                    current_time_ms: Optional[int] = None,
                     ) -> List[PaperTrade]:
-        """For each open trade, check whether the latest candle hit the
-        stop or target. If so, close the trade.
+        """Backward-compatible wrapper. Returns just the closed trades.
 
-        Conservative: if both stop and target fall within the same bar's
-        range, assume the stop hit first by default.
+        Phase 10: now delegates to check_exits_with_recovery which adds
+        gap detection, entry-time candle filtering, and incomplete-coverage
+        flagging. Existing callers that only consume the closed-trade list
+        continue to work; new callers should use
+        check_exits_with_recovery() directly to inspect gap / coverage.
         """
+        result = self.check_exits_with_recovery(
+            candles_by_pair=candles_by_pair,
+            assume_stop_first_on_ambiguous=assume_stop_first_on_ambiguous,
+            current_time_ms=current_time_ms)
+        return result["closed_trades"]
+
+    def check_exits_with_recovery(self, *,
+                    candles_by_pair: Dict[str, List[Candle]],
+                    assume_stop_first_on_ambiguous: bool = True,
+                    current_time_ms: Optional[int] = None,
+                    interval_ms: int = 3_600_000,
+                    ) -> dict:
+        """Phase 10 paper-exit recovery — the primary exit-checking entry
+        point. Returns a structured dict (NOT just a list of trades) so
+        callers (cron, tests) can distinguish:
+
+          * closed trades (list of PaperTrade)
+          * incomplete_pairs (pairs whose candle data was missing/empty/
+            stale and therefore could NOT be reliably exit-checked)
+          * gap_detected (the cron was delayed > DEFAULT_GAP_THRESHOLD_HOURS
+            since the last successful exit check)
+          * gap_hours (the size of the gap)
+          * processed_at_ms (timestamp at which this check ran — used
+            by the caller to update `last_exit_check_ms`)
+
+        Behaviour guarantees:
+          * Candles BEFORE the trade's entry_time_ms are NEVER used to
+            trigger an exit (the trade wasn't open yet). This was a
+            known limitation in the previous implementation.
+          * Candles that fall BEFORE `last_exit_check_ms - interval_ms`
+            (i.e., before the previous successful check, with a one-bar
+            safety buffer) are ALSO ignored — they represent pre-gap
+            history we already processed.
+          * If a pair has OPEN trades but is absent from candles_by_pair
+            OR has zero candles, the pair is recorded in
+            `incomplete_pairs` and NO "no-exit" claim is made for it.
+            The cron must surface this to the operator.
+          * Incomplete (still-forming) candles are skipped (unchanged).
+          * Conservative stop-first behaviour when both stop and target
+            fall inside the same candle (unchanged).
+          * Idempotency: before applying UPDATE, we re-read the trade
+            from the store. If the trade is no longer OPEN (a concurrent
+            cron already closed it), we skip the UPDATE entirely —
+            preventing duplicate accounting under retries / races.
+          * `last_exit_check_ms` is updated to `processed_at_ms` AFTER
+            a successful (no exception) run. If the run throws, the
+            field is NOT updated, so the next run will still detect
+            the gap.
+        """
+        now_ms = current_time_ms or int(datetime.now(timezone.utc).timestamp() * 1000)
+        last_check_ms = self.last_exit_check_ms
+        gap_hours = ((now_ms - last_check_ms) / 3_600_000.0) if last_check_ms > 0 else None
+        gap_detected = (gap_hours is not None
+                        and gap_hours > self.DEFAULT_GAP_THRESHOLD_HOURS)
+
         closed: List[PaperTrade] = []
+        incomplete_pairs: List[dict] = []
+        # Snapshot the OPEN trade rows ONCE. Concurrent cron runs may
+        # close trades between iterations; we re-check each trade's
+        # status before UPDATE to avoid double-accounting.
         open_rows = self.store.get_open_trades()
         for row in open_rows:
             pair = row["pair"]
-            if pair not in candles_by_pair:
-                continue
-            candles = candles_by_pair[pair]
+            candles = candles_by_pair.get(pair)
             if not candles:
+                incomplete_pairs.append({
+                    "pair": pair,
+                    "trade_id": row["id"],
+                    "reason": ("missing" if pair not in candles_by_pair
+                               else "empty"),
+                    "gap_hours": gap_hours,
+                })
                 continue
-            # Iterate ALL completed candles in chronological order (oldest
-            # first). This catches stop/target hits that occurred between
-            # cron runs — the previous implementation only checked the
-            # latest candle, which could miss exits that happened in
-            # earlier candles.
-            #
-            # The first candle that hits stop or target triggers the exit.
-            # If both stop and target are hit in the SAME candle, assume
-            # stop-first (conservative).
+            # Filter: only candles AFTER entry AND after (last_check - 1
+            # interval buffer). The buffer ensures we don't miss a
+            # candle that closed at the boundary of the last check.
+            entry_time_ms = int(row.get("entry_time_ms", 0))
+            filter_floor_ms = (last_check_ms - interval_ms) if last_check_ms > 0 else 0
+            eligible = [c for c in candles
+                        if c.complete
+                        and c.open_time_ms > entry_time_ms
+                        and c.open_time_ms >= filter_floor_ms]
+            # Track incomplete-candle coverage separately (informational).
+            incomplete_count = sum(1 for c in candles if not c.complete)
+            if not eligible:
+                # All candles were either before entry, before last_check
+                # buffer, or incomplete. Distinguish from "missing pair":
+                if incomplete_count == len(candles) and incomplete_count > 0:
+                    incomplete_pairs.append({
+                        "pair": pair,
+                        "trade_id": row["id"],
+                        "reason": "all_incomplete",
+                        "incomplete_count": incomplete_count,
+                    })
+                else:
+                    # No eligible candles to check (e.g., gap with no
+                    # candle fetch). Surface as "no eligible candles"
+                    # so the operator can investigate.
+                    incomplete_pairs.append({
+                        "pair": pair,
+                        "trade_id": row["id"],
+                        "reason": "no_eligible_candles",
+                        "candle_count": len(candles),
+                        "gap_hours": gap_hours,
+                    })
+                continue
+
             stop, target = row["stop"], row["target"]
             exit_price = None
             exit_reason = None
             exit_candle = None
-            for candle in candles:
-                if not candle.complete:
-                    continue  # skip incomplete (still-forming) candles
+            for candle in eligible:
                 hit_stop = candle.low <= stop
                 hit_target = candle.high >= target
                 if not (hit_stop or hit_target):
                     continue
-                # This candle triggered an exit
                 if hit_stop and hit_target:
                     if assume_stop_first_on_ambiguous:
                         exit_price, exit_reason = stop, "stop"
@@ -349,7 +452,18 @@ class PaperTradingEngine:
                 exit_candle = candle
                 break  # process the FIRST exit only
             if exit_price is None:
-                continue  # no exit triggered by any completed candle
+                continue  # no exit triggered by any eligible candle
+
+            # ---- Idempotency: re-check trade status before UPDATE ----
+            # If a concurrent cron run already closed this trade, skip.
+            fresh_rows = self.store.list_trades(limit=10)
+            fresh = next((r for r in fresh_rows
+                          if r.get("id") == row["id"]), None)
+            if fresh is not None and fresh.get("status") != "OPEN":
+                # Lost the race — another caller closed this trade.
+                # Do NOT apply a second UPDATE; do NOT debit PnL again.
+                continue
+
             # Apply adverse exit slippage.
             exit_price_adjusted = exit_price * (1 - self.settings.slippage_pct / 100.0)
             pnl_net = self.risk_engine.on_trade_closed(
@@ -379,11 +493,26 @@ class PaperTradingEngine:
                 peak_equity=self.state.peak_equity,
                 note=f"close {pair} reason={exit_reason} pnl={pnl_net:.2f}",
             )
-            # Refresh from DB
-            refreshed = self.store.list_trades(limit=1)
-            if refreshed:
-                closed.append(PaperTrade.from_row(refreshed[0]))
-        return closed
+            # Refresh from DB to get the post-update row.
+            refreshed = self.store.list_trades(limit=10)
+            wanted = [r for r in refreshed if r.get("id") == row["id"]]
+            if wanted:
+                closed.append(PaperTrade.from_row(wanted[0]))
+
+        # Phase 10: update last_exit_check_ms ONLY on successful run.
+        self.last_exit_check_ms = now_ms
+        self._persist_state()
+
+        return {
+            "closed_trades": closed,
+            "incomplete_pairs": incomplete_pairs,
+            "gap_detected": gap_detected,
+            "gap_hours": gap_hours,
+            "last_check_ms": last_check_ms,
+            "processed_at_ms": now_ms,
+            "open_trades_count": len(open_rows),
+            "closed_count": len(closed),
+        }
 
     def update_marks(self, marks: Dict[str, float]) -> float:
         """Update unrealized PnL based on latest marks per pair."""

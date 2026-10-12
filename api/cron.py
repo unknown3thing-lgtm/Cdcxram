@@ -182,12 +182,23 @@ class handler(BaseHTTPRequestHandler):
                 return
 
             # ---- Step 3: Check open paper trades for stop/target exits ----
-            # The cron fetches the latest candle for each pair that has an
-            # OPEN paper trade, then calls check_exits() to process any
-            # stop or target hits. This is idempotent — check_exits only
-            # processes OPEN trades (CLOSED trades are skipped).
+            # Phase 10: gap-aware exit checking. The cron now:
+            #   1. Reads PaperTradingEngine.last_exit_check_ms (persisted
+            #      in the engine's state blob).
+            #   2. Computes the gap (hours since last successful exit check).
+            #   3. If gap > 5h, fetches MORE candles per pair (up to a
+            #      cap of 200 to stay within WazirX's reasonable limit
+            #      and the Vercel 10s function timeout).
+            #   4. Calls check_exits_with_recovery() which returns
+            #      structured info including incomplete_pairs (pairs that
+            #      could NOT be reliably exit-checked).
+            #   5. Surfaces incomplete_pairs in the cron response JSON —
+            #      never silently reports "ok" when coverage is incomplete.
             exits_processed = 0
             exits_detail = []
+            incomplete_pairs = []
+            gap_detected = False
+            gap_hours = None
             try:
                 from coindcx_lab.engine.paper import PaperTradingEngine
                 from coindcx_lab.engine.risk import RiskSettings
@@ -200,20 +211,70 @@ class handler(BaseHTTPRequestHandler):
                 # Get all OPEN trades
                 open_trades = store.get_open_trades()
                 if open_trades:
-                    # Collect unique pairs from open trades
                     open_pairs = list(set(t["pair"] for t in open_trades))
-                    # Fetch latest candle for each open pair
+                    # Phase 10: gap-aware candle limit. If the engine
+                    # has never been checked (last_exit_check_ms == 0)
+                    # or the gap exceeds 5h, fetch up to 200 candles
+                    # per pair (capped). Otherwise the default is 5.
+                    interval_ms = 3_600_000  # 1h candles
+                    last_check = getattr(pe, "last_exit_check_ms", 0)
+                    now_ms_check = int(datetime.now(timezone.utc).timestamp() * 1000)
+                    if last_check > 0:
+                        gap_hours_val = (now_ms_check - last_check) / 3_600_000.0
+                    else:
+                        gap_hours_val = None
+                    gap_detected = (gap_hours_val is not None
+                                    and gap_hours_val > pe.DEFAULT_GAP_THRESHOLD_HOURS)
+                    # Determine per-pair candle limit
+                    if gap_detected:
+                        # Aim to cover the gap + a 5-bar safety margin.
+                        # Cap at 200 (WazirX supports up to 500; we leave
+                        # headroom for timeout).
+                        gap_bars = int((gap_hours_val or 0) + 5)
+                        candle_limit = max(5, min(200, gap_bars))
+                    elif last_check == 0:
+                        # First-ever check: pull a small default window.
+                        candle_limit = 10
+                    else:
+                        candle_limit = 5
+                    gap_hours = gap_hours_val
+
                     candles_by_pair = {}
+                    fetch_errors = []
                     for pair in open_pairs:
                         try:
                             candles, cprov = client.candles(
-                                pair=pair, interval="1h", limit=5)
+                                pair=pair, interval="1h", limit=candle_limit)
                             candles_by_pair[pair] = candles
-                        except Exception:
-                            pass  # skip if candle fetch fails
+                        except Exception as e:
+                            # Phase 10: DO NOT silently swallow. Record
+                            # the fetch failure so check_exits_with_recovery
+                            # can flag this pair as incomplete.
+                            fetch_errors.append({
+                                "pair": pair,
+                                "error": f"{type(e).__name__}: {e}",
+                            })
 
-                    if candles_by_pair:
-                        closed = pe.check_exits(candles_by_pair=candles_by_pair)
+                    # If we got fetch errors, those pairs will be flagged
+                    # as missing by check_exits_with_recovery (since they
+                    # won't be in candles_by_pair).
+
+                    if candles_by_pair or fetch_errors:
+                        # Phase 10: surface fetch errors BEFORE calling
+                        # check_exits so they're recorded even if the
+                        # exit-check itself throws.
+                        for fe in fetch_errors:
+                            incomplete_pairs.append({
+                                "pair": fe["pair"],
+                                "reason": "candle_fetch_failed",
+                                "detail": fe["error"],
+                                "gap_hours": gap_hours,
+                            })
+
+                        result = pe.check_exits_with_recovery(
+                            candles_by_pair=candles_by_pair,
+                            current_time_ms=now_ms_check)
+                        closed = result["closed_trades"]
                         exits_processed = len(closed)
                         for t in closed:
                             exits_detail.append({
@@ -222,33 +283,65 @@ class handler(BaseHTTPRequestHandler):
                                 "exit_price": t.exit_price,
                                 "pnl_net": t.pnl_net,
                             })
+                        # Phase 10: append incomplete-pair reports from
+                        # the engine (missing pairs / no eligible candles
+                        # / all-incomplete candles).
+                        for ip in result.get("incomplete_pairs", []):
+                            incomplete_pairs.append({
+                                "pair": ip["pair"],
+                                "trade_id": ip.get("trade_id"),
+                                "reason": ip.get("reason", "unknown"),
+                                "gap_hours": ip.get("gap_hours"),
+                            })
             except Exception as e:
                 # Exit-checking failure should NOT fail the whole cron
                 exits_detail.append({"error": f"exit check failed: {type(e).__name__}: {e}"})
+                # Phase 10: an exit-check failure is also a form of
+                # incomplete coverage — flag it for review.
+                incomplete_pairs.append({
+                    "pair": "*",
+                    "reason": "exit_check_exception",
+                    "detail": f"{type(e).__name__}: {e}",
+                })
 
             ended_at = datetime.now(timezone.utc).isoformat()
             duration_ms = int(
                 (datetime.now(timezone.utc).timestamp() * 1000) - t0_ms)
 
+            # Phase 10: cron status. If we have incomplete_pairs, the
+            # cron ran but coverage was incomplete — status="partial"
+            # signals to operators that some open trades could NOT be
+            # reliably exit-checked and need manual review.
+            cron_status = "partial" if incomplete_pairs else "ok"
+            candle_limit_used = locals().get("candle_limit")
+
             store.log_job(
-                job_name="cron_refresh", status="ok",
+                job_name="cron_refresh", status=cron_status,
                 started_at=started_at, ended_at=ended_at,
                 duration_ms=duration_ms,
                 detail={"pairs_upserted": upserted,
                         "live_error": live_error,
                         "source": prov.source.value,
                         "exits_processed": exits_processed,
-                        "exits_detail": exits_detail},
+                        "exits_detail": exits_detail,
+                        "incomplete_pairs": incomplete_pairs,
+                        "gap_detected": gap_detected,
+                        "gap_hours": gap_hours,
+                        "candle_limit_used": candle_limit_used},
             )
 
             send_json(self, 200, {
-                "status": "ok",
+                "status": cron_status,
                 "started_at": started_at,
                 "ended_at": ended_at,
                 "duration_ms": duration_ms,
                 "pairs_upserted": upserted,
                 "exits_processed": exits_processed,
                 "exits_detail": exits_detail,
+                "incomplete_pairs": incomplete_pairs,
+                "gap_detected": gap_detected,
+                "gap_hours": gap_hours,
+                "candle_limit_used": candle_limit_used,
                 "provenance": {
                     "source": prov.source.value,
                     "label": prov.label(),
@@ -257,7 +350,14 @@ class handler(BaseHTTPRequestHandler):
                 "live_unavailable_reason": live_error,
                 "note": ("Cron refreshes market data AND checks open paper "
                          "trades for stop/target exits. Idempotent — "
-                         "CLOSED trades are never re-processed."),
+                         "CLOSED trades are never re-processed. Phase 10 "
+                         "adds gap-aware recovery: if the gap since the "
+                         "last successful exit check exceeds 5h, more "
+                         "candles are fetched per pair. "
+                         "status='partial' means some pairs could NOT be "
+                         "reliably exit-checked (missing candles, fetch "
+                         "errors, or all-incomplete candles) and need "
+                         "manual review."),
             })
         except Exception as e:
             send_error(self, 500, "internal_error", f"{type(e).__name__}: {e}")

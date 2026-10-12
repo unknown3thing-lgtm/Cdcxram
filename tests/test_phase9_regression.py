@@ -291,7 +291,12 @@ class TestPaperExitCorrectness:
 
     def test_candles_before_entry_ignored(self):
         """If a candle BEFORE the trade's entry time hits the stop,
-        it should NOT trigger an exit (the trade wasn't open yet)."""
+        it should NOT trigger an exit (the trade wasn't open yet).
+
+        Phase 10: this filter is NOW enforced. Previously the
+        implementation acknowledged this as a 'known limitation'; the
+        Phase 10 paper-exit recovery work closes that gap.
+        """
         from coindcx_lab.db.store import Store
         from coindcx_lab.engine.paper import PaperTradingEngine, PaperTradeStatus
         from coindcx_lab.engine.risk import RiskSettings
@@ -323,7 +328,7 @@ class TestPaperExitCorrectness:
             entry_time = trade.entry_time_ms
 
             # Create candles: one BEFORE entry (low=90, hits stop)
-            # and one AFTER entry (normal range)
+            # and one AFTER entry (normal range — neither hits stop/target).
             before_candle = Candle(
                 open_time_ms=entry_time - 3_600_000,  # 1h before entry
                 open=100, high=101, low=90, close=100, volume=10,
@@ -336,14 +341,13 @@ class TestPaperExitCorrectness:
             closed = pe.check_exits(candles_by_pair={
                 "B-BTCINR": [before_candle, after_candle]})
 
-            # The before-entry candle should NOT trigger an exit
-            # (trade wasn't open when that candle formed)
-            # BUT the current implementation doesn't filter by entry time!
-            # This is a KNOWN limitation — the cron fetches recent candles
-            # which are always after the entry time.
-            # For now, verify the exit IS triggered (by the before candle)
-            # and document that the cron only fetches recent candles.
-            assert len(closed) <= 1  # may or may not trigger
+            # Phase 10: the before-entry candle MUST be filtered out,
+            # and the after-entry candle has neither hit. So NO exit.
+            assert len(closed) == 0, \
+                "candle before entry must not trigger exit (Phase 10 fix)"
+            # Trade should still be OPEN
+            opens = pe.store.get_open_trades()
+            assert len(opens) == 1
         finally:
             store.close()
             os.unlink(db_path)
