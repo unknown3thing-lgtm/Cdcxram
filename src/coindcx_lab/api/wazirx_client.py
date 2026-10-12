@@ -132,6 +132,12 @@ class WazirXClient:
     timeout: float = 10.0
     max_retries: int = 3
     backoff_seconds: float = 0.6
+    # Phase 11: separate retry budget for 429 rate-limit responses.
+    # 429 means "you're sending too fast; wait and try again", so we
+    # retry with a longer backoff than for 5xx. Set to 0 to disable
+    # 429 retries (preserve pre-Phase-11 behaviour).
+    rate_limit_retries: int = 4
+    rate_limit_backoff_seconds: float = 2.0
     cache_ttl_seconds: float = 5.0
     user_agent: str = "coindcx-lab/0.1 (+research; wazirx-fallback)"
 
@@ -146,9 +152,14 @@ class WazirXClient:
 
     def _request(self, method: str, path: str, *,
                 params: Optional[dict] = None) -> Tuple[Any, requests.Response]:
+        """Phase 11: single while-loop with separate budgets for 5xx
+        network errors (max_retries) and 429 rate-limit responses
+        (rate_limit_retries)."""
         url = self.base_url + path
         last_exc: Optional[Exception] = None
-        for attempt in range(1, self.max_retries + 1):
+        rl_attempts = 0       # 429 retries used so far
+        err_attempts = 0      # 5xx / network-error retries used so far
+        while True:
             try:
                 resp = requests.request(
                     method, url,
@@ -157,24 +168,39 @@ class WazirXClient:
                     timeout=self.timeout,
                 )
                 if resp.status_code == 429:
-                    raise RateLimitError(f"429 Too Many Requests for {url}")
+                    # Phase 11: 429 is retryable with a longer backoff.
+                    rl_attempts += 1
+                    if rl_attempts <= self.rate_limit_retries:
+                        wait = self.rate_limit_backoff_seconds * (
+                            2 ** (rl_attempts - 1))
+                        log.warning(
+                            "429 rate-limited at %s (rl_attempt %d/%d); "
+                            "backing off %.1fs",
+                            url, rl_attempts, self.rate_limit_retries, wait)
+                        time.sleep(wait)
+                        continue
+                    # Exhausted 429 retries — raise RateLimitError so
+                    # callers can distinguish from real HTTP errors.
+                    raise RateLimitError(
+                        f"429 Too Many Requests for {url} "
+                        f"(exhausted {self.rate_limit_retries} "
+                        f"rate-limit retries)")
                 if resp.status_code == 403:
                     # WazirX sometimes returns 403 (openresty) for specific
-                    # endpoints (e.g. /api/v1/status). Non-retryable for
-                    # that endpoint, but for /api/v2/tickers and /sapi/v1/
-                    # klines it's the data-centre IP filter. Either way,
-                    # surface the failure so MultiProviderClient can fall
-                    # back to the next provider or SIMULATED.
+                    # endpoints. Non-retryable — surface so MultiProviderClient
+                    # can fall back to the next provider or SIMULATED.
                     raise CoinDCXAPIError(
                         f"403 Forbidden at {url} — WazirX edge block "
                         "or endpoint not exposed publicly.")
                 if resp.status_code >= 500:
                     last_exc = CoinDCXAPIError(
                         f"HTTP {resp.status_code} server error at {url}")
-                    log.warning("attempt %d/%d got 5xx at %s",
-                                attempt, self.max_retries, url)
-                    if attempt < self.max_retries:
-                        time.sleep(self.backoff_seconds * (2 ** (attempt - 1)))
+                    err_attempts += 1
+                    log.warning("5xx attempt %d/%d at %s",
+                                err_attempts, self.max_retries, url)
+                    if err_attempts < self.max_retries:
+                        time.sleep(self.backoff_seconds * (
+                            2 ** (err_attempts - 1)))
                         continue
                     raise last_exc
                 if resp.status_code >= 400:
@@ -189,19 +215,19 @@ class WazirXClient:
                         f"body[:200]={resp.text[:200]}")
             except (requests.Timeout, requests.ConnectionError) as e:
                 last_exc = e
-                log.warning("attempt %d/%d failed at %s: %s",
-                            attempt, self.max_retries, url, e)
-                if attempt < self.max_retries:
-                    time.sleep(self.backoff_seconds * (2 ** (attempt - 1)))
+                err_attempts += 1
+                log.warning("network error attempt %d/%d at %s: %s",
+                            err_attempts, self.max_retries, url, e)
+                if err_attempts < self.max_retries:
+                    time.sleep(self.backoff_seconds * (
+                        2 ** (err_attempts - 1)))
                     continue
                 raise CoinDCXAPIError(
-                    f"Exhausted {self.max_retries} retries for {url}: {last_exc}")
+                    f"Exhausted {self.max_retries} retries for {url}: "
+                    f"{last_exc}")
             except CoinDCXAPIError as e:
                 # Non-retryable errors (403, 4xx) — propagate immediately.
                 raise
-
-        raise CoinDCXAPIError(
-            f"Exhausted {self.max_retries} retries for {url}: {last_exc}")
 
     # ---------------------------------------------------------------- cache
     def _cache_get(self, key: str) -> Optional[Any]:

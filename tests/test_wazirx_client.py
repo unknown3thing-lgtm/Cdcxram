@@ -142,15 +142,52 @@ class TestListPairs:
             # 403 is non-retryable — only one HTTP call
             assert mock_req.call_count == 1
 
-    def test_429_raises_rate_limit(self):
+    def test_429_retried_then_raises_rate_limit(self):
+        """Phase 11: 429 is now retried with exponential backoff before
+        raising RateLimitError. Previously 429 raised immediately; this
+        was too aggressive for the historical-data expansion work which
+        can briefly trip WazirX's per-IP rate limit. Now the client
+        retries `rate_limit_retries` times with backoff
+        `rate_limit_backoff_seconds * 2**(n-1)`."""
         from coindcx_lab.api.wazirx_client import WazirXClient
         from coindcx_lab.api.client import RateLimitError
-        c = WazirXClient(max_retries=3, backoff_seconds=0.001)
-        with patch("coindcx_lab.api.wazirx_client.requests.request") as mock_req:
+        # Disable actual sleep to keep test fast.
+        c = WazirXClient(max_retries=3, backoff_seconds=0.001,
+                         rate_limit_retries=4,
+                         rate_limit_backoff_seconds=0.001)
+        with patch("coindcx_lab.api.wazirx_client.requests.request") as mock_req, \
+             patch("coindcx_lab.api.wazirx_client.time.sleep") as mock_sleep:
             mock_req.return_value = _mock_response(429, {"error": "rate"})
             with pytest.raises(RateLimitError):
                 c.list_exchange_pairs()
-            assert mock_req.call_count == 1
+            # Should have called requests.request exactly
+            # rate_limit_retries + 1 times (4 retries, then the final
+            # attempt that raises).
+            assert mock_req.call_count == c.rate_limit_retries + 1, \
+                f"expected {c.rate_limit_retries + 1} HTTP calls, " \
+                f"got {mock_req.call_count}"
+            # Should have called sleep once per retry.
+            assert mock_sleep.call_count == c.rate_limit_retries
+
+    def test_429_eventually_succeeds_after_retries(self):
+        """Phase 11: 429 retries should eventually succeed if the API
+        recovers within the retry budget."""
+        from coindcx_lab.api.wazirx_client import WazirXClient
+        c = WazirXClient(max_retries=3, backoff_seconds=0.001,
+                         rate_limit_retries=4,
+                         rate_limit_backoff_seconds=0.001)
+        # First 2 calls return 429; third returns 200.
+        responses = [
+            _mock_response(429, {"error": "rate"}),
+            _mock_response(429, {"error": "rate"}),
+            _mock_response(200, _sample_all_tickers()),
+        ]
+        with patch("coindcx_lab.api.wazirx_client.requests.request",
+                    side_effect=responses), \
+             patch("coindcx_lab.api.wazirx_client.time.sleep"):
+            prices, prov = c.current_prices()
+            assert "B-BTCINR" in prices
+            assert prov.source.value == "live"
 
 
 # ---------------------------------------------------------------------------

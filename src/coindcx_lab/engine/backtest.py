@@ -172,7 +172,8 @@ class Backtester:
             provenance: Optional[DataProvenance] = None,
             segment: str = "full",
             warmup_prefix: Optional[List[Candle]] = None,
-            segment_start_idx: int = 0) -> BacktestResult:
+            segment_start_idx: int = 0,
+            interval: str = "1h") -> BacktestResult:
         """Run a backtest over `candles` (chronologically ordered).
 
         Phase 10 — warm-up prefix support
@@ -182,6 +183,15 @@ class Backtester:
         indicator initialization. `segment_start_idx` MUST equal
         `len(warmup_prefix)` and marks the first bar of the actual
         scored segment.
+
+        Phase 11 — interval parameter
+        ------------------------------
+        `interval` is passed to the signal engine's evaluate() so the
+        strategy knows what timeframe the candles represent. The
+        backtester itself is interval-agnostic — `warmup_skip_bars` and
+        `strategy.warmup_candles` are CANDLE COUNTS, not time durations.
+        Callers must understand that "60 candles" means 60 hours on 1h
+        candles but 60 days on 1d candles.
 
         Behaviour:
           * Indicators at bar `i` see candles[0..i] (prefix + segment).
@@ -218,12 +228,15 @@ class Backtester:
             prefix_clean = [c for c in prefix_sorted
                             if c.open_time_ms not in prefix_times]
             all_candles = prefix_clean + seg_sorted
-            # Verify segment_start_idx points at the first SEGMENT candle.
-            # We rely on the caller to pass the correct value, but we
-            # also defensively re-derive it from timestamps if there's
-            # a mismatch.
-            actual_seg_start = len(all_candles) - len(seg_sorted)
-            if segment_start_idx <= 0:
+            # Phase 11 fix: ALWAYS recompute segment_start_idx from the
+            # actual post-de-dup prefix length. Previously this only
+            # happened when the caller passed segment_start_idx <= 0,
+            # which meant callers who passed len(warmup_prefix) (pre-
+            # de-dup) got the wrong value when duplicates were removed.
+            actual_seg_start = len(prefix_clean)
+            if segment_start_idx != actual_seg_start:
+                # Caller may have passed the pre-de-dup prefix length;
+                # override with the actual post-de-dup value.
                 segment_start_idx = actual_seg_start
         else:
             all_candles = sorted(candles, key=lambda c: c.open_time_ms)
@@ -312,8 +325,12 @@ class Backtester:
             if (pos is None and not paused_today and not paused_entirely
                     and in_segment and warmup_ok):
                 prefix = all_candles[:i + 1]
+                # Phase 11: propagate the interval parameter so the
+                # signal engine knows what timeframe the candles
+                # represent (1h, 4h, 1d). Previously this was
+                # hard-coded to "1h".
                 sigs = self.signal_engine.evaluate(
-                    pair=pair, interval="1h",
+                    pair=pair, interval=interval,
                     candles=prefix, provenance=provenance,
                     risk_state=state)
                 buy_sigs = [s for s in sigs
@@ -559,7 +576,8 @@ class Backtester:
 
     # ---------------------------------------------------- walk-forward split
     def walk_forward(self, *, pair: str, candles: List[Candle],
-                     dev_end_iso: str, val_end_iso: str) -> Dict[str, BacktestResult]:
+                     dev_end_iso: str, val_end_iso: str,
+                     interval: str = "1h") -> Dict[str, BacktestResult]:
         """Run dev/val/oos splits by ISO date boundaries.
 
         Phase 10 — warm-up prefix
@@ -570,6 +588,15 @@ class Backtester:
         bars to seed its SMA) to initialise BEFORE the scored segment
         begins, so trend-following strategies can actually fire on
         short segments (e.g., a 125-bar val window).
+
+        Phase 11 — interval parameter
+        ------------------------------
+        `interval` (1h / 4h / 1d) is propagated to run() so the signal
+        engine knows what timeframe the candles represent. The walk-
+        forward split itself uses calendar-day boundaries
+        (`_day_iso_from_ms`), which is interval-agnostic — a 4h bar
+        and a 1h bar that fall on the same UTC day get assigned to
+        the same segment.
 
         Guarantees:
           * Indicators at bar i in segment N see only bars 0..i (prefix
@@ -617,20 +644,24 @@ class Backtester:
         out: Dict[str, BacktestResult] = {}
         # DEV: first segment — no prefix available by definition.
         out["dev"] = self._run_segment(pair=pair, seg=dev, segment="dev",
-                                        warmup_prefix=[], prior_segs=[])
+                                        warmup_prefix=[], prior_segs=[],
+                                        interval=interval)
         # VAL: prefix = last warmup_n of dev.
         out["val"] = self._run_segment(pair=pair, seg=val, segment="val",
                                        warmup_prefix=_prefix_for([dev]),
-                                       prior_segs=[dev])
+                                       prior_segs=[dev],
+                                       interval=interval)
         # OOS: prefix = last warmup_n of (dev + val).
         out["oos"] = self._run_segment(pair=pair, seg=oos, segment="oos",
                                        warmup_prefix=_prefix_for([dev, val]),
-                                       prior_segs=[dev, val])
+                                       prior_segs=[dev, val],
+                                       interval=interval)
         return out
 
     def _run_segment(self, *, pair: str, seg: List[Candle],
                      segment: str, warmup_prefix: List[Candle],
-                     prior_segs: List[List[Candle]]) -> BacktestResult:
+                     prior_segs: List[List[Candle]],
+                     interval: str = "1h") -> BacktestResult:
         """Run one walk-forward segment. If the segment itself is too
         short to produce ANY scored bars (with or without prefix), emit
         an explicit empty BacktestResult with a warning."""
@@ -659,7 +690,8 @@ class Backtester:
         # warning will be emitted by _summarise.
         result = self.run(pair=pair, candles=seg, segment=segment,
                           warmup_prefix=warmup_prefix or None,
-                          segment_start_idx=len(warmup_prefix))
+                          segment_start_idx=len(warmup_prefix),
+                          interval=interval)
         return result
 
 

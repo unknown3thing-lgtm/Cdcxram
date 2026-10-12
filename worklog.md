@@ -194,3 +194,37 @@ Stage Summary:
 - Production safeguards fully preserved — no real orders, no leverage,
   no migration/RLS/env var changes, no portfolio resets.
 - Deployment: not deployed live in this session; verified locally only.
+
+---
+Task ID: phase-11-start
+Agent: main (super-z)
+Task: Phase 11 kickoff — inspect commits, remove redundant files, plan work
+
+Work Log:
+- Found an automated commit 367a0e8 (UUID message) on top of Phase 10
+  that committed previously-untracked api/settings.py,
+  api/portfolio_reset.py, and a junk tool-results/ text file. This
+  would have pushed the deployed Vercel function count to 13 (over
+  Hobby 12-function limit).
+- Inspected api/portfolio.py — already handles action=reset (line 37)
+  via vercel.json rewrite /api/portfolio_reset → /api/portfolio?action=reset.
+- Inspected api/health.py — already handles action=settings (line 37)
+  via vercel.json rewrite /api/settings → /api/health?action=settings.
+- Confirmed api/settings.py and api/portfolio_reset.py are REDUNDANT
+  duplicates of logic already present in health.py / portfolio.py.
+- Removed them via git rm and committed as ce9c3c4 "chore(phase11):
+  remove redundant api/settings.py and api/portfolio_reset.py".
+  Also removed the tool-results/*.txt junk file.
+- Verified 11 deployed functions: backtest, candles, cron, health,
+  markets, portfolio, prices, risk, scanner, signals, trades.
+- Inspected commits 45b03aa (Phase 9 equity fix), 5f55a5b (Phase 9
+  cash-cap test update), 4defbf9 (Phase 10 walk-forward + paper-exit).
+- Ran full test suite: 262 passing (no regressions).
+- Ran API endpoint + idempotency + Phase 7 regression tests: 32 passing.
+
+Stage Summary:
+- Pre-Phase-11 cleanup done (commit ce9c3c4) — restored 11-function
+  count.
+- Phase 10 verified locally; not deployed live in this session.
+- Ready to begin Phase 11 work: historical data expansion, 4h/daily
+  interval support, strategy evaluation.
