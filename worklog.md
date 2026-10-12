@@ -861,3 +861,53 @@ Stage Summary:
 - Strategy profitability remains UNVALIDATED. 80% win-rate target
   NOT achieved (and not claimed).
 - Ready to commit + push + attempt Vercel deployment verification.
+
+---
+Task ID: phase-14-final
+Agent: main (super-z)
+Task: Phase 14 final — Vercel deployment verification attempt
+
+Work Log:
+- Final pre-commit verification:
+    * Full test suite: 329 passing (313 prior + 16 new Phase 14).
+    * Serverless function count: 11 (within Vercel Hobby 12-function
+      limit).
+    * Migrations: 4 byte-for-byte unchanged (0001: 9969, 0002: 6954,
+      0003: 2571, 0004: 1157 bytes — same as Phase 13 baseline).
+- Committed Phase 14 changes: SHA e93cf94 on local main.
+    * 6 files changed, 7479 insertions(+), including:
+      - src/coindcx_lab/engine/regime.py (NEW — classifier)
+      - src/coindcx_lab/engine/regime_strategies.py (NEW — 4 candidates)
+      - tests/test_phase14_regression.py (NEW — 16 tests)
+      - scripts/run_phase14_comparison.py (NEW — backtest runner)
+      - download/phase14_strategy_comparison.json (results)
+- Pushed to GitHub main: 9f226d7..e93cf94 fast-forward succeeded.
+- Verified post-push: origin/main == local main == e93cf94.
+- Attempted Vercel Production deployment verification:
+    * `vercel` CLI installed (Phase 13) — Vercel CLI 63.1.2.
+    * No VERCEL_TOKEN / VERCEL_PROJECT_ID / VERCEL_ORG_ID env vars
+      visible in this bash session.
+    * No ~/.local/share/com.vercel.cli/auth.json file present.
+    * No .vercel/ project config (no `vercel link` ever done here).
+    * `vercel whoami` returns "Logged out."
+    * Per mandatory rule: "If deployment credentials are unavailable,
+      stop and report the blocker; never claim deployment succeeded
+      without verification."
+    * Cannot verify Vercel Production deployment SHA matches the
+      GitHub commit, cannot deploy via CLI, cannot smoke-test routes.
+
+Stage Summary:
+- Phase 14 code + tests committed locally at e93cf94.
+- Pushed to GitHub main successfully (fast-forward 9f226d7..e93cf94).
+- GitHub main verified at e93cf94 (matches local main).
+- Vercel Production deployment status: CANNOT VERIFY — credentials
+  unavailable in this session. The Vercel-GitHub integration (if
+  enabled on the project) should auto-trigger a deployment from
+  the push, but I cannot query the Vercel API or CLI to confirm.
+- Phase 14 is PARTIALLY COMPLETE per the mandatory rule
+  ("At completion, commit and push the code and tests to GitHub main,
+  deploy the verified commit to Vercel Production, and confirm the
+  deployed SHA matches GitHub main.").
+- The GitHub push IS complete; the Vercel deployment verification
+  is NOT complete.
+- Honest blocker reported per the mandatory rule.
