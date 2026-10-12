@@ -1177,3 +1177,52 @@ Stage Summary:
 - Phase 16 architecture issues identified.
 - Ready to expose +DI/-DI + make classifier configurable + build
   DirectionalAdxClassifier.
+
+---
+Task ID: phase-16-final
+Agent: main (super-z)
+Task: Phase 16 final — commit, push, Vercel deployment attempt
+
+Work Log:
+- Final pre-commit verification:
+    * Full test suite: 356 passing (343 prior + 13 new Phase 16).
+    * Serverless function count: 11 (within Vercel Hobby 12-function
+      limit).
+    * Migrations: 4 byte-for-byte unchanged (0001: 9969, 0002: 6954,
+      0003: 2571, 0004: 1157 bytes — same as Phase 15 baseline).
+    * No RLS policy changes.
+    * Production strategy defaults UNCHANGED.
+    * Research candidates NOT connected to production /api/signals.
+- Committed Phase 16 changes: SHA 34c80dc on local main.
+    * 4 files changed, 573 insertions(+), 87 deletions(-):
+      - src/coindcx_lab/engine/indicators.py (M — adx_with_di() +
+        plus_di14/minus_di14 fields)
+      - src/coindcx_lab/engine/phase15_candidates.py (M — configurable
+        classifier + DirectionalAdxClassifier)
+      - tests/test_phase16_regression.py (NEW — 13 tests)
+- Pushed to GitHub main: 0d48f43..34c80dc fast-forward succeeded.
+- Verified post-push: origin/main == local main == 34c80dc.
+- Attempted Vercel Production deployment verification:
+    * `vercel` CLI installed (Vercel CLI 63.1.2, from Phase 13).
+    * No VERCEL_TOKEN / VERCEL_PROJECT_ID / VERCEL_ORG_ID env vars
+      visible in this bash session.
+    * No ~/.local/share/com.vercel.cli/auth.json file present.
+    * No .vercel/ project config (no `vercel link` ever done here).
+    * `vercel whoami` returns "Logged out."
+    * Per mandatory rule: "If deployment is blocked, report it
+      honestly."
+    * Cannot verify Vercel Production deployment SHA matches the
+      GitHub commit, cannot deploy via CLI, cannot smoke-test routes.
+
+Stage Summary:
+- Phase 16 code + tests committed locally at 34c80dc.
+- Pushed to GitHub main successfully (fast-forward 0d48f43..34c80dc).
+- GitHub main verified at 34c80dc (matches local main).
+- Vercel Production deployment status: CANNOT VERIFY — credentials
+  unavailable in this session. The Vercel-GitHub integration (if
+  enabled on the project) should auto-trigger a deployment from
+  the push, but I cannot query the Vercel API or CLI to confirm.
+- Phase 16 is PARTIALLY COMPLETE per the mandatory rule.
+- The GitHub push IS complete; the Vercel deployment verification
+  is NOT complete.
+- Honest blocker reported per the mandatory rule.
