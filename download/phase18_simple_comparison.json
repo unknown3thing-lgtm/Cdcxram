@@ -1,0 +1,2520 @@
+{
+  "phase": 18,
+  "started_at_utc": "2026-10-12T15:27:43.382356+00:00",
+  "pairs": [
+    "B-BTCINR",
+    "B-ETHINR",
+    "B-WRXINR",
+    "B-TRXINR",
+    "B-PEPEINR",
+    "B-SHIBINR",
+    "B-LINKINR",
+    "B-XRPINR"
+  ],
+  "results": [
+    {
+      "pair": "B-BTCINR",
+      "strategy": "simple_breakout",
+      "n_candles": 1000,
+      "segments": {
+        "dev": {
+          "segment": "dev",
+          "starting_capital": 2000.0,
+          "ending_equity": 1994.2025379792838,
+          "total_return_inr": -5.797462020716239,
+          "total_return_pct": -0.289873101035812,
+          "net_pnl_after_costs": -5.797462020716285,
+          "max_drawdown_pct": 1.593491556615477,
+          "win_rate_pct": 50.0,
+          "avg_win_inr": 4.853356526361367,
+          "avg_loss_inr": -10.650818547077652,
+          "profit_factor": 0.45567920483379376,
+          "expectancy_inr": -2.8987310103581425,
+          "num_trades": 2,
+          "exposure_pct": 74.70238095238095,
+          "turnover_inr": 997.3372953632306,
+          "est_fees_inr": 1.991864926094887,
+          "est_slippage_inr": 0.9959324630474435,
+          "buy_hold_return_pct": -0.5219703976624942,
+          "segment_start_idx": 0,
+          "total_bars": 336,
+          "eligible_bars": 287,
+          "warmup_prefix_len": 0,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 7775651.882999999,
+              "exit_price": 7633130.942656333,
+              "pnl_net": -10.650818547077652,
+              "exit_reason": "stop",
+              "entry_time_ms": 1788444000000,
+              "exit_time_ms": 1789304399999
+            },
+            {
+              "entry": 7743870.0,
+              "exit_price": 7842820.0,
+              "pnl_net": 4.853356526361367,
+              "exit_reason": "end_of_data",
+              "entry_time_ms": 1789380000000,
+              "exit_time_ms": 1789430399999
+            }
+          ]
+        },
+        "val": {
+          "segment": "val",
+          "starting_capital": 2000.0,
+          "ending_equity": 2018.28495943661,
+          "total_return_inr": 18.284959436610052,
+          "total_return_pct": 0.9142479718305025,
+          "net_pnl_after_costs": 18.284959436610066,
+          "max_drawdown_pct": 1.2913011158790597,
+          "win_rate_pct": 50.0,
+          "avg_win_inr": 27.273543972434773,
+          "avg_loss_inr": -8.988584535824707,
+          "profit_factor": 3.0342423619351777,
+          "expectancy_inr": 9.142479718305033,
+          "num_trades": 2,
+          "exposure_pct": 69.94047619047619,
+          "turnover_inr": 1006.8183859931087,
+          "est_fees_inr": 2.0349741927118954,
+          "est_slippage_inr": 1.0174870963559477,
+          "buy_hold_return_pct": 8.20656442544889,
+          "segment_start_idx": 50,
+          "total_bars": 336,
+          "eligible_bars": 336,
+          "warmup_prefix_len": 50,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 7703850.0,
+              "exit_price": 8147850.13366458,
+              "pnl_net": 27.273543972434773,
+              "exit_reason": "target",
+              "entry_time_ms": 1789718400000,
+              "exit_time_ms": 1789981199999
+            },
+            {
+              "entry": 8354175.0,
+              "exit_price": 8230888.656903232,
+              "pnl_net": -8.988584535824707,
+              "exit_reason": "stop",
+              "entry_time_ms": 1789984800000,
+              "exit_time_ms": 1790575199999
+            }
+          ]
+        },
+        "oos": {
+          "segment": "oos",
+          "starting_capital": 2000.0,
+          "ending_equity": 1985.0015846840965,
+          "total_return_inr": -14.998415315903458,
+          "total_return_pct": -0.7499207657951729,
+          "net_pnl_after_costs": -14.99841531590351,
+          "max_drawdown_pct": 1.085221098795117,
+          "win_rate_pct": 0.0,
+          "avg_win_inr": 0.0,
+          "avg_loss_inr": -7.499207657951755,
+          "profit_factor": 0.0,
+          "expectancy_inr": -7.499207657951755,
+          "num_trades": 2,
+          "exposure_pct": 50.15290519877675,
+          "turnover_inr": 996.6682807649493,
+          "est_fees_inr": 1.9813101113810667,
+          "est_slippage_inr": 0.9906550556905334,
+          "buy_hold_return_pct": -1.2864692595328848,
+          "segment_start_idx": 50,
+          "total_bars": 327,
+          "eligible_bars": 327,
+          "warmup_prefix_len": 50,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 8485010.385,
+              "exit_price": 8284006.531900871,
+              "pnl_net": -13.326876940203089,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790773200000,
+              "exit_time_ms": 1791367199999
+            },
+            {
+              "entry": 8240420.151,
+              "exit_price": 8237403.73162208,
+              "pnl_net": -1.6715383757004196,
+              "exit_reason": "stop",
+              "entry_time_ms": 1791738000000,
+              "exit_time_ms": 1791741599999
+            }
+          ]
+        }
+      }
+    },
+    {
+      "pair": "B-ETHINR",
+      "strategy": "simple_breakout",
+      "n_candles": 1000,
+      "segments": {
+        "dev": {
+          "segment": "dev",
+          "starting_capital": 2000.0,
+          "ending_equity": 1994.8451418882198,
+          "total_return_inr": -5.154858111780186,
+          "total_return_pct": -0.2577429055890093,
+          "net_pnl_after_costs": -5.154858111780223,
+          "max_drawdown_pct": 1.6371960287098026,
+          "win_rate_pct": 50.0,
+          "avg_win_inr": 6.665290654331066,
+          "avg_loss_inr": -11.82014876611129,
+          "profit_factor": 0.5638922814102517,
+          "expectancy_inr": -2.5774290558901116,
+          "num_trades": 2,
+          "exposure_pct": 73.80952380952381,
+          "turnover_inr": 997.0449628084722,
+          "est_fees_inr": 1.9919229519330637,
+          "est_slippage_inr": 0.9959614759665318,
+          "buy_hold_return_pct": 1.2356606982857214,
+          "segment_start_idx": 0,
+          "total_bars": 336,
+          "eligible_bars": 287,
+          "warmup_prefix_len": 0,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 245122.5,
+              "exit_price": 240055.49816540588,
+              "pnl_net": -11.82014876611129,
+              "exit_reason": "stop",
+              "entry_time_ms": 1788447600000,
+              "exit_time_ms": 1789048799999
+            },
+            {
+              "entry": 248219.0475,
+              "exit_price": 252298.4,
+              "pnl_net": 6.665290654331066,
+              "exit_reason": "end_of_data",
+              "entry_time_ms": 1789131600000,
+              "exit_time_ms": 1789430399999
+            }
+          ]
+        },
+        "val": {
+          "segment": "val",
+          "starting_capital": 2000.0,
+          "ending_equity": 2040.3336936835633,
+          "total_return_inr": 40.3336936835633,
+          "total_return_pct": 2.016684684178165,
+          "net_pnl_after_costs": 40.33369368356324,
+          "max_drawdown_pct": 1.2934204432160619,
+          "win_rate_pct": 33.33333333333333,
+          "avg_win_inr": 47.884408563860184,
+          "avg_loss_inr": -3.7753574401484715,
+          "profit_factor": 6.341705298502419,
+          "expectancy_inr": 13.444564561187747,
+          "num_trades": 3,
+          "exposure_pct": 79.76190476190477,
+          "turnover_inr": 1522.26324071026,
+          "est_fees_inr": 3.0894944167291776,
+          "est_slippage_inr": 1.5447472083645888,
+          "buy_hold_return_pct": 5.151241545725247,
+          "segment_start_idx": 50,
+          "total_bars": 336,
+          "eligible_bars": 336,
+          "warmup_prefix_len": 50,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 238026.25364999997,
+              "exit_price": 261571.14250163065,
+              "pnl_net": 47.884408563860184,
+              "exit_reason": "target",
+              "entry_time_ms": 1789585200000,
+              "exit_time_ms": 1789808399999
+            },
+            {
+              "entry": 260130.0,
+              "exit_price": 257494.14366952176,
+              "pnl_net": -6.71585428668002,
+              "exit_reason": "stop",
+              "entry_time_ms": 1789808400000,
+              "exit_time_ms": 1789873199999
+            },
+            {
+              "entry": 264933.00029999996,
+              "exit_price": 265294.9,
+              "pnl_net": -0.8348605936169227,
+              "exit_reason": "end_of_data",
+              "entry_time_ms": 1789952400000,
+              "exit_time_ms": 1790639999999
+            }
+          ]
+        },
+        "oos": {
+          "segment": "oos",
+          "starting_capital": 2000.0,
+          "ending_equity": 1968.9151851443683,
+          "total_return_inr": -31.08481485563175,
+          "total_return_pct": -1.5542407427815874,
+          "net_pnl_after_costs": -31.084814855631787,
+          "max_drawdown_pct": 1.5542407427815874,
+          "win_rate_pct": 0.0,
+          "avg_win_inr": 0.0,
+          "avg_loss_inr": -10.361604951877263,
+          "profit_factor": 0.0,
+          "expectancy_inr": -10.361604951877263,
+          "num_trades": 3,
+          "exposure_pct": 6.422018348623854,
+          "turnover_inr": 1491.0573006719605,
+          "est_fees_inr": 2.9554629809597293,
+          "est_slippage_inr": 1.4777314904798646,
+          "buy_hold_return_pct": -4.688329854814413,
+          "segment_start_idx": 50,
+          "total_bars": 327,
+          "eligible_bars": 327,
+          "warmup_prefix_len": 50,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 274137.0,
+              "exit_price": 268203.62897020415,
+              "pnl_net": -12.305675580551243,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790676000000,
+              "exit_time_ms": 1790701199999
+            },
+            {
+              "entry": 273280.87214999995,
+              "exit_price": 267955.6400646635,
+              "pnl_net": -11.159446151055963,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790773200000,
+              "exit_time_ms": 1790783999999
+            },
+            {
+              "entry": 272136.0,
+              "exit_price": 268750.9099915382,
+              "pnl_net": -7.6196931240245815,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790917200000,
+              "exit_time_ms": 1790967599999
+            }
+          ]
+        }
+      }
+    },
+    {
+      "pair": "B-WRXINR",
+      "strategy": "simple_breakout",
+      "n_candles": 1000,
+      "segments": {
+        "dev": {
+          "segment": "dev",
+          "starting_capital": 2000.0,
+          "ending_equity": 2063.5543860834546,
+          "total_return_inr": 63.554386083454574,
+          "total_return_pct": 3.1777193041727285,
+          "net_pnl_after_costs": 63.5543860834544,
+          "max_drawdown_pct": 2.6867666244382042,
+          "win_rate_pct": 37.5,
+          "avg_win_inr": 45.673712878728814,
+          "avg_loss_inr": -14.693350510546406,
+          "profit_factor": 1.8650768391843255,
+          "expectancy_inr": 7.9442982604318,
+          "num_trades": 8,
+          "exposure_pct": 44.94047619047619,
+          "turnover_inr": 3821.1302056476097,
+          "est_fees_inr": 7.71739088370423,
+          "est_slippage_inr": 3.858695441852115,
+          "buy_hold_return_pct": 41.61490683229813,
+          "segment_start_idx": 0,
+          "total_bars": 336,
+          "eligible_bars": 287,
+          "warmup_prefix_len": 0,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 1.6508249999999998,
+              "exit_price": 1.627039805244816,
+              "pnl_net": -8.693226708782255,
+              "exit_reason": "stop",
+              "entry_time_ms": 1788458400000,
+              "exit_time_ms": 1788551999999
+            },
+            {
+              "entry": 1.68084,
+              "exit_price": 1.6387112641205832,
+              "pnl_net": -13.952339973119884,
+              "exit_reason": "stop",
+              "entry_time_ms": 1788616800000,
+              "exit_time_ms": 1788623999999
+            },
+            {
+              "entry": 1.6708349999999998,
+              "exit_price": 1.7945943661730204,
+              "pnl_net": 35.07790389027501,
+              "exit_reason": "target",
+              "entry_time_ms": 1788699600000,
+              "exit_time_ms": 1788706799999
+            },
+            {
+              "entry": 1.7708849999999998,
+              "exit_price": 1.7117577416951695,
+              "pnl_net": -18.282169781156032,
+              "exit_reason": "stop",
+              "entry_time_ms": 1788706800000,
+              "exit_time_ms": 1788710399999
+            },
+            {
+              "entry": 1.9709849999999998,
+              "exit_price": 2.2562516591391764,
+              "pnl_net": 70.55101117543087,
+              "exit_reason": "target",
+              "entry_time_ms": 1788757200000,
+              "exit_time_ms": 1788764399999
+            },
+            {
+              "entry": 2.2011000000000003,
+              "exit_price": 2.0537814108936723,
+              "pnl_net": -21.541507726814984,
+              "exit_reason": "stop",
+              "entry_time_ms": 1788764400000,
+              "exit_time_ms": 1788933599999
+            },
+            {
+              "entry": 2.12106,
+              "exit_price": 2.0816968770574467,
+              "pnl_net": -10.997508362858884,
+              "exit_reason": "stop",
+              "entry_time_ms": 1789124400000,
+              "exit_time_ms": 1789127999999
+            },
+            {
+              "entry": 2.14107,
+              "exit_price": 2.28,
+              "pnl_net": 31.392223570480553,
+              "exit_reason": "end_of_data",
+              "entry_time_ms": 1789149600000,
+              "exit_time_ms": 1789430399999
+            }
+          ]
+        },
+        "val": {
+          "segment": "val",
+          "starting_capital": 2000.0,
+          "ending_equity": 2029.091752798144,
+          "total_return_inr": 29.091752798143943,
+          "total_return_pct": 1.454587639907197,
+          "net_pnl_after_costs": 29.091752798143915,
+          "max_drawdown_pct": 1.224492294882241,
+          "win_rate_pct": 50.0,
+          "avg_win_inr": 43.76383302131388,
+          "avg_loss_inr": -14.672080223169964,
+          "profit_factor": 2.9827967374525794,
+          "expectancy_inr": 14.545876399071958,
+          "num_trades": 2,
+          "exposure_pct": 65.77380952380952,
+          "turnover_inr": 1010.9409582553285,
+          "est_fees_inr": 2.054054751435955,
+          "est_slippage_inr": 1.0270273757179775,
+          "buy_hold_return_pct": 5.309734513274338,
+          "segment_start_idx": 50,
+          "total_bars": 336,
+          "eligible_bars": 336,
+          "warmup_prefix_len": 50,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 2.211105,
+              "exit_price": 2.4115718753381916,
+              "pnl_net": 43.76383302131388,
+              "exit_reason": "target",
+              "entry_time_ms": 1789729200000,
+              "exit_time_ms": 1790503199999
+            },
+            {
+              "entry": 2.471235,
+              "exit_price": 2.407589738126577,
+              "pnl_net": -14.672080223169964,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790503200000,
+              "exit_time_ms": 1790531999999
+            }
+          ]
+        },
+        "oos": {
+          "segment": "oos",
+          "starting_capital": 2000.0,
+          "ending_equity": 1963.2150041221234,
+          "total_return_inr": -36.784995877876554,
+          "total_return_pct": -1.839249793893828,
+          "net_pnl_after_costs": -36.784995877876476,
+          "max_drawdown_pct": 1.9303944718428974,
+          "win_rate_pct": 0.0,
+          "avg_win_inr": 0.0,
+          "avg_loss_inr": -12.261665292625493,
+          "profit_factor": 0.0,
+          "expectancy_inr": -12.261665292625493,
+          "num_trades": 3,
+          "exposure_pct": 2.7522935779816518,
+          "turnover_inr": 1489.6886057798097,
+          "est_fees_inr": 2.9470127347839186,
+          "est_slippage_inr": 1.4735063673919593,
+          "buy_hold_return_pct": -5.508474576271181,
+          "segment_start_idx": 50,
+          "total_bars": 327,
+          "eligible_bars": 327,
+          "warmup_prefix_len": 50,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 2.371185,
+              "exit_price": 2.3102977300982883,
+              "pnl_net": -14.319737598892372,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790931600000,
+              "exit_time_ms": 1790935199999
+            },
+            {
+              "entry": 2.2911449999999998,
+              "exit_price": 2.239759972696686,
+              "pnl_net": -12.606101682977307,
+              "exit_reason": "stop",
+              "entry_time_ms": 1791450000000,
+              "exit_time_ms": 1791475199999
+            },
+            {
+              "entry": 2.311155,
+              "exit_price": 2.271835501732554,
+              "pnl_net": -9.8591565960068,
+              "exit_reason": "stop",
+              "entry_time_ms": 1791604800000,
+              "exit_time_ms": 1791619199999
+            }
+          ]
+        }
+      }
+    },
+    {
+      "pair": "B-TRXINR",
+      "strategy": "simple_breakout",
+      "n_candles": 1000,
+      "segments": {
+        "dev": {
+          "segment": "dev",
+          "starting_capital": 2000.0,
+          "ending_equity": 2004.2820338119316,
+          "total_return_inr": 4.282033811931569,
+          "total_return_pct": 0.21410169059657846,
+          "net_pnl_after_costs": 4.282033811931662,
+          "max_drawdown_pct": 0.6372803067443947,
+          "win_rate_pct": 50.0,
+          "avg_win_inr": 6.002670068630127,
+          "avg_loss_inr": -1.7206362566984645,
+          "profit_factor": 3.4886339545976877,
+          "expectancy_inr": 2.141016905965831,
+          "num_trades": 2,
+          "exposure_pct": 46.726190476190474,
+          "turnover_inr": 999.5698409358254,
+          "est_fees_inr": 2.0064313627276738,
+          "est_slippage_inr": 1.0032156813638369,
+          "buy_hold_return_pct": 2.7240263193885084,
+          "segment_start_idx": 0,
+          "total_bars": 336,
+          "eligible_bars": 287,
+          "warmup_prefix_len": 0,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 32.636510099999995,
+              "exit_price": 32.62208687031514,
+              "pnl_net": -1.7206362566984645,
+              "exit_reason": "stop",
+              "entry_time_ms": 1788595200000,
+              "exit_time_ms": 1788598799999
+            },
+            {
+              "entry": 33.2990412,
+              "exit_price": 33.7998,
+              "pnl_net": 6.002670068630127,
+              "exit_reason": "end_of_data",
+              "entry_time_ms": 1788861600000,
+              "exit_time_ms": 1789430399999
+            }
+          ]
+        },
+        "val": {
+          "segment": "val",
+          "starting_capital": 2000.0,
+          "ending_equity": 1991.8504275080327,
+          "total_return_inr": -8.14957249196732,
+          "total_return_pct": -0.407478624598366,
+          "net_pnl_after_costs": -8.149572491967394,
+          "max_drawdown_pct": 0.7831448080049491,
+          "win_rate_pct": 0.0,
+          "avg_win_inr": 0.0,
+          "avg_loss_inr": -8.149572491967394,
+          "profit_factor": 0.0,
+          "expectancy_inr": -8.149572491967394,
+          "num_trades": 1,
+          "exposure_pct": 21.726190476190478,
+          "turnover_inr": 500.0,
+          "est_fees_inr": 0.9933404381652805,
+          "est_slippage_inr": 0.49667021908264025,
+          "buy_hold_return_pct": 0.05943829319505767,
+          "segment_start_idx": 50,
+          "total_bars": 336,
+          "eligible_bars": 336,
+          "warmup_prefix_len": 50,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 33.98528415,
+              "exit_price": 33.532629947465125,
+              "pnl_net": -8.149572491967394,
+              "exit_reason": "stop",
+              "entry_time_ms": 1789912800000,
+              "exit_time_ms": 1790179199999
+            }
+          ]
+        },
+        "oos": {
+          "segment": "oos",
+          "starting_capital": 2000.0,
+          "ending_equity": 1994.101368519189,
+          "total_return_inr": -5.898631480810991,
+          "total_return_pct": -0.2949315740405496,
+          "net_pnl_after_costs": -5.898631480811028,
+          "max_drawdown_pct": 0.4049930968775266,
+          "win_rate_pct": 0.0,
+          "avg_win_inr": 0.0,
+          "avg_loss_inr": -5.898631480811028,
+          "profit_factor": 0.0,
+          "expectancy_inr": -5.898631480811028,
+          "num_trades": 1,
+          "exposure_pct": 1.2232415902140672,
+          "turnover_inr": 500.0,
+          "est_fees_inr": 0.9955947606601792,
+          "est_slippage_inr": 0.4977973803300896,
+          "buy_hold_return_pct": -2.895223880597018,
+          "segment_start_idx": 50,
+          "total_bars": 327,
+          "eligible_bars": 327,
+          "warmup_prefix_len": 50,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 33.7390611,
+              "exit_price": 33.44180382150733,
+              "pnl_net": -5.898631480811028,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790769600000,
+              "exit_time_ms": 1790787599999
+            }
+          ]
+        }
+      }
+    },
+    {
+      "pair": "B-PEPEINR",
+      "strategy": "simple_breakout",
+      "n_candles": 1000,
+      "segments": {
+        "dev": {
+          "segment": "dev",
+          "starting_capital": 2000.0,
+          "ending_equity": 1967.906550189041,
+          "total_return_inr": -32.0934498109591,
+          "total_return_pct": -1.604672490547955,
+          "net_pnl_after_costs": -32.09344981095913,
+          "max_drawdown_pct": 1.7429437613789824,
+          "win_rate_pct": 0.0,
+          "avg_win_inr": 0.0,
+          "avg_loss_inr": -10.697816603653044,
+          "profit_factor": 0.0,
+          "expectancy_inr": -10.697816603653044,
+          "num_trades": 3,
+          "exposure_pct": 37.5,
+          "turnover_inr": 1490.4620038147268,
+          "est_fees_inr": 2.9532604484912315,
+          "est_slippage_inr": 1.4766302242456157,
+          "buy_hold_return_pct": -1.4040999719179923,
+          "segment_start_idx": 0,
+          "total_bars": 336,
+          "eligible_bars": 287,
+          "warmup_prefix_len": 0,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 0.00034777379999999995,
+              "exit_price": 0.0003417619744668231,
+              "pnl_net": -10.130333560028236,
+              "exit_reason": "stop",
+              "entry_time_ms": 1788408000000,
+              "exit_time_ms": 1788422399999
+            },
+            {
+              "entry": 0.00037328655,
+              "exit_price": 0.00036096274672398824,
+              "pnl_net": -17.8913176210362,
+              "exit_reason": "stop",
+              "entry_time_ms": 1788451200000,
+              "exit_time_ms": 1788519599999
+            },
+            {
+              "entry": 0.00034997489999999995,
+              "exit_price": 0.000348131505928786,
+              "pnl_net": -4.071798629894692,
+              "exit_reason": "stop",
+              "entry_time_ms": 1788620400000,
+              "exit_time_ms": 1789001999999
+            }
+          ]
+        },
+        "val": {
+          "segment": "val",
+          "starting_capital": 2000.0,
+          "ending_equity": 2068.5854860318673,
+          "total_return_inr": 68.58548603186728,
+          "total_return_pct": 3.4292743015933635,
+          "net_pnl_after_costs": 68.58548603186712,
+          "max_drawdown_pct": 2.709566877362808,
+          "win_rate_pct": 50.0,
+          "avg_win_inr": 44.86553665048252,
+          "avg_loss_inr": -10.572793634548958,
+          "profit_factor": 4.24348929916445,
+          "expectancy_inr": 17.14637150796678,
+          "num_trades": 4,
+          "exposure_pct": 23.809523809523807,
+          "turnover_inr": 2013.0938427000494,
+          "est_fees_inr": 4.10092455826937,
+          "est_slippage_inr": 2.050462279134685,
+          "buy_hold_return_pct": 18.76958131586441,
+          "segment_start_idx": 50,
+          "total_bars": 336,
+          "eligible_bars": 336,
+          "warmup_prefix_len": 50,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 0.000348174,
+              "exit_price": 0.00034607443276105207,
+              "pnl_net": -4.510589372109181,
+              "exit_reason": "stop",
+              "entry_time_ms": 1789610400000,
+              "exit_time_ms": 1789617599999
+            },
+            {
+              "entry": 0.00036058019999999995,
+              "exit_price": 0.0003915387147719681,
+              "pnl_net": 41.27106840675734,
+              "exit_reason": "target",
+              "entry_time_ms": 1789657200000,
+              "exit_time_ms": 1789837199999
+            },
+            {
+              "entry": 0.00039609794999999993,
+              "exit_price": 0.00038432825856099073,
+              "pnl_net": -16.634997896988736,
+              "exit_reason": "stop",
+              "entry_time_ms": 1789837200000,
+              "exit_time_ms": 1789901999999
+            },
+            {
+              "entry": 0.00047233605,
+              "exit_price": 0.0005191460166789376,
+              "pnl_net": 48.4600048942077,
+              "exit_reason": "target",
+              "entry_time_ms": 1790002800000,
+              "exit_time_ms": 1790053199999
+            }
+          ]
+        },
+        "oos": {
+          "segment": "oos",
+          "starting_capital": 2000.0,
+          "ending_equity": 2007.4154695305433,
+          "total_return_inr": 7.415469530543305,
+          "total_return_pct": 0.3707734765271653,
+          "net_pnl_after_costs": 7.415469530543284,
+          "max_drawdown_pct": 2.1458863091405678,
+          "win_rate_pct": 33.33333333333333,
+          "avg_win_inr": 28.388063614372896,
+          "avg_loss_inr": -12.340164424550629,
+          "profit_factor": 1.1502303631341873,
+          "expectancy_inr": 1.2359115884238807,
+          "num_trades": 6,
+          "exposure_pct": 37.61467889908257,
+          "turnover_inr": 2987.285509746709,
+          "est_fees_inr": 5.9909729484466325,
+          "est_slippage_inr": 2.9954864742233163,
+          "buy_hold_return_pct": -5.658171615618426,
+          "segment_start_idx": 50,
+          "total_bars": 327,
+          "eligible_bars": 327,
+          "warmup_prefix_len": 50,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 0.00043351665,
+              "exit_price": 0.00042097772756299233,
+              "pnl_net": -15.940176696041732,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790668800000,
+              "exit_time_ms": 1790701199999
+            },
+            {
+              "entry": 0.00043551764999999996,
+              "exit_price": 0.0004313450310781761,
+              "pnl_net": -6.2331496137537625,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790776800000,
+              "exit_time_ms": 1790798399999
+            },
+            {
+              "entry": 0.00044022,
+              "exit_price": 0.00046893476208632965,
+              "pnl_net": 30.72077403034887,
+              "exit_reason": "target",
+              "entry_time_ms": 1790874000000,
+              "exit_time_ms": 1790917199999
+            },
+            {
+              "entry": 0.00046593285,
+              "exit_price": 0.00045692514774233834,
+              "pnl_net": -11.199469780577697,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790917200000,
+              "exit_time_ms": 1790924399999
+            },
+            {
+              "entry": 0.00043371675,
+              "exit_price": 0.0004211121725542445,
+              "pnl_net": -15.98786160782932,
+              "exit_reason": "stop",
+              "entry_time_ms": 1791046800000,
+              "exit_time_ms": 1791255599999
+            },
+            {
+              "entry": 0.00040130054999999997,
+              "exit_price": 0.00042364675877568276,
+              "pnl_net": 26.055353198396926,
+              "exit_reason": "target",
+              "entry_time_ms": 1791594000000,
+              "exit_time_ms": 1791745199999
+            }
+          ]
+        }
+      }
+    },
+    {
+      "pair": "B-SHIBINR",
+      "strategy": "simple_breakout",
+      "n_candles": 1000,
+      "segments": {
+        "dev": {
+          "segment": "dev",
+          "starting_capital": 2000.0,
+          "ending_equity": 1986.1693280067286,
+          "total_return_inr": -13.83067199327138,
+          "total_return_pct": -0.6915335996635691,
+          "net_pnl_after_costs": -13.830671993271357,
+          "max_drawdown_pct": 2.046934929185585,
+          "win_rate_pct": 25.0,
+          "avg_win_inr": 27.135908681647887,
+          "avg_loss_inr": -13.655526891639747,
+          "profit_factor": 0.6623913500855385,
+          "expectancy_inr": -3.4576679983178393,
+          "num_trades": 4,
+          "exposure_pct": 51.19047619047619,
+          "turnover_inr": 2010.5217051580823,
+          "est_fees_inr": 4.0132325872036985,
+          "est_slippage_inr": 2.0066162936018492,
+          "buy_hold_return_pct": 3.3663366336633542,
+          "segment_start_idx": 0,
+          "total_bars": 336,
+          "eligible_bars": 287,
+          "warmup_prefix_len": 0,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 0.0005192595000000001,
+              "exit_price": 0.0005490431106641526,
+              "pnl_net": 27.135908681647887,
+              "exit_reason": "target",
+              "entry_time_ms": 1788400800000,
+              "exit_time_ms": 1788944399999
+            },
+            {
+              "entry": 0.0005512754999999999,
+              "exit_price": 0.000540293841876863,
+              "pnl_net": -11.600575679890637,
+              "exit_reason": "stop",
+              "entry_time_ms": 1788944400000,
+              "exit_time_ms": 1788951599999
+            },
+            {
+              "entry": 0.000528264,
+              "exit_price": 0.0005129260848530427,
+              "pnl_net": -16.11975405283335,
+              "exit_reason": "stop",
+              "entry_time_ms": 1789135200000,
+              "exit_time_ms": 1789156799999
+            },
+            {
+              "entry": 0.0005342669999999999,
+              "exit_price": 0.0005216927329180944,
+              "pnl_net": -13.246250942195257,
+              "exit_reason": "stop",
+              "entry_time_ms": 1789214400000,
+              "exit_time_ms": 1789275599999
+            }
+          ]
+        },
+        "val": {
+          "segment": "val",
+          "starting_capital": 2000.0,
+          "ending_equity": 2032.2615956848076,
+          "total_return_inr": 32.26159568480762,
+          "total_return_pct": 1.6130797842403808,
+          "net_pnl_after_costs": 32.26159568480755,
+          "max_drawdown_pct": 1.620445758156899,
+          "win_rate_pct": 40.0,
+          "avg_win_inr": 38.66959659399872,
+          "avg_loss_inr": -15.025865834396628,
+          "profit_factor": 1.7156902202368833,
+          "expectancy_inr": 6.452319136961511,
+          "num_trades": 5,
+          "exposure_pct": 34.82142857142857,
+          "turnover_inr": 2528.314167712832,
+          "est_fees_inr": 5.096534733210287,
+          "est_slippage_inr": 2.5482673666051436,
+          "buy_hold_return_pct": 10.55662188099809,
+          "segment_start_idx": 50,
+          "total_bars": 336,
+          "eligible_bars": 336,
+          "warmup_prefix_len": 50,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 0.000504252,
+              "exit_price": 0.0005434340140728944,
+              "pnl_net": 37.29334246744199,
+              "exit_reason": "target",
+              "entry_time_ms": 1789628400000,
+              "exit_time_ms": 1789743599999
+            },
+            {
+              "entry": 0.0005472735,
+              "exit_price": 0.0005325038327280562,
+              "pnl_net": -15.252830422339754,
+              "exit_reason": "stop",
+              "entry_time_ms": 1789743600000,
+              "exit_time_ms": 1789801199999
+            },
+            {
+              "entry": 0.000558279,
+              "exit_price": 0.0005432528073848652,
+              "pnl_net": -15.102029235988272,
+              "exit_reason": "stop",
+              "entry_time_ms": 1789840800000,
+              "exit_time_ms": 1789855199999
+            },
+            {
+              "entry": 0.000566283,
+              "exit_price": 0.0006132500666024016,
+              "pnl_net": 40.04585072055546,
+              "exit_reason": "target",
+              "entry_time_ms": 1789981200000,
+              "exit_time_ms": 1790053199999
+            },
+            {
+              "entry": 0.0005982989999999999,
+              "exit_price": 0.0005828579034138932,
+              "pnl_net": -14.72273784486186,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790388000000,
+              "exit_time_ms": 1790567999999
+            }
+          ]
+        },
+        "oos": {
+          "segment": "oos",
+          "starting_capital": 2000.0,
+          "ending_equity": 1970.8366807503457,
+          "total_return_inr": -29.16331924965425,
+          "total_return_pct": -1.4581659624827126,
+          "net_pnl_after_costs": -29.16331924965436,
+          "max_drawdown_pct": 1.4581659624827126,
+          "win_rate_pct": 0.0,
+          "avg_win_inr": 0.0,
+          "avg_loss_inr": -9.721106416551454,
+          "profit_factor": 0.0,
+          "expectancy_inr": -9.721106416551454,
+          "num_trades": 3,
+          "exposure_pct": 3.058103975535168,
+          "turnover_inr": 1489.8229662405022,
+          "est_fees_inr": 2.954914985709915,
+          "est_slippage_inr": 1.4774574928549575,
+          "buy_hold_return_pct": -6.6666666666666625,
+          "segment_start_idx": 50,
+          "total_bars": 327,
+          "eligible_bars": 327,
+          "warmup_prefix_len": 50,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 0.000590295,
+              "exit_price": 0.0005747543178242094,
+              "pnl_net": -14.643742664707453,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790686800000,
+              "exit_time_ms": 1790704799999
+            },
+            {
+              "entry": 0.0005852925,
+              "exit_price": 0.0005735633355916583,
+              "pnl_net": -11.420649708576354,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790773200000,
+              "exit_time_ms": 1790798399999
+            },
+            {
+              "entry": 0.000586293,
+              "exit_price": 0.0005843672509557392,
+              "pnl_net": -3.0989268763705513,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790935200000,
+              "exit_time_ms": 1790938799999
+            }
+          ]
+        }
+      }
+    },
+    {
+      "pair": "B-LINKINR",
+      "strategy": "simple_breakout",
+      "n_candles": 1000,
+      "segments": {
+        "dev": {
+          "segment": "dev",
+          "starting_capital": 2000.0,
+          "ending_equity": 2005.6744025577816,
+          "total_return_inr": 5.674402557781605,
+          "total_return_pct": 0.28372012788908024,
+          "net_pnl_after_costs": 5.674402557781626,
+          "max_drawdown_pct": 0.660943696402068,
+          "win_rate_pct": 50.0,
+          "avg_win_inr": 15.004407110440999,
+          "avg_loss_inr": -9.330004552659373,
+          "profit_factor": 1.6081886161742789,
+          "expectancy_inr": 2.837201278890813,
+          "num_trades": 2,
+          "exposure_pct": 6.25,
+          "turnover_inr": 1003.7511017776103,
+          "est_fees_inr": 2.0162009074742135,
+          "est_slippage_inr": 1.0081004537371068,
+          "buy_hold_return_pct": 2.9495652173913185,
+          "segment_start_idx": 0,
+          "total_bars": 336,
+          "eligible_bars": 287,
+          "warmup_prefix_len": 0,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 1202.74107,
+              "exit_price": 1242.5017675818276,
+              "pnl_net": 15.004407110440999,
+              "exit_reason": "target",
+              "entry_time_ms": 1788652800000,
+              "exit_time_ms": 1788728399999
+            },
+            {
+              "entry": 1335.92763,
+              "exit_price": 1315.1614674002153,
+              "pnl_net": -9.330004552659373,
+              "exit_reason": "stop",
+              "entry_time_ms": 1788764400000,
+              "exit_time_ms": 1788771599999
+            }
+          ]
+        },
+        "val": {
+          "segment": "val",
+          "starting_capital": 2000.0,
+          "ending_equity": 1973.7213408373727,
+          "total_return_inr": -26.278659162627264,
+          "total_return_pct": -1.3139329581313632,
+          "net_pnl_after_costs": -26.278659162627292,
+          "max_drawdown_pct": 1.3139329581313632,
+          "win_rate_pct": 0.0,
+          "avg_win_inr": 0.0,
+          "avg_loss_inr": -8.759553054209098,
+          "profit_factor": 0.0,
+          "expectancy_inr": -8.759553054209098,
+          "num_trades": 3,
+          "exposure_pct": 3.571428571428571,
+          "turnover_inr": 1493.8104898894333,
+          "est_fees_inr": 2.9657910071269296,
+          "est_slippage_inr": 1.4828955035634648,
+          "buy_hold_return_pct": 33.058001192337905,
+          "segment_start_idx": 50,
+          "total_bars": 336,
+          "eligible_bars": 336,
+          "warmup_prefix_len": 50,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 1215.6074999999998,
+              "exit_price": 1200.7834764071813,
+              "pnl_net": -7.588226486521892,
+              "exit_reason": "stop",
+              "entry_time_ms": 1789743600000,
+              "exit_time_ms": 1789750799999
+            },
+            {
+              "entry": 1304.71203,
+              "exit_price": 1283.4966948927647,
+              "pnl_net": -9.581587469222852,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790006400000,
+              "exit_time_ms": 1790045999999
+            },
+            {
+              "entry": 1399.6995,
+              "exit_price": 1378.1461717057514,
+              "pnl_net": -9.10884520688255,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790326800000,
+              "exit_time_ms": 1790333999999
+            }
+          ]
+        },
+        "oos": {
+          "segment": "oos",
+          "starting_capital": 2000.0,
+          "ending_equity": 1986.8125675372573,
+          "total_return_inr": -13.187432462742663,
+          "total_return_pct": -0.6593716231371332,
+          "net_pnl_after_costs": -13.187432462742672,
+          "max_drawdown_pct": 0.6469586994364204,
+          "win_rate_pct": 0.0,
+          "avg_win_inr": 0.0,
+          "avg_loss_inr": -13.187432462742672,
+          "profit_factor": 0.0,
+          "expectancy_inr": -13.187432462742672,
+          "num_trades": 1,
+          "exposure_pct": 0.3058103975535168,
+          "turnover_inr": 500.0,
+          "est_fees_inr": 0.988295010052336,
+          "est_slippage_inr": 0.494147505026168,
+          "buy_hold_return_pct": -14.91091249166725,
+          "segment_start_idx": 50,
+          "total_bars": 327,
+          "eligible_bars": 327,
+          "warmup_prefix_len": 50,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 1560.78,
+              "exit_price": 1524.2421715789694,
+              "pnl_net": -13.187432462742672,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790643600000,
+              "exit_time_ms": 1790650799999
+            }
+          ]
+        }
+      }
+    },
+    {
+      "pair": "B-XRPINR",
+      "strategy": "simple_breakout",
+      "n_candles": 1000,
+      "segments": {
+        "dev": {
+          "segment": "dev",
+          "starting_capital": 2000.0,
+          "ending_equity": 1972.4580750889343,
+          "total_return_inr": -27.541924911065735,
+          "total_return_pct": -1.3770962455532867,
+          "net_pnl_after_costs": -27.541924911065742,
+          "max_drawdown_pct": 1.5419844895847978,
+          "win_rate_pct": 0.0,
+          "avg_win_inr": 0.0,
+          "avg_loss_inr": -9.180641637021914,
+          "profit_factor": 0.0,
+          "expectancy_inr": -9.180641637021914,
+          "num_trades": 3,
+          "exposure_pct": 19.642857142857142,
+          "turnover_inr": 1494.3482798411683,
+          "est_fees_inr": 2.9656030393302664,
+          "est_slippage_inr": 1.4828015196651332,
+          "buy_hold_return_pct": 2.324672489082957,
+          "segment_start_idx": 0,
+          "total_bars": 336,
+          "eligible_bars": 287,
+          "warmup_prefix_len": 0,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 137.06880015000002,
+              "exit_price": 136.13480223964706,
+              "pnl_net": -4.901929952209579,
+              "exit_reason": "stop",
+              "entry_time_ms": 1788415200000,
+              "exit_time_ms": 1788418799999
+            },
+            {
+              "entry": 144.104016,
+              "exit_price": 140.8324211288965,
+              "pnl_net": -12.803020730907456,
+              "exit_reason": "stop",
+              "entry_time_ms": 1788451200000,
+              "exit_time_ms": 1788526799999
+            },
+            {
+              "entry": 140.07,
+              "exit_price": 137.70632160543107,
+              "pnl_net": -9.836974227948707,
+              "exit_reason": "stop",
+              "entry_time_ms": 1788631200000,
+              "exit_time_ms": 1788800399999
+            }
+          ]
+        },
+        "val": {
+          "segment": "val",
+          "starting_capital": 2000.0,
+          "ending_equity": 2035.3689397328794,
+          "total_return_inr": 35.368939732879426,
+          "total_return_pct": 1.7684469866439714,
+          "net_pnl_after_costs": 35.36893973287934,
+          "max_drawdown_pct": 1.8482449126115141,
+          "win_rate_pct": 42.857142857142854,
+          "avg_win_inr": 28.647117378721163,
+          "avg_loss_inr": -12.64310310082104,
+          "profit_factor": 1.6993722081286846,
+          "expectancy_inr": 5.05270567612562,
+          "num_trades": 7,
+          "exposure_pct": 51.19047619047619,
+          "turnover_inr": 3546.6324746550717,
+          "est_fees_inr": 7.139342903398121,
+          "est_slippage_inr": 3.5696714516990604,
+          "buy_hold_return_pct": 5.195529542999566,
+          "segment_start_idx": 50,
+          "total_bars": 336,
+          "eligible_bars": 336,
+          "warmup_prefix_len": 50,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 135.0675,
+              "exit_price": 141.49639230869144,
+              "pnl_net": 22.263114628716785,
+              "exit_reason": "target",
+              "entry_time_ms": 1789740000000,
+              "exit_time_ms": 1789808399999
+            },
+            {
+              "entry": 141.93633269999998,
+              "exit_price": 139.20985814203112,
+              "pnl_net": -11.21361276528769,
+              "exit_reason": "stop",
+              "entry_time_ms": 1789808400000,
+              "exit_time_ms": 1789815599999
+            },
+            {
+              "entry": 141.07049999999998,
+              "exit_price": 139.14958058966556,
+              "pnl_net": -8.343999460368739,
+              "exit_reason": "stop",
+              "entry_time_ms": 1789819200000,
+              "exit_time_ms": 1789865999999
+            },
+            {
+              "entry": 141.04038494999998,
+              "exit_price": 150.25310633453168,
+              "pnl_net": 31.152965865812092,
+              "exit_reason": "target",
+              "entry_time_ms": 1789952400000,
+              "exit_time_ms": 1790024399999
+            },
+            {
+              "entry": 151.0755,
+              "exit_price": 161.20786529266636,
+              "pnl_net": 32.52527164163462,
+              "exit_reason": "target",
+              "entry_time_ms": 1790024400000,
+              "exit_time_ms": 1790139599999
+            },
+            {
+              "entry": 162.1144167,
+              "exit_price": 157.53706162712606,
+              "pnl_net": -16.114168364805046,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790139600000,
+              "exit_time_ms": 1790164799999
+            },
+            {
+              "entry": 153.24318329999997,
+              "exit_price": 149.24204279623325,
+              "pnl_net": -14.900631812822688,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790262000000,
+              "exit_time_ms": 1790571599999
+            }
+          ]
+        },
+        "oos": {
+          "segment": "oos",
+          "starting_capital": 2000.0,
+          "ending_equity": 1968.4793763051402,
+          "total_return_inr": -31.52062369485975,
+          "total_return_pct": -1.5760311847429875,
+          "net_pnl_after_costs": -31.520623694859644,
+          "max_drawdown_pct": 1.5760311847429875,
+          "win_rate_pct": 0.0,
+          "avg_win_inr": 0.0,
+          "avg_loss_inr": -10.506874564953215,
+          "profit_factor": 0.0,
+          "expectancy_inr": -10.506874564953215,
+          "num_trades": 3,
+          "exposure_pct": 4.587155963302752,
+          "turnover_inr": 1491.317175087011,
+          "est_fees_inr": 2.9555470470497376,
+          "est_slippage_inr": 1.4777735235248688,
+          "buy_hold_return_pct": -7.653355704697992,
+          "segment_start_idx": 50,
+          "total_bars": 327,
+          "eligible_bars": 327,
+          "warmup_prefix_len": 50,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 155.0775,
+              "exit_price": 151.91502968197287,
+              "pnl_net": -11.68112431703528,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790686800000,
+              "exit_time_ms": 1790697599999
+            },
+            {
+              "entry": 153.07639995,
+              "exit_price": 150.02994418343553,
+              "pnl_net": -11.369051017885184,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790791200000,
+              "exit_time_ms": 1790801999999
+            },
+            {
+              "entry": 152.076,
+              "exit_price": 149.92265585265415,
+              "pnl_net": -8.470448359939178,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790917200000,
+              "exit_time_ms": 1790960399999
+            }
+          ]
+        }
+      }
+    },
+    {
+      "pair": "B-BTCINR",
+      "strategy": "breakout_retest",
+      "n_candles": 1000,
+      "segments": {
+        "dev": {
+          "segment": "dev",
+          "starting_capital": 2000.0,
+          "ending_equity": 1997.7825764257295,
+          "total_return_inr": -2.2174235742704695,
+          "total_return_pct": -0.11087117871352346,
+          "net_pnl_after_costs": -2.217423574270533,
+          "max_drawdown_pct": 0.18156614967557463,
+          "win_rate_pct": 0.0,
+          "avg_win_inr": 0.0,
+          "avg_loss_inr": -2.217423574270533,
+          "profit_factor": 0.0,
+          "expectancy_inr": -2.217423574270533,
+          "num_trades": 1,
+          "exposure_pct": 0.8928571428571428,
+          "turnover_inr": 500.0,
+          "est_fees_inr": 0.9992814986737402,
+          "est_slippage_inr": 0.4996407493368701,
+          "buy_hold_return_pct": -0.5219703976624942,
+          "segment_start_idx": 0,
+          "total_bars": 336,
+          "eligible_bars": 277,
+          "warmup_prefix_len": 0,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 7803900.0,
+              "exit_price": 7792685.775,
+              "pnl_net": -2.217423574270533,
+              "exit_reason": "stop",
+              "entry_time_ms": 1789002000000,
+              "exit_time_ms": 1789016399999
+            }
+          ]
+        },
+        "val": {
+          "segment": "val",
+          "starting_capital": 2000.0,
+          "ending_equity": 2000.0,
+          "total_return_inr": 0.0,
+          "total_return_pct": 0.0,
+          "net_pnl_after_costs": 0.0,
+          "max_drawdown_pct": 0.0,
+          "win_rate_pct": 0.0,
+          "avg_win_inr": 0.0,
+          "avg_loss_inr": 0.0,
+          "profit_factor": 0.0,
+          "expectancy_inr": 0.0,
+          "num_trades": 0,
+          "exposure_pct": 0.0,
+          "turnover_inr": 0,
+          "est_fees_inr": 0,
+          "est_slippage_inr": 0,
+          "buy_hold_return_pct": 8.20656442544889,
+          "segment_start_idx": 60,
+          "total_bars": 336,
+          "eligible_bars": 336,
+          "warmup_prefix_len": 60,
+          "warnings": [
+            "zero_trades_with_eligible_bars: 336 eligible bars evaluated but no BUY signals fired"
+          ],
+          "trade_details": []
+        },
+        "oos": {
+          "segment": "oos",
+          "starting_capital": 2000.0,
+          "ending_equity": 1991.6228305702052,
+          "total_return_inr": -8.377169429794776,
+          "total_return_pct": -0.4188584714897388,
+          "net_pnl_after_costs": -8.377169429794685,
+          "max_drawdown_pct": 0.6846673431625645,
+          "win_rate_pct": 0.0,
+          "avg_win_inr": 0.0,
+          "avg_loss_inr": -2.792389809931562,
+          "profit_factor": 0.0,
+          "expectancy_inr": -2.792389809931562,
+          "num_trades": 3,
+          "exposure_pct": 6.422018348623854,
+          "turnover_inr": 1497.8632039674283,
+          "est_fees_inr": 2.9918369939960563,
+          "est_slippage_inr": 1.4959184969980281,
+          "buy_hold_return_pct": -1.2864692595328848,
+          "segment_start_idx": 60,
+          "total_bars": 327,
+          "eligible_bars": 327,
+          "warmup_prefix_len": 60,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 8454223.999499999,
+              "exit_price": 8437595.025,
+              "pnl_net": -2.4819961618730835,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790978400000,
+              "exit_time_ms": 1790992799999
+            },
+            {
+              "entry": 8218241.067,
+              "exit_price": 8183875.995,
+              "pnl_net": -3.583191806540651,
+              "exit_reason": "stop",
+              "entry_time_ms": 1791745200000,
+              "exit_time_ms": 1791813599999
+            },
+            {
+              "entry": 8197323.6135,
+              "exit_price": 8183875.995,
+              "pnl_net": -2.311981461380951,
+              "exit_reason": "stop",
+              "entry_time_ms": 1791813600000,
+              "exit_time_ms": 1791817199999
+            }
+          ]
+        }
+      }
+    },
+    {
+      "pair": "B-ETHINR",
+      "strategy": "breakout_retest",
+      "n_candles": 1000,
+      "segments": {
+        "dev": {
+          "segment": "dev",
+          "starting_capital": 2000.0,
+          "ending_equity": 2000.0,
+          "total_return_inr": 0.0,
+          "total_return_pct": 0.0,
+          "net_pnl_after_costs": 0.0,
+          "max_drawdown_pct": 0.0,
+          "win_rate_pct": 0.0,
+          "avg_win_inr": 0.0,
+          "avg_loss_inr": 0.0,
+          "profit_factor": 0.0,
+          "expectancy_inr": 0.0,
+          "num_trades": 0,
+          "exposure_pct": 0.0,
+          "turnover_inr": 0,
+          "est_fees_inr": 0,
+          "est_slippage_inr": 0,
+          "buy_hold_return_pct": 1.2356606982857214,
+          "segment_start_idx": 0,
+          "total_bars": 336,
+          "eligible_bars": 277,
+          "warmup_prefix_len": 0,
+          "warnings": [
+            "zero_trades_with_eligible_bars: 277 eligible bars evaluated but no BUY signals fired"
+          ],
+          "trade_details": []
+        },
+        "val": {
+          "segment": "val",
+          "starting_capital": 2000.0,
+          "ending_equity": 1992.1072388425393,
+          "total_return_inr": -7.892761157460654,
+          "total_return_pct": -0.3946380578730327,
+          "net_pnl_after_costs": -7.892761157460729,
+          "max_drawdown_pct": 0.3946380578730327,
+          "win_rate_pct": 0.0,
+          "avg_win_inr": 0.0,
+          "avg_loss_inr": -2.630920385820243,
+          "profit_factor": 0.0,
+          "expectancy_inr": -2.630920385820243,
+          "num_trades": 3,
+          "exposure_pct": 0.5952380952380952,
+          "turnover_inr": 1497.7017826493811,
+          "est_fees_inr": 2.9919988023448187,
+          "est_slippage_inr": 1.4959994011724094,
+          "buy_hold_return_pct": 5.151241545725247,
+          "segment_start_idx": 60,
+          "total_bars": 336,
+          "eligible_bars": 336,
+          "warmup_prefix_len": 60,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 251215.54499999998,
+              "exit_price": 250261.80299999999,
+              "pnl_net": -3.395406964166963,
+              "exit_reason": "stop",
+              "entry_time_ms": 1789437600000,
+              "exit_time_ms": 1789441199999
+            },
+            {
+              "entry": 269134.5,
+              "exit_price": 268646.02,
+              "pnl_net": -2.402055474142023,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790535600000,
+              "exit_time_ms": 1790546399999
+            },
+            {
+              "entry": 268970.0178,
+              "exit_price": 268646.02,
+              "pnl_net": -2.0952987191517436,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790611200000,
+              "exit_time_ms": 1790614799999
+            }
+          ]
+        },
+        "oos": {
+          "segment": "oos",
+          "starting_capital": 2000.0,
+          "ending_equity": 2005.3662440302642,
+          "total_return_inr": 5.36624403026417,
+          "total_return_pct": 0.2683122015132085,
+          "net_pnl_after_costs": 5.3662440302640615,
+          "max_drawdown_pct": 0.06337138792472967,
+          "win_rate_pct": 100.0,
+          "avg_win_inr": 5.3662440302640615,
+          "avg_loss_inr": 0.0,
+          "profit_factor": Infinity,
+          "expectancy_inr": 5.3662440302640615,
+          "num_trades": 1,
+          "exposure_pct": 0.6116207951070336,
+          "turnover_inr": 500.0,
+          "est_fees_inr": 1.006876558868567,
+          "est_slippage_inr": 0.5034382794342835,
+          "buy_hold_return_pct": -4.688329854814413,
+          "segment_start_idx": 60,
+          "total_bars": 327,
+          "eligible_bars": 327,
+          "warmup_prefix_len": 60,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 250125.10004999998,
+              "exit_price": 253565.1,
+              "pnl_net": 5.3662440302640615,
+              "exit_reason": "target",
+              "entry_time_ms": 1791766800000,
+              "exit_time_ms": 1791777599999
+            }
+          ]
+        }
+      }
+    },
+    {
+      "pair": "B-WRXINR",
+      "strategy": "breakout_retest",
+      "n_candles": 1000,
+      "segments": {
+        "dev": {
+          "segment": "dev",
+          "starting_capital": 2000.0,
+          "ending_equity": 2047.331209027307,
+          "total_return_inr": 47.33120902730707,
+          "total_return_pct": 2.3665604513653533,
+          "net_pnl_after_costs": 47.331209027307125,
+          "max_drawdown_pct": 1.7769871660676733,
+          "win_rate_pct": 25.0,
+          "avg_win_inr": 65.2459372165769,
+          "avg_loss_inr": -5.971576063089924,
+          "profit_factor": 3.642027750979593,
+          "expectancy_inr": 11.832802256826783,
+          "num_trades": 4,
+          "exposure_pct": 3.273809523809524,
+          "turnover_inr": 2043.245048025316,
+          "est_fees_inr": 4.1400313521060985,
+          "est_slippage_inr": 2.0700156760530493,
+          "buy_hold_return_pct": 41.61490683229813,
+          "segment_start_idx": 0,
+          "total_bars": 336,
+          "eligible_bars": 277,
+          "warmup_prefix_len": 0,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 2.16108,
+              "exit_price": 2.45,
+              "pnl_net": 65.2459372165769,
+              "exit_reason": "target",
+              "entry_time_ms": 1788804000000,
+              "exit_time_ms": 1788839999999
+            },
+            {
+              "entry": 2.131065,
+              "exit_price": 2.09945,
+              "pnl_net": -9.197083521528866,
+              "exit_reason": "stop",
+              "entry_time_ms": 1788922800000,
+              "exit_time_ms": 1788933599999
+            },
+            {
+              "entry": 2.111055,
+              "exit_price": 2.09945,
+              "pnl_net": -4.363452505408629,
+              "exit_reason": "stop",
+              "entry_time_ms": 1788933600000,
+              "exit_time_ms": 1788937199999
+            },
+            {
+              "entry": 2.111055,
+              "exit_price": 2.09945,
+              "pnl_net": -4.354192162332279,
+              "exit_reason": "stop",
+              "entry_time_ms": 1788937200000,
+              "exit_time_ms": 1788940799999
+            }
+          ]
+        },
+        "val": {
+          "segment": "val",
+          "starting_capital": 2000.0,
+          "ending_equity": 1987.2934963424657,
+          "total_return_inr": -12.706503657534313,
+          "total_return_pct": -0.6353251828767157,
+          "net_pnl_after_costs": -12.70650365753438,
+          "max_drawdown_pct": 0.6353251828767157,
+          "win_rate_pct": 0.0,
+          "avg_win_inr": 0.0,
+          "avg_loss_inr": -4.2355012191781265,
+          "profit_factor": 0.0,
+          "expectancy_inr": -4.2355012191781265,
+          "num_trades": 3,
+          "exposure_pct": 0.5952380952380952,
+          "turnover_inr": 1496.8188749139786,
+          "est_fees_inr": 2.985409360210739,
+          "est_slippage_inr": 1.4927046801053696,
+          "buy_hold_return_pct": 5.309734513274338,
+          "segment_start_idx": 60,
+          "total_bars": 336,
+          "eligible_bars": 336,
+          "warmup_prefix_len": 60,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 2.2811399999999997,
+              "exit_price": 2.2685999999999997,
+              "pnl_net": -4.2445027486256866,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790060400000,
+              "exit_time_ms": 1790067599999
+            },
+            {
+              "entry": 2.2811399999999997,
+              "exit_price": 2.2685999999999997,
+              "pnl_net": -4.235494846834142,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790082000000,
+              "exit_time_ms": 1790085599999
+            },
+            {
+              "entry": 2.2811399999999997,
+              "exit_price": 2.2685999999999997,
+              "pnl_net": -4.226506062074552,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790085600000,
+              "exit_time_ms": 1790092799999
+            }
+          ]
+        },
+        "oos": {
+          "segment": "oos",
+          "starting_capital": 2000.0,
+          "ending_equity": 1991.4949163557462,
+          "total_return_inr": -8.505083644253773,
+          "total_return_pct": -0.4252541822126887,
+          "net_pnl_after_costs": -8.505083644253823,
+          "max_drawdown_pct": 0.4252541822126887,
+          "win_rate_pct": 0.0,
+          "avg_win_inr": 0.0,
+          "avg_loss_inr": -2.835027881417941,
+          "profit_factor": 0.0,
+          "expectancy_inr": -2.835027881417941,
+          "num_trades": 3,
+          "exposure_pct": 0.6116207951070336,
+          "turnover_inr": 1497.8608468520342,
+          "est_fees_inr": 2.9917041663092783,
+          "est_slippage_inr": 1.4958520831546391,
+          "buy_hold_return_pct": -5.508474576271181,
+          "segment_start_idx": 60,
+          "total_bars": 327,
+          "eligible_bars": 327,
+          "warmup_prefix_len": 60,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 2.3811899999999997,
+              "exit_price": 2.37805,
+              "pnl_net": -2.1583451971492615,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790672400000,
+              "exit_time_ms": 1790675999999
+            },
+            {
+              "entry": 2.3411699999999995,
+              "exit_price": 2.3283,
+              "pnl_net": -4.239922197564688,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790949600000,
+              "exit_time_ms": 1790953199999
+            },
+            {
+              "entry": 2.331165,
+              "exit_price": 2.3283,
+              "pnl_net": -2.1068162495398726,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790953200000,
+              "exit_time_ms": 1790963999999
+            }
+          ]
+        }
+      }
+    },
+    {
+      "pair": "B-TRXINR",
+      "strategy": "breakout_retest",
+      "n_candles": 1000,
+      "segments": {
+        "dev": {
+          "segment": "dev",
+          "starting_capital": 2000.0,
+          "ending_equity": 1994.4186429356046,
+          "total_return_inr": -5.5813570643954336,
+          "total_return_pct": -0.2790678532197717,
+          "net_pnl_after_costs": -5.581357064395361,
+          "max_drawdown_pct": 0.2985247739386476,
+          "win_rate_pct": 0.0,
+          "avg_win_inr": 0.0,
+          "avg_loss_inr": -1.8604523547984535,
+          "profit_factor": 0.0,
+          "expectancy_inr": -1.8604523547984535,
+          "num_trades": 3,
+          "exposure_pct": 0.5952380952380952,
+          "turnover_inr": 1498.807017854205,
+          "est_fees_inr": 2.9965274698487883,
+          "est_slippage_inr": 1.4982637349243941,
+          "buy_hold_return_pct": 2.7240263193885084,
+          "segment_start_idx": 0,
+          "total_bars": 336,
+          "eligible_bars": 277,
+          "warmup_prefix_len": 0,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 33.35006669999999,
+              "exit_price": 33.34245,
+              "pnl_net": -1.614021885149524,
+              "exit_reason": "stop",
+              "entry_time_ms": 1788944400000,
+              "exit_time_ms": 1788947999999
+            },
+            {
+              "entry": 33.3454644,
+              "exit_price": 33.34245,
+              "pnl_net": -1.543884812880656,
+              "exit_reason": "stop",
+              "entry_time_ms": 1788955200000,
+              "exit_time_ms": 1788958799999
+            },
+            {
+              "entry": 33.4044939,
+              "exit_price": 33.34245,
+              "pnl_net": -2.423450366365181,
+              "exit_reason": "stop",
+              "entry_time_ms": 1788984000000,
+              "exit_time_ms": 1788994799999
+            }
+          ]
+        },
+        "val": {
+          "segment": "val",
+          "starting_capital": 2000.0,
+          "ending_equity": 2000.0,
+          "total_return_inr": 0.0,
+          "total_return_pct": 0.0,
+          "net_pnl_after_costs": 0.0,
+          "max_drawdown_pct": 0.0,
+          "win_rate_pct": 0.0,
+          "avg_win_inr": 0.0,
+          "avg_loss_inr": 0.0,
+          "profit_factor": 0.0,
+          "expectancy_inr": 0.0,
+          "num_trades": 0,
+          "exposure_pct": 0.0,
+          "turnover_inr": 0,
+          "est_fees_inr": 0,
+          "est_slippage_inr": 0,
+          "buy_hold_return_pct": 0.05943829319505767,
+          "segment_start_idx": 60,
+          "total_bars": 336,
+          "eligible_bars": 336,
+          "warmup_prefix_len": 60,
+          "warnings": [
+            "zero_trades_with_eligible_bars: 336 eligible bars evaluated but no BUY signals fired"
+          ],
+          "trade_details": []
+        },
+        "oos": {
+          "segment": "oos",
+          "starting_capital": 2000.0,
+          "ending_equity": 2000.0,
+          "total_return_inr": 0.0,
+          "total_return_pct": 0.0,
+          "net_pnl_after_costs": 0.0,
+          "max_drawdown_pct": 0.0,
+          "win_rate_pct": 0.0,
+          "avg_win_inr": 0.0,
+          "avg_loss_inr": 0.0,
+          "profit_factor": 0.0,
+          "expectancy_inr": 0.0,
+          "num_trades": 0,
+          "exposure_pct": 0.0,
+          "turnover_inr": 0,
+          "est_fees_inr": 0,
+          "est_slippage_inr": 0,
+          "buy_hold_return_pct": -2.895223880597018,
+          "segment_start_idx": 60,
+          "total_bars": 327,
+          "eligible_bars": 327,
+          "warmup_prefix_len": 60,
+          "warnings": [
+            "zero_trades_with_eligible_bars: 327 eligible bars evaluated but no BUY signals fired"
+          ],
+          "trade_details": []
+        }
+      }
+    },
+    {
+      "pair": "B-PEPEINR",
+      "strategy": "breakout_retest",
+      "n_candles": 1000,
+      "segments": {
+        "dev": {
+          "segment": "dev",
+          "starting_capital": 2000.0,
+          "ending_equity": 1994.8662336742077,
+          "total_return_inr": -5.133766325792294,
+          "total_return_pct": -0.2566883162896147,
+          "net_pnl_after_costs": -5.133766325792292,
+          "max_drawdown_pct": 0.9388710110545005,
+          "win_rate_pct": 0.0,
+          "avg_win_inr": 0.0,
+          "avg_loss_inr": -5.133766325792292,
+          "profit_factor": 0.0,
+          "expectancy_inr": -5.133766325792292,
+          "num_trades": 1,
+          "exposure_pct": 10.119047619047619,
+          "turnover_inr": 500.0,
+          "est_fees_inr": 0.9963607748364626,
+          "est_slippage_inr": 0.4981803874182313,
+          "buy_hold_return_pct": -1.4040999719179923,
+          "segment_start_idx": 0,
+          "total_bars": 336,
+          "eligible_bars": 277,
+          "warmup_prefix_len": 0,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 0.0003351675,
+              "exit_price": 0.000332728,
+              "pnl_net": -5.133766325792292,
+              "exit_reason": "stop",
+              "entry_time_ms": 1789214400000,
+              "exit_time_ms": 1789340399999
+            }
+          ]
+        },
+        "val": {
+          "segment": "val",
+          "starting_capital": 2000.0,
+          "ending_equity": 2000.0944807190199,
+          "total_return_inr": 0.09448071901988442,
+          "total_return_pct": 0.004724035950994221,
+          "net_pnl_after_costs": 0.09448071901991817,
+          "max_drawdown_pct": 0.9170379393194212,
+          "win_rate_pct": 25.0,
+          "avg_win_inr": 17.223902782449116,
+          "avg_loss_inr": -5.709807354476399,
+          "profit_factor": 1.0055156980002047,
+          "expectancy_inr": 0.023620179754979542,
+          "num_trades": 4,
+          "exposure_pct": 3.571428571428571,
+          "turnover_inr": 2008.7927314258918,
+          "est_fees_inr": 4.023715516846073,
+          "est_slippage_inr": 2.0118577584230364,
+          "buy_hold_return_pct": 18.76958131586441,
+          "segment_start_idx": 60,
+          "total_bars": 336,
+          "eligible_bars": 336,
+          "warmup_prefix_len": 60,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 0.00034207095,
+              "exit_price": 0.0003549,
+              "pnl_net": 17.223902782449116,
+              "exit_reason": "target",
+              "entry_time_ms": 1789617600000,
+              "exit_time_ms": 1789657199999
+            },
+            {
+              "entry": 0.00045022499999999995,
+              "exit_price": 0.0004458595,
+              "pnl_net": -6.39546646458213,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790272800000,
+              "exit_time_ms": 1790276399999
+            },
+            {
+              "entry": 0.00044782379999999997,
+              "exit_price": 0.0004458595,
+              "pnl_net": -3.709849714615827,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790294400000,
+              "exit_time_ms": 1790301599999
+            },
+            {
+              "entry": 0.00045082529999999996,
+              "exit_price": 0.0004458595,
+              "pnl_net": -7.024105884231241,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790344800000,
+              "exit_time_ms": 1790351999999
+            }
+          ]
+        },
+        "oos": {
+          "segment": "oos",
+          "starting_capital": 2000.0,
+          "ending_equity": 1986.9860565804793,
+          "total_return_inr": -13.013943419520729,
+          "total_return_pct": -0.6506971709760364,
+          "net_pnl_after_costs": -13.013943419520823,
+          "max_drawdown_pct": 0.689140556731479,
+          "win_rate_pct": 0.0,
+          "avg_win_inr": 0.0,
+          "avg_loss_inr": -4.337981139840275,
+          "profit_factor": 0.0,
+          "expectancy_inr": -4.337981139840275,
+          "num_trades": 3,
+          "exposure_pct": 1.2232415902140672,
+          "turnover_inr": 1497.795535866143,
+          "est_fees_inr": 2.9870577148850925,
+          "est_slippage_inr": 1.4935288574425463,
+          "buy_hold_return_pct": -5.658171615618426,
+          "segment_start_idx": 60,
+          "total_bars": 327,
+          "eligible_bars": 327,
+          "warmup_prefix_len": 60,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 0.00043941959999999996,
+              "exit_price": 0.0004378,
+              "pnl_net": -3.3401211507178408,
+              "exit_reason": "stop",
+              "entry_time_ms": 1791216000000,
+              "exit_time_ms": 1791219599999
+            },
+            {
+              "entry": 0.00040150064999999995,
+              "exit_price": 0.00040098499999999997,
+              "pnl_net": -2.1376142339928514,
+              "exit_reason": "stop",
+              "entry_time_ms": 1791698400000,
+              "exit_time_ms": 1791712799999
+            },
+            {
+              "entry": 0.00041990985,
+              "exit_price": 0.00041481549999999997,
+              "pnl_net": -7.53620803481013,
+              "exit_reason": "stop",
+              "entry_time_ms": 1791770400000,
+              "exit_time_ms": 1791777599999
+            }
+          ]
+        }
+      }
+    },
+    {
+      "pair": "B-SHIBINR",
+      "strategy": "breakout_retest",
+      "n_candles": 1000,
+      "segments": {
+        "dev": {
+          "segment": "dev",
+          "starting_capital": 2000.0,
+          "ending_equity": 1992.8877564849793,
+          "total_return_inr": -7.112243515020737,
+          "total_return_pct": -0.3556121757510368,
+          "net_pnl_after_costs": -7.112243515020758,
+          "max_drawdown_pct": 0.45409175326102635,
+          "win_rate_pct": 0.0,
+          "avg_win_inr": 0.0,
+          "avg_loss_inr": -2.3707478383402525,
+          "profit_factor": 0.0,
+          "expectancy_inr": -2.3707478383402525,
+          "num_trades": 3,
+          "exposure_pct": 0.2976190476190476,
+          "turnover_inr": 1498.1990849641152,
+          "est_fees_inr": 2.99377659130016,
+          "est_slippage_inr": 1.49688829565008,
+          "buy_hold_return_pct": 3.3663366336633542,
+          "segment_start_idx": 0,
+          "total_bars": 336,
+          "eligible_bars": 277,
+          "warmup_prefix_len": 0,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 0.0005392694999999999,
+              "exit_price": 0.000538295,
+              "pnl_net": -2.402181794075035,
+              "exit_reason": "stop",
+              "entry_time_ms": 1788696000000,
+              "exit_time_ms": 1788699599999
+            },
+            {
+              "entry": 0.0005392694999999999,
+              "exit_price": 0.000538295,
+              "pnl_net": -2.3992965553891423,
+              "exit_reason": "stop",
+              "entry_time_ms": 1788868800000,
+              "exit_time_ms": 1788875999999
+            },
+            {
+              "entry": 0.0005152575,
+              "exit_price": 0.000514415,
+              "pnl_net": -2.31076516555658,
+              "exit_reason": "stop",
+              "entry_time_ms": 1789153200000,
+              "exit_time_ms": 1789156799999
+            }
+          ]
+        },
+        "val": {
+          "segment": "val",
+          "starting_capital": 2000.0,
+          "ending_equity": 2034.4001068846524,
+          "total_return_inr": 34.40010688465236,
+          "total_return_pct": 1.720005344232618,
+          "net_pnl_after_costs": 34.40010688465228,
+          "max_drawdown_pct": 0.7047688856633821,
+          "win_rate_pct": 37.5,
+          "avg_win_inr": 17.188191257983934,
+          "avg_loss_inr": -3.4328933778599042,
+          "profit_factor": 3.0041465375250076,
+          "expectancy_inr": 4.300013360581535,
+          "num_trades": 8,
+          "exposure_pct": 8.035714285714286,
+          "turnover_inr": 4063.961950012926,
+          "est_fees_inr": 8.174585885739113,
+          "est_slippage_inr": 4.087292942869556,
+          "buy_hold_return_pct": 10.55662188099809,
+          "segment_start_idx": 60,
+          "total_bars": 336,
+          "eligible_bars": 336,
+          "warmup_prefix_len": 60,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 0.0004912455,
+              "exit_price": 0.000522,
+              "pnl_net": 29.755622952271292,
+              "exit_reason": "target",
+              "entry_time_ms": 1789610400000,
+              "exit_time_ms": 1789696799999
+            },
+            {
+              "entry": 0.0005242620000000001,
+              "exit_price": 0.000534,
+              "pnl_net": 7.889061379960767,
+              "exit_reason": "target",
+              "entry_time_ms": 1789714800000,
+              "exit_time_ms": 1789725599999
+            },
+            {
+              "entry": 0.000548274,
+              "exit_price": 0.00054725,
+              "pnl_net": -2.4782230871305764,
+              "exit_reason": "stop",
+              "entry_time_ms": 1789952400000,
+              "exit_time_ms": 1789955999999
+            },
+            {
+              "entry": 0.0005492744999999999,
+              "exit_price": 0.00054725,
+              "pnl_net": -3.3988512712181853,
+              "exit_reason": "stop",
+              "entry_time_ms": 1789963200000,
+              "exit_time_ms": 1789966799999
+            },
+            {
+              "entry": 0.0005492744999999999,
+              "exit_price": 0.000566,
+              "pnl_net": 13.919889441719741,
+              "exit_reason": "target",
+              "entry_time_ms": 1789977600000,
+              "exit_time_ms": 1789984799999
+            },
+            {
+              "entry": 0.0006002999999999999,
+              "exit_price": 0.00059501,
+              "pnl_net": -6.034288255579739,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790082000000,
+              "exit_time_ms": 1790089199999
+            },
+            {
+              "entry": 0.0005972985,
+              "exit_price": 0.00059501,
+              "pnl_net": -3.4805001874344508,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790092800000,
+              "exit_time_ms": 1790096399999
+            },
+            {
+              "entry": 0.0005952975,
+              "exit_price": 0.00059501,
+              "pnl_net": -1.7726040879365705,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790100000000,
+              "exit_time_ms": 1790103599999
+            }
+          ]
+        },
+        "oos": {
+          "segment": "oos",
+          "starting_capital": 2000.0,
+          "ending_equity": 1983.9028319066215,
+          "total_return_inr": -16.097168093378514,
+          "total_return_pct": -0.8048584046689258,
+          "net_pnl_after_costs": -16.097168093378485,
+          "max_drawdown_pct": 1.0469643687969523,
+          "win_rate_pct": 0.0,
+          "avg_win_inr": 0.0,
+          "avg_loss_inr": -5.365722697792829,
+          "profit_factor": 0.0,
+          "expectancy_inr": -5.365722697792829,
+          "num_trades": 3,
+          "exposure_pct": 0.6116207951070336,
+          "turnover_inr": 1495.9681396781048,
+          "est_fees_inr": 2.980309575626271,
+          "est_slippage_inr": 1.4901547878131356,
+          "buy_hold_return_pct": -6.6666666666666625,
+          "segment_start_idx": 60,
+          "total_bars": 327,
+          "eligible_bars": 327,
+          "warmup_prefix_len": 60,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 0.0005832915,
+              "exit_price": 0.000578095,
+              "pnl_net": -5.947780612266688,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790690400000,
+              "exit_time_ms": 1790701199999
+            },
+            {
+              "entry": 0.0005812905,
+              "exit_price": 0.000578095,
+              "pnl_net": -4.231880063047153,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790701200000,
+              "exit_time_ms": 1790704799999
+            },
+            {
+              "entry": 0.0005832915,
+              "exit_price": 0.000578095,
+              "pnl_net": -5.9175074180646465,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790712000000,
+              "exit_time_ms": 1790715599999
+            }
+          ]
+        }
+      }
+    },
+    {
+      "pair": "B-LINKINR",
+      "strategy": "breakout_retest",
+      "n_candles": 1000,
+      "segments": {
+        "dev": {
+          "segment": "dev",
+          "starting_capital": 2000.0,
+          "ending_equity": 1998.4951125266432,
+          "total_return_inr": -1.5048874733568027,
+          "total_return_pct": -0.07524437366784013,
+          "net_pnl_after_costs": -1.5048874733568338,
+          "max_drawdown_pct": 0.8070395548498963,
+          "win_rate_pct": 25.0,
+          "avg_win_inr": 14.754982166031981,
+          "avg_loss_inr": -5.419956546462938,
+          "profit_factor": 0.9074477528582818,
+          "expectancy_inr": -0.37622186833920845,
+          "num_trades": 4,
+          "exposure_pct": 8.928571428571429,
+          "turnover_inr": 2006.8104548419356,
+          "est_fees_inr": 4.018143237066114,
+          "est_slippage_inr": 2.009071618533057,
+          "buy_hold_return_pct": 2.9495652173913185,
+          "segment_start_idx": 0,
+          "total_bars": 336,
+          "eligible_bars": 277,
+          "warmup_prefix_len": 0,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 1199.689545,
+              "exit_price": 1238.75,
+              "pnl_net": 14.754982166031981,
+              "exit_reason": "target",
+              "entry_time_ms": 1788674400000,
+              "exit_time_ms": 1788728399999
+            },
+            {
+              "entry": 1160.58,
+              "exit_price": 1150.3991,
+              "pnl_net": -5.922923017164626,
+              "exit_reason": "stop",
+              "entry_time_ms": 1789135200000,
+              "exit_time_ms": 1789181999999
+            },
+            {
+              "entry": 1162.711065,
+              "exit_price": 1154.2,
+              "pnl_net": -5.177281096024661,
+              "exit_reason": "stop",
+              "entry_time_ms": 1789203600000,
+              "exit_time_ms": 1789210799999
+            },
+            {
+              "entry": 1162.7010599999999,
+              "exit_price": 1154.2,
+              "pnl_net": -5.159665526199528,
+              "exit_reason": "stop",
+              "entry_time_ms": 1789210800000,
+              "exit_time_ms": 1789225199999
+            }
+          ]
+        },
+        "val": {
+          "segment": "val",
+          "starting_capital": 2000.0,
+          "ending_equity": 2040.1602177911936,
+          "total_return_inr": 40.160217791193645,
+          "total_return_pct": 2.008010889559682,
+          "net_pnl_after_costs": 40.16021779119365,
+          "max_drawdown_pct": 0.36067495568920854,
+          "win_rate_pct": 100.0,
+          "avg_win_inr": 40.16021779119365,
+          "avg_loss_inr": 0.0,
+          "profit_factor": Infinity,
+          "expectancy_inr": 40.16021779119365,
+          "num_trades": 1,
+          "exposure_pct": 8.630952380952381,
+          "turnover_inr": 500.0,
+          "est_fees_inr": 1.0417228019941849,
+          "est_slippage_inr": 0.5208614009970924,
+          "buy_hold_return_pct": 33.058001192337905,
+          "segment_start_idx": 60,
+          "total_bars": 336,
+          "eligible_bars": 336,
+          "warmup_prefix_len": 60,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 1098.92919,
+              "exit_price": 1190.63,
+              "pnl_net": 40.16021779119365,
+              "exit_reason": "target",
+              "entry_time_ms": 1789635600000,
+              "exit_time_ms": 1789743599999
+            }
+          ]
+        },
+        "oos": {
+          "segment": "oos",
+          "starting_capital": 2000.0,
+          "ending_equity": 1993.0365375416193,
+          "total_return_inr": -6.963462458380718,
+          "total_return_pct": -0.3481731229190359,
+          "net_pnl_after_costs": -6.963462458380831,
+          "max_drawdown_pct": 0.4702200757661217,
+          "win_rate_pct": 33.33333333333333,
+          "avg_win_inr": 2.1922078813219708,
+          "avg_loss_inr": -4.577835169851401,
+          "profit_factor": 0.239437179363661,
+          "expectancy_inr": -2.32115415279361,
+          "num_trades": 3,
+          "exposure_pct": 10.703363914373089,
+          "turnover_inr": 1496.5153189933258,
+          "est_fees_inr": 2.990553005035825,
+          "est_slippage_inr": 1.4952765025179124,
+          "buy_hold_return_pct": -14.91091249166725,
+          "segment_start_idx": 60,
+          "total_bars": 327,
+          "eligible_bars": 327,
+          "warmup_prefix_len": 60,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 1291.34535,
+              "exit_price": 1282.8535,
+              "pnl_net": -4.783053686993999,
+              "exit_reason": "stop",
+              "entry_time_ms": 1791644400000,
+              "exit_time_ms": 1791698399999
+            },
+            {
+              "entry": 1290.30483,
+              "exit_price": 1282.8535,
+              "pnl_net": -4.3726166527088015,
+              "exit_reason": "stop",
+              "entry_time_ms": 1791712800000,
+              "exit_time_ms": 1791727199999
+            },
+            {
+              "entry": 1305.042195,
+              "exit_price": 1314.72,
+              "pnl_net": 2.1922078813219708,
+              "exit_reason": "end_of_data",
+              "entry_time_ms": 1791748800000,
+              "exit_time_ms": 1791817199999
+            }
+          ]
+        }
+      }
+    },
+    {
+      "pair": "B-XRPINR",
+      "strategy": "breakout_retest",
+      "n_candles": 1000,
+      "segments": {
+        "dev": {
+          "segment": "dev",
+          "starting_capital": 2000.0,
+          "ending_equity": 1991.6061075249597,
+          "total_return_inr": -8.393892475040275,
+          "total_return_pct": -0.4196946237520137,
+          "net_pnl_after_costs": -8.39389247504036,
+          "max_drawdown_pct": 0.7590381362442103,
+          "win_rate_pct": 0.0,
+          "avg_win_inr": 0.0,
+          "avg_loss_inr": -2.7979641583467867,
+          "profit_factor": 0.0,
+          "expectancy_inr": -2.7979641583467867,
+          "num_trades": 3,
+          "exposure_pct": 4.166666666666666,
+          "turnover_inr": 1497.3938067351294,
+          "est_fees_inr": 2.990880041056804,
+          "est_slippage_inr": 1.495440020528402,
+          "buy_hold_return_pct": 2.324672489082957,
+          "segment_start_idx": 0,
+          "total_bars": 336,
+          "eligible_bars": 277,
+          "warmup_prefix_len": 0,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 141.07049999999998,
+              "exit_price": 140.3828585,
+              "pnl_net": -3.9335705826164364,
+              "exit_reason": "stop",
+              "entry_time_ms": 1788922800000,
+              "exit_time_ms": 1788955199999
+            },
+            {
+              "entry": 140.68230599999998,
+              "exit_price": 140.3828585,
+              "pnl_net": -2.5576318942494076,
+              "exit_reason": "stop",
+              "entry_time_ms": 1788955200000,
+              "exit_time_ms": 1788973199999
+            },
+            {
+              "entry": 136.26809999999998,
+              "exit_price": 136.1564965,
+              "pnl_net": -1.9026899981745156,
+              "exit_reason": "stop",
+              "entry_time_ms": 1789189200000,
+              "exit_time_ms": 1789199999999
+            }
+          ]
+        },
+        "val": {
+          "segment": "val",
+          "starting_capital": 2000.0,
+          "ending_equity": 1988.731593808627,
+          "total_return_inr": -11.26840619137306,
+          "total_return_pct": -0.563420309568653,
+          "net_pnl_after_costs": -11.268406191373165,
+          "max_drawdown_pct": 1.6867293956107625,
+          "win_rate_pct": 0.0,
+          "avg_win_inr": 0.0,
+          "avg_loss_inr": -11.268406191373165,
+          "profit_factor": 0.0,
+          "expectancy_inr": -11.268406191373165,
+          "num_trades": 1,
+          "exposure_pct": 24.404761904761905,
+          "turnover_inr": 500.0,
+          "est_fees_inr": 0.990216919187408,
+          "est_slippage_inr": 0.495108459593704,
+          "buy_hold_return_pct": 5.195529542999566,
+          "segment_start_idx": 60,
+          "total_bars": 336,
+          "eligible_bars": 336,
+          "warmup_prefix_len": 60,
+          "warnings": [],
+          "trade_details": [
+            {
+              "entry": 153.24328334999998,
+              "exit_price": 150.2449005,
+              "pnl_net": -11.268406191373165,
+              "exit_reason": "stop",
+              "entry_time_ms": 1790265600000,
+              "exit_time_ms": 1790564399999
+            }
+          ]
+        },
+        "oos": {
+          "segment": "oos",
+          "starting_capital": 2000.0,
+          "ending_equity": 2000.0,
+          "total_return_inr": 0.0,
+          "total_return_pct": 0.0,
+          "net_pnl_after_costs": 0.0,
+          "max_drawdown_pct": 0.0,
+          "win_rate_pct": 0.0,
+          "avg_win_inr": 0.0,
+          "avg_loss_inr": 0.0,
+          "profit_factor": 0.0,
+          "expectancy_inr": 0.0,
+          "num_trades": 0,
+          "exposure_pct": 0.0,
+          "turnover_inr": 0,
+          "est_fees_inr": 0,
+          "est_slippage_inr": 0,
+          "buy_hold_return_pct": -7.653355704697992,
+          "segment_start_idx": 60,
+          "total_bars": 327,
+          "eligible_bars": 327,
+          "warmup_prefix_len": 60,
+          "warnings": [
+            "zero_trades_with_eligible_bars: 327 eligible bars evaluated but no BUY signals fired"
+          ],
+          "trade_details": []
+        }
+      }
+    }
+  ],
+  "aggregated": {
+    "simple_breakout": {
+      "trades": 75,
+      "wins": 20,
+      "losses": 55,
+      "net_pnl": 23.36788791171532,
+      "wins_pnl": 625.3923030890786,
+      "losses_pnl_abs": 602.0244151773634,
+      "hold_bars_total": 2791.999979166661,
+      "exit_breakdown": {
+        "stop": 54,
+        "end_of_data": 5,
+        "target": 16
+      },
+      "max_dd_pct": 2.709566877362808,
+      "bh_total_pct": 89.3282064805072,
+      "bh_count": 24,
+      "win_rate_pct": 26.666666666666668,
+      "avg_win": 31.26961515445393,
+      "avg_loss": -10.945898457770243,
+      "expectancy": 0.31157183882287093,
+      "profit_factor": 1.0388155153222993,
+      "hold_hours_avg": 37.226666388888816,
+      "bh_avg_pct": 3.722008603354467
+    },
+    "breakout_retest": {
+      "trades": 55,
+      "wins": 9,
+      "losses": 46,
+      "net_pnl": 12.584189972863976,
+      "wins_pnl": 196.50806564178947,
+      "losses_pnl_abs": 183.92387566892552,
+      "hold_bars_total": 369.99998472222217,
+      "exit_breakdown": {
+        "stop": 46,
+        "target": 8,
+        "end_of_data": 1
+      },
+      "max_dd_pct": 1.7769871660676733,
+      "bh_total_pct": 89.3282064805072,
+      "bh_count": 24,
+      "win_rate_pct": 16.363636363636363,
+      "avg_win": 21.834229515754387,
+      "avg_loss": -3.9983451232375113,
+      "expectancy": 0.2288034540520723,
+      "profit_factor": 1.0684206437423942,
+      "hold_hours_avg": 6.727272449494948,
+      "bh_avg_pct": 3.722008603354467
+    }
+  },
+  "ended_at_utc": "2026-10-12T15:27:48.046465+00:00"
+}
