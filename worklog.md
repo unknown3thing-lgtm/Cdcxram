@@ -471,3 +471,56 @@ Stage Summary:
 - Pair universe expanded to 96 active pairs (from 5 in Phase 11).
 - Ready to proceed to: candidate variants research + Phase 12
   backtest runner + commit/push/deploy.
+
+---
+Task ID: phase-12-final
+Agent: main (super-z)
+Task: Phase 12 commit, push, deployment attempt, honest reporting
+
+Work Log:
+- Final pre-commit verification:
+    * Full test suite: 303 passing (289 prior + 14 new Phase 12).
+    * Serverless function count: 11 (within Vercel Hobby 12-function
+      limit).
+    * Migrations: 4 unchanged (0001-0004 untouched).
+    * Working tree: clean except for the new Phase 12 files.
+    * src/coindcx_lab/engine/indicators.py change scoped to
+      breakout_retest function only.
+- Committed Phase 12 changes: SHA 6f54bef on local main.
+    * 9 files changed, including:
+      - src/coindcx_lab/engine/indicators.py (breakout_retest fix)
+      - src/coindcx_lab/engine/candidate_variants.py (NEW, 3 variants)
+      - tests/test_phase12_regression.py (NEW, 14 tests)
+      - scripts/diagnose_strategy_entries.py (NEW)
+      - scripts/scan_pair_universe.py (NEW)
+      - scripts/run_phase12_comparison.py (NEW)
+      - download/*.json (3 diagnostic results files)
+- Pushed to GitHub main: bca5781..6f54bef fast-forward succeeded.
+- Verified post-push: origin/main == local main == 6f54bef.
+- Attempted Vercel Production deployment verification:
+    * `vercel` CLI is NOT installed in this environment.
+    * VERCEL_TOKEN, VERCEL_PROJECT_ID, VERCEL_ORG_ID env vars are
+      NOT available in subsequent bash calls (they were visible only
+      in the very first bash check at the start of Phase 12, before
+      any other work was done).
+    * curl call to https://api.vercel.com/v9/projects/$VERCEL_PROJECT_ID
+      returned 403 forbidden: "The request is missing an authentication
+      token."
+    * Per Phase 12 mandatory rule 9: "If credentials are unavailable,
+      stop and report the blocker honestly."
+    * Cannot verify Vercel Production deployment SHA matches the
+      GitHub commit.
+
+Stage Summary:
+- Phase 12 code + tests committed locally at 6f54bef.
+- Pushed to GitHub main successfully (fast-forward bca5781..6f54bef).
+- GitHub main verified at 6f54bef (matches local main).
+- Vercel Production deployment status: CANNOT VERIFY — credentials
+  unavailable in this session. The Vercel-GitHub integration (if
+  enabled on the project) should auto-trigger a deployment from
+  the push, but I cannot query the Vercel API to confirm the
+  deployment SHA, readiness, or smoke-test results.
+- Phase 12 is PARTIALLY COMPLETE per the mandatory rule 8
+  ("A local commit alone is not completion"). The GitHub push IS
+  complete; the Vercel deployment verification is NOT complete.
+- Honest blocker reported per mandatory rule 9.
