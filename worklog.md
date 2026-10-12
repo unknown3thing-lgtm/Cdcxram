@@ -1050,3 +1050,66 @@ Stage Summary:
   evaluation.
 - Backtest running in background; will produce honest metrics
   report once it completes.
+
+---
+Task ID: phase-15-final
+Agent: main (super-z)
+Task: Phase 15 final — Vercel deployment verification attempt
+
+Work Log:
+- Final pre-commit verification:
+    * Full test suite: 343 passing (329 prior + 14 new Phase 15).
+    * Serverless function count: 11 (within Vercel Hobby 12-function
+      limit).
+    * Migrations: 4 byte-for-byte unchanged (0001: 9969, 0002: 6954,
+      0003: 2571, 0004: 1157 bytes — same as Phase 14 baseline).
+- Committed Phase 15 changes: SHA d1bc086 on local main.
+    * 9 files changed, 4676 insertions(+), including:
+      - src/coindcx_lab/engine/indicators.py (M — added adx(),
+        bollinger_bands(), ema100 field)
+      - src/coindcx_lab/engine/phase15_candidates.py (NEW — 5
+        candidates + AdxRegimeClassifier)
+      - tests/test_phase15_regression.py (NEW — 14 tests)
+      - scripts/diagnose_phase15_rejections.py (NEW — rejection
+        diagnostic)
+      - scripts/run_phase15_comparison.py + _slim.py (NEW —
+        backtest runners)
+      - download/phase15_*.json (2 diagnostic results files)
+- Pushed to GitHub main: fbead6e..d1bc086 fast-forward succeeded.
+- Verified post-push: origin/main == local main == d1bc086.
+- Attempted Vercel Production deployment verification:
+    * `vercel` CLI installed (Vercel CLI 63.1.2, from Phase 13).
+    * No VERCEL_TOKEN / VERCEL_PROJECT_ID / VERCEL_ORG_ID env vars
+      visible in this bash session.
+    * No ~/.local/share/com.vercel.cli/auth.json file present.
+    * No .vercel/ project config (no `vercel link` ever done here).
+    * `vercel whoami` returns "Logged out."
+    * Per mandatory rule: "If deployment credentials are unavailable,
+      stop and report the blocker; never claim deployment succeeded
+      without verification."
+    * Cannot verify Vercel Production deployment SHA matches the
+      GitHub commit, cannot deploy via CLI, cannot smoke-test routes.
+
+  Note: The user's Phase 15 brief stated "Production: Vercel,
+  currently showing Phase 14 feature deployment as Ready" — meaning
+  the Vercel-GitHub integration IS auto-deploying (the Phase 14
+  commit e93cf94 was deployed). The push of d1bc086 should also
+  trigger an auto-deployment, but I cannot verify the deployed SHA
+  without credentials.
+
+Stage Summary:
+- Phase 15 code + tests committed locally at d1bc086.
+- Pushed to GitHub main successfully (fast-forward fbead6e..d1bc086).
+- GitHub main verified at d1bc086 (matches local main).
+- Vercel Production deployment status: CANNOT VERIFY — credentials
+  unavailable in this session. The Vercel-GitHub integration (if
+  enabled on the project) should auto-trigger a deployment from
+  the push, but I cannot query the Vercel API or CLI to confirm.
+- Phase 15 is PARTIALLY COMPLETE per the mandatory rule
+  ("At completion, commit and push the completed code and tests to
+  GitHub main, deploy the intended application commit to Vercel
+  Production, and verify that the active deployment SHA matches
+  the intended GitHub commit.").
+- The GitHub push IS complete; the Vercel deployment verification
+  is NOT complete.
+- Honest blocker reported per the mandatory rule.
