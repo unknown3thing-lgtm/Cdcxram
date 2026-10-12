@@ -317,3 +317,47 @@ Stage Summary:
 - Paper-exit recovery tested with 9 additional isolated cases beyond
   Phase 10's coverage.
 - Production safeguards fully preserved.
+
+---
+Task ID: phase-11-github-sync
+Agent: main (super-z)
+Task: Resolve GitHub–Vercel sync issue — push Phase 10/11 commits to GitHub main
+
+Work Log:
+- Inspected git state per user request:
+    * git status: working tree clean
+    * git log: local main at fffbacf (Phase 11 final)
+    * git branch -vv: local main had no upstream tracking set,
+      but origin/main ref existed at 5f55a5b (Phase 9)
+- Verified Phase 10/11 commits exist locally and are ancestors
+  of local main:
+    * 4defbf9 (Phase 10 feat) ✓
+    * 367a0e8 (automated UUID commit) ✓
+    * ce9c3c4 (Phase 11 cleanup) ✓
+    * 66370cd (Phase 11 feat) ✓
+    * fffbacf (Phase 11 worklog docs) ✓
+- Verified local main is 5 commits AHEAD of origin/main, 0 commits
+  BEHIND (no diverge). git merge-base --is-ancestor origin/main main
+  returned YES — confirming linear fast-forward history.
+- Pre-push safety checks (all passed):
+    * Full test suite: 289 passing (no regressions)
+    * Serverless function count: 11 (within Vercel Hobby 12-function limit)
+    * vercel.json: unchanged, rewrites /api/settings -> /api/health
+      and /api/portfolio_reset -> /api/portfolio (no new functions added)
+    * Redundant api/settings.py and api/portfolio_reset.py correctly
+      absent (removed in ce9c3c4)
+- Pushed to GitHub main via `git push origin main` — fast-forward
+  from 5f55a5b..fffbacf succeeded.
+- Verified post-push: fetched origin, confirmed origin/main ==
+  main == fffbacf. Git log now shows "fffbacf (HEAD -> main, origin/main)".
+
+Stage Summary:
+- GitHub main is now at fffbacf (Phase 11 final), matching local.
+- Vercel's auto-deploy (if enabled on the project) will pick up the
+  new commit; the user did not request a manual `vercel --prod`
+  deploy, so no deploy was performed.
+- All Phase 10 + Phase 11 code, tests, and cleanup preserved.
+- No reset, rebase, force-push, or destructive operation performed.
+- No duplicate API files created.
+- No secrets or env var values printed.
+- No production portfolio data, migrations, or RLS policies modified.
