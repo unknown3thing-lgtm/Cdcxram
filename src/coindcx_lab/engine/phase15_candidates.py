@@ -83,11 +83,14 @@ class TrendPullbackWiderZone(RegimeTrendPullback):
     """Phase 15 candidate A: trend pullback with wider (deeper)
     pullback zone [EMA50, EMA100] instead of [EMA50, EMA20].
 
-    Tests whether the shallow pullback zone or the regime filter is
-    the main blocker.
+    Phase 16: now accepts a ``regime_classifier`` via constructor.
+    Defaults to ``RegimeClassifier`` for backward compat.
     """
     name = "phase15_trend_pullback_wider_zone"
     warmup_candles = 200
+
+    def __init__(self, *, regime_classifier=None):
+        self._regime_classifier = regime_classifier or RegimeClassifier
 
     def evaluate(self, *, pair, interval, candles, indicators,
                  risk_engine, risk_state, provenance, current_price=None):
@@ -97,7 +100,7 @@ class TrendPullbackWiderZone(RegimeTrendPullback):
             return sig
 
         i = indicators.last_idx
-        snap = RegimeClassifier.classify_at(candles, indicators, i)
+        snap = self._regime_classifier.classify_at(candles, indicators, i)
         if snap.regime is not MarketRegime.TRENDING_UP:
             sig.state = SignalState.WAIT
             sig.explanation = f"regime {snap.regime.value}; need TRENDING_UP"
@@ -156,12 +159,13 @@ class TrendPullbackPriceReversal(RegimeTrendPullback):
     """Phase 15 candidate B: trend pullback with explicit price-
     reversal trigger (3+ declining closes + first up-close).
 
-    Tests whether the entry hypothesis (shallow pullback + RSI in
-    range) or the absence of an explicit reversal trigger is the
-    main blocker.
+    Phase 16: now accepts a ``regime_classifier`` via constructor.
     """
     name = "phase15_trend_pullback_price_reversal"
     warmup_candles = 200
+
+    def __init__(self, *, regime_classifier=None):
+        self._regime_classifier = regime_classifier or RegimeClassifier
 
     def evaluate(self, *, pair, interval, candles, indicators,
                  risk_engine, risk_state, provenance, current_price=None):
@@ -171,7 +175,7 @@ class TrendPullbackPriceReversal(RegimeTrendPullback):
             return sig
 
         i = indicators.last_idx
-        snap = RegimeClassifier.classify_at(candles, indicators, i)
+        snap = self._regime_classifier.classify_at(candles, indicators, i)
         if snap.regime is not MarketRegime.TRENDING_UP:
             sig.state = SignalState.WAIT
             sig.explanation = f"regime {snap.regime.value}; need TRENDING_UP"
@@ -245,9 +249,14 @@ class MeanReversionBB(RegimeMeanReversion):
     """Phase 15 candidate C: mean reversion using Bollinger Band
     touches (close <= BB_lower on prev bar) AND close back inside
     (close > BB_lower on current bar).
+
+    Phase 16: now accepts a ``regime_classifier`` via constructor.
     """
     name = "phase15_mean_reversion_bb"
     warmup_candles = 200
+
+    def __init__(self, *, regime_classifier=None):
+        self._regime_classifier = regime_classifier or RegimeClassifier
 
     def evaluate(self, *, pair, interval, candles, indicators,
                  risk_engine, risk_state, provenance, current_price=None):
@@ -257,7 +266,7 @@ class MeanReversionBB(RegimeMeanReversion):
             return sig
 
         i = indicators.last_idx
-        snap = RegimeClassifier.classify_at(candles, indicators, i)
+        snap = self._regime_classifier.classify_at(candles, indicators, i)
         if snap.regime is not MarketRegime.RANGE_BOUND:
             sig.state = SignalState.WAIT
             sig.explanation = f"regime {snap.regime.value}; need RANGE_BOUND"
@@ -320,9 +329,14 @@ class MeanReversionBB(RegimeMeanReversion):
 class MeanReversionDecliningCloses(RegimeMeanReversion):
     """Phase 15 candidate D: mean reversion using a price-reversal
     trigger after 3+ consecutive declining closes.
+
+    Phase 16: now accepts a ``regime_classifier`` via constructor.
     """
     name = "phase15_mean_reversion_declining"
     warmup_candles = 200
+
+    def __init__(self, *, regime_classifier=None):
+        self._regime_classifier = regime_classifier or RegimeClassifier
 
     def evaluate(self, *, pair, interval, candles, indicators,
                  risk_engine, risk_state, provenance, current_price=None):
@@ -332,7 +346,7 @@ class MeanReversionDecliningCloses(RegimeMeanReversion):
             return sig
 
         i = indicators.last_idx
-        snap = RegimeClassifier.classify_at(candles, indicators, i)
+        snap = self._regime_classifier.classify_at(candles, indicators, i)
         if snap.regime is not MarketRegime.RANGE_BOUND:
             sig.state = SignalState.WAIT
             sig.explanation = f"regime {snap.regime.value}; need RANGE_BOUND"
@@ -396,12 +410,13 @@ class BreakoutRetestLevelStop(RegimeBreakoutRetest):
     stop (0.5% below breakout level) instead of the wider
     min(breakout_level * 0.995, 2*ATR) stop.
 
-    Tests whether the wide stop geometry (which made post-cost R/R
-    borderline) is the blocker, OR whether the breakout hypothesis
-    itself is the blocker.
+    Phase 16: now accepts a ``regime_classifier`` via constructor.
     """
     name = "phase15_breakout_retest_level_stop"
     warmup_candles = 200
+
+    def __init__(self, *, regime_classifier=None):
+        self._regime_classifier = regime_classifier or RegimeClassifier
 
     def evaluate(self, *, pair, interval, candles, indicators,
                  risk_engine, risk_state, provenance, current_price=None):
@@ -411,7 +426,7 @@ class BreakoutRetestLevelStop(RegimeBreakoutRetest):
             return sig
 
         i = indicators.last_idx
-        snap = RegimeClassifier.classify_at(candles, indicators, i)
+        snap = self._regime_classifier.classify_at(candles, indicators, i)
         if snap.regime not in (MarketRegime.TRENDING_UP,
                                 MarketRegime.UNCERTAIN):
             sig.state = SignalState.WAIT
@@ -455,36 +470,52 @@ class BreakoutRetestLevelStop(RegimeBreakoutRetest):
 
 
 # ===========================================================================
-# F. AdxRegimeClassifier (alternative classifier using ADX)
+# F. DirectionalAdxClassifier (Phase 16 — proper ADX + DI classifier)
 # ===========================================================================
-class AdxRegimeClassifier:
-    """Phase 15 candidate F: alternative regime classifier using ADX.
+class DirectionalAdxClassifier:
+    """Phase 16 — ADX-based regime classifier that uses +DI vs -DI
+    for direction (NOT EMA stack, NOT ADX alone).
 
-    Classification rules:
-      TRENDING_UP    : ADX > 25 AND +DI > -DI AND EMA20 > EMA50
-                       (strong trend + directional bias up)
-      TRENDING_DOWN  : ADX > 25 AND -DI > +DI AND EMA20 < EMA50
-      RANGE_BOUND    : ADX < 20 (weak/no trend)
-      HIGH_VOLATILITY: ATR/price >= 2.5% (unchanged from EMA-based)
-      UNCERTAIN      : default (e.g., 20 <= ADX <= 25)
+    Phase 16 brief req 3: "Build a separate ADX-based classifier that
+    considers: Trend strength using ADX; Direction using +DI versus -DI;
+    Appropriate price or moving-average confirmation where justified;
+    Sideways conditions; High-volatility conditions; Insufficient data
+    and uncertain conditions."
 
-    This is an ALTERNATIVE classifier — the existing RegimeClassifier
-    is unchanged. The Phase 15 backtest runner uses this classifier
-    with the same strategies (re-instantiated to use ADX regime)
-    to compare classification accuracy.
+    And: "ADX alone must never be treated as bullish or bearish direction."
+
+    Classification rules (all use ONLY data available at bar i):
+      TRENDING_UP    : ADX > 25 AND +DI > -DI (strong trend, direction up)
+      TRENDING_DOWN  : ADX > 25 AND -DI > +DI (strong trend, direction down)
+      RANGE_BOUND    : ADX < 20 (weak/no trend — sideways)
+      HIGH_VOLATILITY: ATR/price >= 2.5% (unchanged threshold)
+      UNCERTAIN      : default (e.g., 20 <= ADX <= 25, or +DI == -DI)
+
+    The +DI/-DI directional indicators are now exposed from the ADX
+    calculation (Phase 16: adx_with_di() + IndicatorSet.plus_di14/
+    minus_di14 fields). This classifier reads them from the IndicatorSet.
+
+    This classifier is SEPARATE from the existing RegimeClassifier
+    (which uses EMA stack + ATR/price). Both are preserved — research
+    candidates can be configured to use either one via the
+    ``regime_classifier`` constructor parameter.
     """
 
     ADX_STRONG_THRESHOLD = 25.0    # ADX > this → strong trend
     ADX_WEAK_THRESHOLD = 20.0      # ADX < this → range-bound
     ATR_PCT_HIGH_VOL_THRESHOLD = 2.5
+    # Minimum +DI/-DI difference to call direction (avoids noise when
+    # +DI ≈ -DI).
+    DI_MIN_DIFFERENCE = 1.0
 
     @classmethod
     def classify_at(cls, candles: List[Candle],
                      indicators: IndicatorSet,
                      i: int) -> RegimeSnapshot:
-        """Classify using ADX + DI + EMA stack. Returns a RegimeSnapshot
-        with the SAME structure as RegimeClassifier.classify_at so the
-        same strategies can consume it."""
+        """Classify using ADX (strength) + +DI/-DI (direction).
+        Returns a RegimeSnapshot with the SAME structure as
+        RegimeClassifier.classify_at so the same strategies can
+        consume it."""
         if i < 0 or i >= len(candles):
             return RegimeSnapshot(
                 regime=MarketRegime.UNCERTAIN,
@@ -499,42 +530,44 @@ class AdxRegimeClassifier:
         ema200 = indicators.ema200[i]
         atr14 = indicators.atr14[i]
         adx_val = indicators.adx14[i]
+        plus_di = indicators.plus_di14[i]
+        minus_di = indicators.minus_di14[i]
         close = candles[i].close
 
-        if any(math.isnan(x) for x in (ema20, ema50, ema200, atr14, close, adx_val)):
-            return RegimeSnapshot(
-                regime=MarketRegime.UNCERTAIN,
-                ema20=ema20, ema50=ema50, ema200=ema200,
-                ema50_slope=float("nan"), atr14=atr14, close=close,
-                atr_pct=float("nan") if math.isnan(atr14) or close == 0 else atr14 / close * 100,
-                ema_spread_pct=float("nan"),
-                ema50_to_200_pct=float("nan"),
-                bar_idx=i)
-
+        # Compute ATR/price first — needed for HIGH_VOLATILITY which
+        # only requires ATR + close (not ADX/DI/EMA200).
+        atr_pct = (atr14 / close) * 100.0 if (close > 0 and not math.isnan(atr14)) else float("nan")
         ema50_prev = indicators.ema50[i - 1] if i >= 1 else ema50
         ema50_slope = (ema50 - ema50_prev) if not math.isnan(ema50_prev) else 0.0
-        atr_pct = (atr14 / close) * 100.0 if close > 0 else 0.0
-        ema_spread_pct = (abs(ema20 - ema50) / ema50) * 100.0 if ema50 > 0 else 0.0
-        ema50_to_200_pct = (abs(ema50 - ema200) / ema200) * 100.0 if ema200 > 0 else 0.0
+        ema_spread_pct = (abs(ema20 - ema50) / ema50) * 100.0 if (ema50 > 0 and not math.isnan(ema20) and not math.isnan(ema50)) else float("nan")
+        ema50_to_200_pct = (abs(ema50 - ema200) / ema200) * 100.0 if (ema200 > 0 and not math.isnan(ema50) and not math.isnan(ema200)) else float("nan")
 
-        # HIGH_VOLATILITY takes priority
-        if atr_pct >= cls.ATR_PCT_HIGH_VOL_THRESHOLD:
+        # 1. HIGH_VOLATILITY takes priority — needs ONLY ATR + close.
+        # This check happens BEFORE the full indicator-availability
+        # check so that high-volatility regimes are detected even
+        # when ADX/+DI/-DI haven't initialized yet.
+        if (not math.isnan(atr_pct)
+                and atr_pct >= cls.ATR_PCT_HIGH_VOL_THRESHOLD):
             regime = MarketRegime.HIGH_VOLATILITY
-        # Strong trend with ADX > 25
+        # 2. For trend/range classification, need ALL indicators.
+        elif any(math.isnan(x) for x in
+                  (ema20, ema50, ema200, atr14, close, adx_val,
+                   plus_di, minus_di)):
+            regime = MarketRegime.UNCERTAIN
+        # 3. Strong trend (ADX > 25): use +DI vs -DI for direction.
         elif adx_val > cls.ADX_STRONG_THRESHOLD:
-            # Use +DI/-DI to determine direction. We don't store DI
-            # in IndicatorSet, so recompute from the +DM/-DM logic.
-            # Simpler proxy: use EMA stack for direction.
-            if ema20 > ema50 > ema200 and ema50_slope > 0:
+            if (plus_di > minus_di + cls.DI_MIN_DIFFERENCE
+                    and plus_di > minus_di):
                 regime = MarketRegime.TRENDING_UP
-            elif ema20 < ema50 < ema200 and ema50_slope < 0:
+            elif (minus_di > plus_di + cls.DI_MIN_DIFFERENCE
+                    and minus_di > plus_di):
                 regime = MarketRegime.TRENDING_DOWN
             else:
                 regime = MarketRegime.UNCERTAIN
-        # Weak trend → range-bound
+        # 4. Weak trend (ADX < 20) → range-bound.
         elif adx_val < cls.ADX_WEAK_THRESHOLD:
             regime = MarketRegime.RANGE_BOUND
-        # 20 <= ADX <= 25 → uncertain (developing trend)
+        # 5. 20 <= ADX <= 25 → uncertain (developing trend).
         else:
             regime = MarketRegime.UNCERTAIN
 
@@ -544,6 +577,13 @@ class AdxRegimeClassifier:
             ema50_slope=ema50_slope, atr14=atr14, close=close,
             atr_pct=atr_pct, ema_spread_pct=ema_spread_pct,
             ema50_to_200_pct=ema50_to_200_pct, bar_idx=i)
+
+
+# Backward-compat alias: the Phase 15 AdxRegimeClassifier used EMA stack
+# for direction. Phase 16 replaces it with DirectionalAdxClassifier which
+# uses +DI/-DI. The old name is kept as an alias so existing test imports
+# don't break, but the implementation is now the Phase 16 version.
+AdxRegimeClassifier = DirectionalAdxClassifier
 
 
 # Convenience list for the Phase 15 backtest runner.

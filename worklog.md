@@ -1113,3 +1113,67 @@ Stage Summary:
 - The GitHub push IS complete; the Vercel deployment verification
   is NOT complete.
 - Honest blocker reported per the mandatory rule.
+
+---
+Task ID: phase-16-start
+Agent: main (super-z)
+Task: Phase 16 kickoff — inspect regime classifier architecture
+
+Work Log:
+- Verified baseline: local + GitHub main at 0d48f43 (matches Phase 15
+  end). Working tree clean. 343 tests passing. 11 serverless
+  functions. 4 migrations byte-for-byte unchanged (0001: 9969, 0002:
+  6954, 0003: 2571, 0004: 1157 bytes). Vercel credentials STILL NOT
+  SET (consistent with Phase 12-15 blocker).
+- Inspected existing implementation per Phase 16 brief req 1:
+    * src/coindcx_lab/engine/regime.py — RegimeClassifier with 5
+      regimes (TRENDING_UP/DOWN/RANGE_BOUND/HIGH_VOLATILITY/
+      UNCERTAIN). Uses EMA stack + EMA50 slope + ATR/price.
+    * src/coindcx_lab/engine/indicators.py:adx() — computes +DI/-DI
+      INTERNALLY but only returns the ADX array. The +DI/-DI arrays
+      are local variables, not exposed.
+    * src/coindcx_lab/engine/phase15_candidates.py — ALL 5 candidates
+      (TrendPullbackWiderZone, TrendPullbackPriceReversal,
+      MeanReversionBB, MeanReversionDecliningCloses,
+      BreakoutRetestLevelStop) hard-code
+      `RegimeClassifier.classify_at(candles, indicators, i)` at
+      lines 100, 174, 260, 335, 414. No way to swap in a different
+      classifier.
+    * src/coindcx_lab/engine/phase15_candidates.py:AdxRegimeClassifier
+      — built in Phase 15 but NOT wired into any candidate. Uses
+      EMA stack (lines 528-531) for direction, NOT +DI/-DI as the
+      Phase 16 brief requires ("Direction using +DI versus -DI").
+    * src/coindcx_lab/engine/signals.py — production strategies
+      (TrendPullback, BreakoutRetest, MomentumContinuation,
+      BaselineSMA) do NOT use any regime classifier (regime is only
+      used by Phase 14/15 research candidates).
+    * api/backtest.py — serverless function exposes the backtest API;
+      uses SignalEngine with production strategies. Research
+      candidates are NOT auto-connected to /api/signals.
+
+- Root cause confirmed (per Phase 16 brief req 1): the regime
+  classifier architecture has TWO problems:
+    1. HARD-CODED DEPENDENCY: Phase 15 candidates hard-code
+       RegimeClassifier — can't swap in ADX-based classifier.
+    2. INCOMPLETE ADX EXPOSURE: the adx() function computes +DI/-DI
+       but doesn't return them. The existing AdxRegimeClassifier
+       uses EMA stack for direction (workaround), violating the
+       Phase 16 brief.
+
+Phase 16 plan:
+  1. Refactor adx() to expose +DI/-DI (add adx_with_di() function +
+     plus_di14/minus_di14 fields to IndicatorSet). Preserve existing
+     adx() for backward compat.
+  2. Refactor Phase 15 candidates to accept regime_classifier via
+     constructor (default=RegimeClassifier for backward compat).
+  3. Build new DirectionalAdxClassifier that uses ADX for strength +
+     +DI vs -DI for direction (per Phase 16 brief req 3).
+  4. Add tests for DirectionalAdxClassifier on synthetic rising/
+     falling/sideways/high-vol series. Verify no look-ahead.
+  5. Run controlled comparison: same pairs/candles/strategies with
+     RegimeClassifier vs DirectionalAdxClassifier.
+
+Stage Summary:
+- Phase 16 architecture issues identified.
+- Ready to expose +DI/-DI + make classifier configurable + build
+  DirectionalAdxClassifier.

@@ -321,25 +321,29 @@ def breakout_retest(candles: List[Candle], lookback: int = 20
 # ---------------------------------------------------------------------------
 # ADX (Average Directional Index) — Wilder's trend-strength indicator.
 # ---------------------------------------------------------------------------
-def adx(candles: List[Candle], period: int = 14) -> np.ndarray:
-    """Average Directional Index (Wilder). NaN for the first
-    ``2 * period`` entries (need period bars to seed +DX/-DX, then
-    period more bars to smooth via Wilder's method).
+def adx_with_di(candles: List[Candle], period: int = 14
+                 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """ADX with directional indicators. Returns (adx, plus_di, minus_di).
 
-    ADX measures trend STRENGTH (not direction). Values:
-      - ADX < 20  : weak / no trend (range-bound)
-      - ADX 20-25 : developing trend
-      - ADX 25-50 : strong trend
-      - ADX > 50  : very strong trend (rare)
+    Phase 16 brief req 3: "Expose ADX, positive directional indicator
+    (+DI) and negative directional indicator (-DI) using mathematically
+    correct calculations and sufficient warm-up history."
 
-    Phase 15 brief req 3D: "Evaluate ADX as an additional trend-
-    strength indicator. Compare classification accuracy and trade
-    outcomes against the current regime classifier."
+    All three arrays are aligned to the input candles and have NaN for
+    the first ``2 * period`` entries (need period bars to seed, then
+    period more to smooth via Wilder's method).
+
+    ADX measures trend STRENGTH (not direction). +DI/-DI measure
+    direction. Per the Phase 16 brief: "ADX alone must never be
+    treated as bullish or bearish direction." Use +DI vs -DI for
+    direction.
     """
     n = len(candles)
-    out = np.full(n, np.nan, dtype=float)
+    adx_out = np.full(n, np.nan, dtype=float)
+    plus_di_out = np.full(n, np.nan, dtype=float)
+    minus_di_out = np.full(n, np.nan, dtype=float)
     if n < 2 * period + 1:
-        return out
+        return adx_out, plus_di_out, minus_di_out
 
     # True Range
     tr = np.zeros(n)
@@ -363,9 +367,8 @@ def adx(candles: List[Candle], period: int = 14) -> np.ndarray:
     atr_s = np.full(n, np.nan, dtype=float)
     plus_s = np.full(n, np.nan, dtype=float)
     minus_s = np.full(n, np.nan, dtype=float)
-    # Seed: simple sum of first `period` values (bars 1..period)
     if n < period + 1:
-        return out
+        return adx_out, plus_di_out, minus_di_out
     atr_s[period] = float(np.sum(tr[1:period + 1]))
     plus_s[period] = float(np.sum(plus_dm[1:period + 1]))
     minus_s[period] = float(np.sum(minus_dm[1:period + 1]))
@@ -375,28 +378,47 @@ def adx(candles: List[Candle], period: int = 14) -> np.ndarray:
         minus_s[i] = minus_s[i - 1] - (minus_s[i - 1] / period) + minus_dm[i]
 
     # +DI and -DI
-    plus_di = np.full(n, np.nan, dtype=float)
-    minus_di = np.full(n, np.nan, dtype=float)
     dx = np.full(n, np.nan, dtype=float)
     for i in range(period, n):
         if atr_s[i] > 0:
-            plus_di[i] = 100.0 * plus_s[i] / atr_s[i]
-            minus_di[i] = 100.0 * minus_s[i] / atr_s[i]
-            di_sum = plus_di[i] + minus_di[i]
+            plus_di_out[i] = 100.0 * plus_s[i] / atr_s[i]
+            minus_di_out[i] = 100.0 * minus_s[i] / atr_s[i]
+            di_sum = plus_di_out[i] + minus_di_out[i]
             if di_sum > 0:
-                dx[i] = 100.0 * abs(plus_di[i] - minus_di[i]) / di_sum
+                dx[i] = 100.0 * abs(plus_di_out[i] - minus_di_out[i]) / di_sum
 
     # ADX = Wilder smoothed DX over `period` bars
     if n < 2 * period + 1:
-        return out
-    # Seed ADX at index 2*period with simple mean of DX[period+1 .. 2*period]
+        return adx_out, plus_di_out, minus_di_out
     seed = float(np.mean(dx[period + 1:2 * period + 1]))
     if not math.isnan(seed):
-        out[2 * period] = seed
+        adx_out[2 * period] = seed
         for i in range(2 * period + 1, n):
-            if not math.isnan(dx[i]) and not math.isnan(out[i - 1]):
-                out[i] = (out[i - 1] * (period - 1) + dx[i]) / period
-    return out
+            if not math.isnan(dx[i]) and not math.isnan(adx_out[i - 1]):
+                adx_out[i] = (adx_out[i - 1] * (period - 1) + dx[i]) / period
+    return adx_out, plus_di_out, minus_di_out
+
+
+def adx(candles: List[Candle], period: int = 14) -> np.ndarray:
+    """Average Directional Index (Wilder). NaN for the first
+    ``2 * period`` entries (need period bars to seed +DX/-DX, then
+    period more bars to smooth via Wilder's method).
+
+    ADX measures trend STRENGTH (not direction). Values:
+      - ADX < 20  : weak / no trend (range-bound)
+      - ADX 20-25 : developing trend
+      - ADX 25-50 : strong trend
+      - ADX > 50  : very strong trend (rare)
+
+    Phase 15 brief req 3D: "Evaluate ADX as an additional trend-
+    strength indicator. Compare classification accuracy and trade
+    outcomes against the current regime classifier."
+
+    Phase 16: for +DI/-DI exposure, use ``adx_with_di()`` instead.
+    This function is preserved for backward compatibility.
+    """
+    adx_out, _, _ = adx_with_di(candles, period)
+    return adx_out
 
 
 # ---------------------------------------------------------------------------
@@ -453,6 +475,9 @@ class IndicatorSet:
     bb_middle: np.ndarray
     bb_upper: np.ndarray
     bb_lower: np.ndarray
+    # Phase 16: +DI/-DI directional indicators (exposed from ADX).
+    plus_di14: np.ndarray
+    minus_di14: np.ndarray
     swing_highs: List[Optional[float]]
     swing_lows: List[Optional[float]]
     resistance_levels: List[float]
@@ -469,6 +494,8 @@ class IndicatorSet:
         res, sup = support_resistance(candles, lookback=20)
         br = breakout_retest(candles, lookback=20)
         bb_mid, bb_up, bb_low = bollinger_bands(candles, period=20, num_std=2.0)
+        # Phase 16: expose +DI/-DI from the ADX calculation.
+        adx_arr, plus_di_arr, minus_di_arr = adx_with_di(candles, 14)
         last_idx = len(candles) - 1
         return cls(
             ema20=ema(closes, 20),
@@ -482,10 +509,12 @@ class IndicatorSet:
             macd_hist=macd_hist,
             relvol20=relative_volume(candles, 20),
             vol20=rolling_volatility(candles, 20),
-            adx14=adx(candles, 14),
+            adx14=adx_arr,
             bb_middle=bb_mid,
             bb_upper=bb_up,
             bb_lower=bb_low,
+            plus_di14=plus_di_arr,
+            minus_di14=minus_di_arr,
             swing_highs=sh_p,
             swing_lows=sl_p,
             resistance_levels=res,
