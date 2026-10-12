@@ -1,0 +1,370 @@
+{
+  "phase": 15,
+  "started_at_utc": "2026-10-12T12:17:22.633942+00:00",
+  "interval": "1h",
+  "candle_limit": 1000,
+  "strategies_diagnosed": [
+    "regime_trend_pullback",
+    "regime_breakout_retest",
+    "regime_mean_reversion",
+    "regime_mtf_trend_pullback"
+  ],
+  "diagnostics": [
+    {
+      "pair": "B-BTCINR",
+      "strategy": "regime_trend_pullback",
+      "n_candles": 1000,
+      "n_evaluated": 800,
+      "n_buy_candidates": 0,
+      "rejection_counts": {
+        "regime_not_eligible": 581,
+        "entry_trigger_absent": 187,
+        "other": 32
+      }
+    },
+    {
+      "pair": "B-ETHINR",
+      "strategy": "regime_trend_pullback",
+      "n_candles": 1000,
+      "n_evaluated": 800,
+      "n_buy_candidates": 0,
+      "rejection_counts": {
+        "entry_trigger_absent": 208,
+        "regime_not_eligible": 556,
+        "other": 36
+      }
+    },
+    {
+      "pair": "B-SOLINR",
+      "strategy": "regime_trend_pullback",
+      "n_candles": 1000,
+      "n_evaluated": 800,
+      "n_buy_candidates": 0,
+      "rejection_counts": {
+        "entry_trigger_absent": 237,
+        "regime_not_eligible": 532,
+        "other": 31
+      }
+    },
+    {
+      "pair": "B-XRPINR",
+      "strategy": "regime_trend_pullback",
+      "n_candles": 1000,
+      "n_evaluated": 800,
+      "n_buy_candidates": 0,
+      "rejection_counts": {
+        "entry_trigger_absent": 142,
+        "other": 32,
+        "regime_not_eligible": 626
+      }
+    },
+    {
+      "pair": "B-TRXINR",
+      "strategy": "regime_trend_pullback",
+      "n_candles": 1000,
+      "n_evaluated": 800,
+      "n_buy_candidates": 0,
+      "rejection_counts": {
+        "other": 55,
+        "regime_not_eligible": 625,
+        "entry_trigger_absent": 120
+      }
+    },
+    {
+      "pair": "B-PEPEINR",
+      "strategy": "regime_trend_pullback",
+      "n_candles": 1000,
+      "n_evaluated": 800,
+      "n_buy_candidates": 0,
+      "rejection_counts": {
+        "entry_trigger_absent": 147,
+        "regime_not_eligible": 618,
+        "other": 35
+      }
+    },
+    {
+      "pair": "B-SHIBINR",
+      "strategy": "regime_trend_pullback",
+      "n_candles": 1000,
+      "n_evaluated": 800,
+      "n_buy_candidates": 0,
+      "rejection_counts": {
+        "regime_not_eligible": 571,
+        "entry_trigger_absent": 199,
+        "other": 30
+      }
+    },
+    {
+      "pair": "B-BTCINR",
+      "strategy": "regime_breakout_retest",
+      "n_candles": 1000,
+      "n_evaluated": 800,
+      "n_buy_candidates": 0,
+      "rejection_counts": {
+        "regime_not_eligible": 439,
+        "other": 178,
+        "entry_trigger_absent": 183
+      }
+    },
+    {
+      "pair": "B-ETHINR",
+      "strategy": "regime_breakout_retest",
+      "n_candles": 1000,
+      "n_evaluated": 800,
+      "n_buy_candidates": 0,
+      "rejection_counts": {
+        "other": 112,
+        "entry_trigger_absent": 312,
+        "regime_not_eligible": 376
+      }
+    },
+    {
+      "pair": "B-SOLINR",
+      "strategy": "regime_breakout_retest",
+      "n_candles": 1000,
+      "n_evaluated": 800,
+      "n_buy_candidates": 0,
+      "rejection_counts": {
+        "other": 311,
+        "entry_trigger_absent": 185,
+        "regime_not_eligible": 304
+      }
+    },
+    {
+      "pair": "B-XRPINR",
+      "strategy": "regime_breakout_retest",
+      "n_candles": 1000,
+      "n_evaluated": 800,
+      "n_buy_candidates": 0,
+      "rejection_counts": {
+        "other": 220,
+        "regime_not_eligible": 459,
+        "entry_trigger_absent": 121
+      }
+    },
+    {
+      "pair": "B-TRXINR",
+      "strategy": "regime_breakout_retest",
+      "n_candles": 1000,
+      "n_evaluated": 800,
+      "n_buy_candidates": 0,
+      "rejection_counts": {
+        "other": 103,
+        "entry_trigger_absent": 115,
+        "regime_not_eligible": 582
+      }
+    },
+    {
+      "pair": "B-PEPEINR",
+      "strategy": "regime_breakout_retest",
+      "n_candles": 1000,
+      "n_evaluated": 800,
+      "n_buy_candidates": 0,
+      "rejection_counts": {
+        "entry_trigger_absent": 207,
+        "other": 254,
+        "regime_not_eligible": 339
+      }
+    },
+    {
+      "pair": "B-SHIBINR",
+      "strategy": "regime_breakout_retest",
+      "n_candles": 1000,
+      "n_evaluated": 800,
+      "n_buy_candidates": 0,
+      "rejection_counts": {
+        "entry_trigger_absent": 161,
+        "other": 305,
+        "regime_not_eligible": 334
+      }
+    },
+    {
+      "pair": "B-BTCINR",
+      "strategy": "regime_mean_reversion",
+      "n_candles": 1000,
+      "n_evaluated": 800,
+      "n_buy_candidates": 0,
+      "rejection_counts": {
+        "entry_trigger_absent": 245,
+        "regime_not_eligible": 554,
+        "other": 1
+      }
+    },
+    {
+      "pair": "B-ETHINR",
+      "strategy": "regime_mean_reversion",
+      "n_candles": 1000,
+      "n_evaluated": 800,
+      "n_buy_candidates": 0,
+      "rejection_counts": {
+        "regime_not_eligible": 563,
+        "entry_trigger_absent": 233,
+        "other": 4
+      }
+    },
+    {
+      "pair": "B-SOLINR",
+      "strategy": "regime_mean_reversion",
+      "n_candles": 1000,
+      "n_evaluated": 800,
+      "n_buy_candidates": 0,
+      "rejection_counts": {
+        "regime_not_eligible": 651,
+        "entry_trigger_absent": 149
+      }
+    },
+    {
+      "pair": "B-XRPINR",
+      "strategy": "regime_mean_reversion",
+      "n_candles": 1000,
+      "n_evaluated": 800,
+      "n_buy_candidates": 0,
+      "rejection_counts": {
+        "regime_not_eligible": 626,
+        "entry_trigger_absent": 174
+      }
+    },
+    {
+      "pair": "B-TRXINR",
+      "strategy": "regime_mean_reversion",
+      "n_candles": 1000,
+      "n_evaluated": 800,
+      "n_buy_candidates": 0,
+      "rejection_counts": {
+        "regime_not_eligible": 514,
+        "entry_trigger_absent": 285,
+        "other": 1
+      }
+    },
+    {
+      "pair": "B-PEPEINR",
+      "strategy": "regime_mean_reversion",
+      "n_candles": 1000,
+      "n_evaluated": 800,
+      "n_buy_candidates": 0,
+      "rejection_counts": {
+        "regime_not_eligible": 715,
+        "entry_trigger_absent": 84,
+        "other": 1
+      }
+    },
+    {
+      "pair": "B-SHIBINR",
+      "strategy": "regime_mean_reversion",
+      "n_candles": 1000,
+      "n_evaluated": 800,
+      "n_buy_candidates": 0,
+      "rejection_counts": {
+        "regime_not_eligible": 660,
+        "entry_trigger_absent": 139,
+        "other": 1
+      }
+    },
+    {
+      "pair": "B-BTCINR",
+      "strategy": "regime_mtf_trend_pullback",
+      "n_candles": 1000,
+      "n_evaluated": 800,
+      "n_buy_candidates": 0,
+      "rejection_counts": {
+        "regime_not_eligible": 271,
+        "entry_trigger_absent": 180,
+        "other": 349
+      }
+    },
+    {
+      "pair": "B-ETHINR",
+      "strategy": "regime_mtf_trend_pullback",
+      "n_candles": 1000,
+      "n_evaluated": 800,
+      "n_buy_candidates": 0,
+      "rejection_counts": {
+        "entry_trigger_absent": 204,
+        "regime_not_eligible": 355,
+        "other": 241
+      }
+    },
+    {
+      "pair": "B-SOLINR",
+      "strategy": "regime_mtf_trend_pullback",
+      "n_candles": 1000,
+      "n_evaluated": 800,
+      "n_buy_candidates": 0,
+      "rejection_counts": {
+        "entry_trigger_absent": 228,
+        "regime_not_eligible": 308,
+        "other": 264
+      }
+    },
+    {
+      "pair": "B-XRPINR",
+      "strategy": "regime_mtf_trend_pullback",
+      "n_candles": 1000,
+      "n_evaluated": 800,
+      "n_buy_candidates": 0,
+      "rejection_counts": {
+        "entry_trigger_absent": 131,
+        "other": 444,
+        "regime_not_eligible": 225
+      }
+    },
+    {
+      "pair": "B-TRXINR",
+      "strategy": "regime_mtf_trend_pullback",
+      "n_candles": 1000,
+      "n_evaluated": 800,
+      "n_buy_candidates": 0,
+      "rejection_counts": {
+        "other": 520,
+        "regime_not_eligible": 174,
+        "entry_trigger_absent": 106
+      }
+    },
+    {
+      "pair": "B-PEPEINR",
+      "strategy": "regime_mtf_trend_pullback",
+      "n_candles": 1000,
+      "n_evaluated": 800,
+      "n_buy_candidates": 0,
+      "rejection_counts": {
+        "entry_trigger_absent": 140,
+        "regime_not_eligible": 240,
+        "other": 420
+      }
+    },
+    {
+      "pair": "B-SHIBINR",
+      "strategy": "regime_mtf_trend_pullback",
+      "n_candles": 1000,
+      "n_evaluated": 800,
+      "n_buy_candidates": 0,
+      "rejection_counts": {
+        "regime_not_eligible": 215,
+        "entry_trigger_absent": 190,
+        "other": 395
+      }
+    }
+  ],
+  "aggregate_by_strategy": {
+    "regime_trend_pullback": {
+      "regime_not_eligible": 4109,
+      "entry_trigger_absent": 1240,
+      "other": 251
+    },
+    "regime_breakout_retest": {
+      "regime_not_eligible": 2833,
+      "other": 1483,
+      "entry_trigger_absent": 1284
+    },
+    "regime_mean_reversion": {
+      "entry_trigger_absent": 1309,
+      "regime_not_eligible": 4283,
+      "other": 8
+    },
+    "regime_mtf_trend_pullback": {
+      "regime_not_eligible": 1788,
+      "entry_trigger_absent": 1179,
+      "other": 2633
+    }
+  }
+}

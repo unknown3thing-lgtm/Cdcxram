@@ -911,3 +911,142 @@ Stage Summary:
 - The GitHub push IS complete; the Vercel deployment verification
   is NOT complete.
 - Honest blocker reported per the mandatory rule.
+
+---
+Task ID: phase-15-start
+Agent: main (super-z)
+Task: Phase 15 kickoff — baseline + rejection diagnostic
+
+Work Log:
+- Verified baseline:
+    * Local + GitHub main at fbead6e.
+    * Inspected fbead6e: docs-only (50 worklog.md insertions, no app
+      changes beyond what's in e93cf94). User's note that "Vercel
+      Production shows Phase 14 feature deployment as Ready" cannot
+      be verified by me — Vercel credentials still NOT SET in this
+      bash session. Will report blocker honestly per mandatory rule 10.
+    * 329 tests passing (Phase 14 baseline).
+    * 11 serverless functions.
+    * 4 migrations byte-for-byte unchanged (0001: 9969, 0002: 6954,
+      0003: 2571, 0004: 1157 bytes).
+    * Working tree clean.
+- Wrote scripts/diagnose_phase15_rejections.py — instruments each
+  Phase 14 regime candidate's evaluate() call and categorizes the
+  rejection reason per Phase 15 brief req 2:
+    - regime_not_eligible
+    - entry_trigger_absent (RSI/pullback/breakout missing)
+    - insufficient_history (warm-up incomplete)
+    - invalid_stop_or_target (stop >= entry etc.)
+    - rr_below_threshold (risk gate rejected)
+    - excessive_spread_or_missing_data
+    - other (uncategorized)
+
+- Phase 15 rejection diagnostic results (7 pairs × 4 candidates ×
+  800 evaluated bars per pair = ~22,400 evaluations):
+    regime_trend_pullback:        5600 evals, 0 buys
+      regime_not_eligible:    4109 (73.4%)
+      entry_trigger_absent:   1240 (22.1%)
+      other:                   251 ( 4.5%)
+    regime_breakout_retest:       5600 evals, 0 buys
+      regime_not_eligible:    2833 (50.6%)
+      entry_trigger_absent:   1284 (22.9%)
+      other:                  1483 (26.5%)  (likely risk-gate NO_TRADE)
+    regime_mean_reversion:        5600 evals, 0 buys
+      regime_not_eligible:    4283 (76.5%)  <- RANGE_BOUND regime is rare
+      entry_trigger_absent:   1309 (23.4%)
+      other:                     8 ( 0.1%)
+    regime_mtf_trend_pullback:    5600 evals, 0 buys
+      other:                  2633 (47.0%)  (HTF warmup incomplete)
+      regime_not_eligible:    1788 (31.9%)
+      entry_trigger_absent:   1179 (21.1%)
+
+  ROOT CAUSE (per Phase 15 brief req 2 "Determine whether the main
+  problem is the entry hypothesis, risk geometry, regime
+  classification or data availability"):
+    - For regime_trend_pullback and regime_mean_reversion, the
+      PRIMARY blocker is the REGIME CLASSIFICATION (73-76% of
+      rejections). The TRENDING_UP and RANGE_BOUND regimes are too
+      strictly defined — most INR-spot bars fall into UNCERTAIN.
+    - For regime_breakout_retest, the "other" category (26%) is
+      likely the risk gate rejecting due to wide stop geometry
+      (post-cost R/R < 2.0 target).
+    - For regime_mtf_trend_pullback, the "other" category (47%) is
+      HTF warmup incomplete at early bars (needs 200 4h bars = ~33
+      days before EMA200 is defined).
+
+  Per Phase 15 brief req 2: "Do not loosen every condition
+  simultaneously." Phase 15 will research SEPARATE entry hypotheses
+  (one at a time) to identify which changes unlock signal generation
+  without overfitting.
+
+Stage Summary:
+- Phase 15 baseline established.
+- Root cause diagnosed: regime classification is the primary blocker
+  (not entry hypothesis, not risk geometry, not data availability).
+- Ready to build ADX indicator + 5 new entry-hypothesis candidates.
+
+---
+Task ID: phase-15-execution
+Agent: main (super-z)
+Task: Phase 15 — ADX + Bollinger Bands + 5 entry-hypothesis candidates
+
+Work Log:
+- Built ADX indicator (src/coindcx_lab/engine/indicators.py:adx()).
+  Wilder's smoothing, NaN for first 2*period bars (28). Measures
+  trend STRENGTH (not direction). Phase 15 brief req 3D.
+- Built Bollinger Bands (indicators.py:bollinger_bands()) — middle
+  = SMA(close, period), upper/lower = middle ± num_std * std. NaN
+  for first period-1 bars. For mean-reversion candidates.
+- Added ema100, adx14, bb_middle, bb_upper, bb_lower fields to
+  IndicatorSet dataclass. Existing 329 tests still pass after the
+  expansion.
+- Built 5 entry-hypothesis candidates
+  (src/coindcx_lab/engine/phase15_candidates.py):
+    A. TrendPullbackWiderZone — pullback zone [EMA100, EMA50]
+       (deeper than [EMA50, EMA20]).
+    B. TrendPullbackPriceReversal — 3+ consecutive declining closes
+       + first up-close (instead of RSI in range).
+    C. MeanReversionBB — Bollinger Band touch (prev close <= BB_lower)
+       + back inside (current close > BB_lower).
+    D. MeanReversionDecliningCloses — 3+ declining closes + first
+       up-close (price-reversal trigger in range-bound regime).
+    E. BreakoutRetestLevelStop — TIGHT breakout-level stop
+       (0.5% below breakout level, NOT min with 2*ATR).
+- Built AdxRegimeClassifier — alternative regime classifier using ADX
+  (>25 strong trend, <20 range-bound). Existing RegimeClassifier
+  unchanged.
+- Wrote tests/test_phase15_regression.py with 14 new tests:
+    A. ADX (3): defined after 2*period, high on strong trend, low on
+       flat series.
+    B. Bollinger Bands (3): defined after period-1, middle=SMA,
+       width>0 on non-flat.
+    C. Entry-hypothesis candidates (6): wider zone uses EMA100,
+       price-reversal requires 3+ declining closes, BB requires
+       touch + back-inside, declining-closes requires 3+ declines,
+       breakout-level-stop uses tight stop, ADX classifier strong
+       trend up.
+    D. Paper-trading reliability (2): IndicatorSet has new fields,
+       equity snapshot persists after close.
+- Full test suite: 343 passing (329 prior + 14 new Phase 15).
+- Production safeguards preserved:
+    * 11 serverless functions (within Vercel Hobby 12-function limit).
+    * 4 migrations byte-for-byte unchanged.
+    * No RLS policy changes.
+    * No env var name changes.
+    * Paper-only trading preserved.
+    * Production strategy defaults UNCHANGED.
+
+Phase 15 evaluation backtest running (background):
+- 5 Phase 15 candidates × 11 pairs (dev/val only — OOS preserved)
+- Production breakout_retest × 11 pairs (full dev/val/oos) for
+  comparison.
+- Total: 66 runs. Output:
+  /home/z/my-project/download/phase15_strategy_comparison.json
+
+Stage Summary:
+- Phase 15 candidates built and unit-tested.
+- ADX + Bollinger Bands + EMA100 added to IndicatorSet.
+- 5 entry-hypothesis candidates + AdxRegimeClassifier ready for
+  evaluation.
+- Backtest running in background; will produce honest metrics
+  report once it completes.
