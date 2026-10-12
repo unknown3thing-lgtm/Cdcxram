@@ -228,3 +228,92 @@ Stage Summary:
 - Phase 10 verified locally; not deployed live in this session.
 - Ready to begin Phase 11 work: historical data expansion, 4h/daily
   interval support, strategy evaluation.
+
+---
+Task ID: phase-11-final
+Agent: main (super-z)
+Task: Phase 11 execution — interval support, history expansion, paper-exit tests, final report
+
+Work Log:
+- Pre-flight cleanup (commit ce9c3c4): removed redundant api/settings.py
+  and api/portfolio_reset.py (accidentally committed in 367a0e8) plus
+  junk tool-results/ text file. Restored deployed function count to 11.
+- Inspected commits 45b03aa, 5f55a5b, 4defbf9 per Phase 11 brief req 1.
+  All three contain the intended changes:
+    * 45b03aa: Phase 9 equity fix (current_equity excludes
+      open_positions_value to avoid double-counting).
+    * 5f55a5b: Phase 9 test update (cash-cap test reflects corrected
+      equity formula).
+    * 4defbf9: Phase 10 walk-forward warm-up prefix + paper-exit gap
+      recovery + 18 regression tests.
+- Ran full test suite (262 passing at start of Phase 11).
+- Ran API endpoint + idempotency + Phase 7 regression tests: 32 passing.
+- Phase 11 fix #1 (429 retry):
+    * Added rate_limit_retries=4 and rate_limit_backoff_seconds=2.0
+      to WazirXClient.
+    * Rewrote _request() as a single while-loop with separate budgets
+      for 5xx/network errors (max_retries) and 429 (rate_limit_retries).
+    * Updated test_429_raises_rate_limit -> test_429_retried_then_raises
+      _rate_limit; added test_429_eventually_succeeds_after_retries.
+- Phase 11 fix #2 (4h/1d interval support):
+    * Added 'interval' parameter to Backtester.run() (default '1h').
+    * Added 'interval' parameter to walk_forward() (default '1h').
+    * Interval is propagated to signal_engine.evaluate() (was hard-
+      coded to '1h').
+    * Walk-forward split remains UTC-day-boundary based; works at any
+      interval.
+    * Fixed segment_start_idx recompute bug: always use post-de-dup
+      prefix length, not the caller-passed value.
+- Phase 11 fix #3 (tests):
+    * tests/test_phase11_regression.py (NEW, 17 tests): interval
+      plumbing, warm-up at 4h/1d, candle integrity (sorting, dedup,
+      OHLC, missing intervals), segment boundaries at 4h/1d, 429 retry.
+    * tests/test_phase11_paper_exit.py (NEW, 9 tests): very long gap,
+      concurrent cron race, multiple retries, rate-limit failure,
+      multiple open trades, all-incomplete candles, no eligible
+      candles, processed_at_ms, zero open trades.
+- Phase 11 fix #4 (data expansion probe):
+    * scripts/probe_wazirx_history.py: tests 10 pairs × 4 limit values
+      (200/500/750/1000) on 1h interval. All 40 probes succeeded.
+    * Data integrity verified: sorted=True, duplicates=0, missing=0,
+      OHLC violations=0 across all probes.
+    * WazirX reliably supports limit=1000 (gives ~42 days history on
+      1h, ~167 days on 4h, ~1000 days on 1d).
+    * 429 retry logic recovered from rate-limit hits without fail.
+    * MATIC has stale data: latest candle 2025-10-25 (delisted ~Oct 2025).
+- Phase 11 fix #5 (strategy evaluation):
+    * scripts/run_phase11_backtest_slim.py: 5 pairs × 3 intervals × 4
+      strategies = 60 walk-forward runs. CANDLE_LIMIT=1000.
+    * Total trades: 20 (all from breakout_retest; trend_pullback,
+      momentum_continuation, baseline_sma produced 0 trades each).
+    * Win rate: 10% (2 wins, 18 losses).
+    * Net PnL: -120.11 INR on 2000 INR starting (-6.0% return).
+    * Both wins suspect: 1 end_of_data force-close (SOL 1d dev, +14.13
+      INR); 1 actual target hit (XRP 4h dev, +27.39 INR).
+    * All 18 losing trades exited via stop-loss.
+    * Strategy profitability remains UNVALIDATED. Sample too small.
+- Phase 11 fix #6 (production safeguards):
+    * 11 serverless functions preserved.
+    * 4 migrations unchanged (0001-0004 untouched).
+    * 9 env var names unchanged.
+    * No real-money / leverage / futures code added.
+    * No RLS policy changes.
+    * Strategy parameters unchanged.
+- Final test suite result: 289 passing (263 prior + 26 new Phase 11).
+- Committed Phase 11 changes: SHA 66370cd on main.
+
+Stage Summary:
+- Phase 11 implementation complete and committed (SHA 66370cd).
+- Strategy profitability remains UNVALIDATED — 20 trades across 60
+  walk-forward runs, 10% win rate, -6.0% net return. All 3 trend
+  strategies (trend_pullback, momentum_continuation, baseline_sma)
+  produced ZERO trades across all 60 runs — their entry conditions
+  are too restrictive for the INR-spot regime.
+- Phase 10 fixes (warm-up prefix, paper-exit gap recovery) verified
+  working at all 3 intervals (1h, 4h, 1d).
+- WazirX reliably supports limit=1000 candles per pair (no truncation,
+  full data integrity).
+- 429 rate-limit retry logic working in production-ready form.
+- Paper-exit recovery tested with 9 additional isolated cases beyond
+  Phase 10's coverage.
+- Production safeguards fully preserved.
