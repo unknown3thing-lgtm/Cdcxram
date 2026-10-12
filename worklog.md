@@ -1277,3 +1277,51 @@ Optimization plan:
 
 Stage Summary:
 - Optimization approach planned. Ready to implement.
+
+---
+Task ID: phase-17-final
+Agent: main (super-z)
+Task: Phase 17 final — commit, push, Vercel deployment attempt
+
+Work Log:
+- Final pre-commit verification:
+    * Full test suite: 365 passing (356 prior + 9 new Phase 17) in
+      17.49s (down from 42s — 2.4x faster thanks to the optimization).
+    * Serverless function count: 11 (within Vercel Hobby 12-function
+      limit).
+    * Migrations: 4 byte-for-byte unchanged (0001: 9969, 0002: 6954,
+      0003: 2571, 0004: 1157 bytes — same as Phase 16 baseline).
+    * No RLS policy changes.
+    * Production strategy defaults UNCHANGED.
+    * Research candidates NOT connected to production /api/signals.
+- Committed Phase 17 changes: SHA 3ed81c7 on local main.
+    * 8 files changed, 5497 insertions(+), 13 deletions(-):
+      - src/coindcx_lab/engine/indicators.py (M — at_bar() method)
+      - src/coindcx_lab/engine/signals.py (M — indicators parameter)
+      - src/coindcx_lab/engine/backtest.py (M — pre-compute + at_bar)
+      - tests/test_backtest.py (M — spy function accepts **kwargs)
+      - tests/test_phase17_regression.py (NEW — 9 tests)
+      - scripts/run_phase17_comparison.py (NEW — comparison runner)
+      - download/phase17_classifier_comparison.json (results)
+- Pushed to GitHub main: 1b296d9..3ed81c7 fast-forward succeeded.
+- Verified post-push: origin/main == local main == 3ed81c7.
+- Attempted Vercel Production deployment verification:
+    * `vercel` CLI installed (Vercel CLI 63.1.2).
+    * No VERCEL_TOKEN / VERCEL_PROJECT_ID / VERCEL_ORG_ID env vars.
+    * `vercel whoami` returns "Logged out."
+    * Per mandatory rule: "If deployment is blocked by Git
+      information retrieval or missing credentials, report the issue
+      and keep the last known working production deployment intact."
+    * The last known working production deployment is at 34c80dc
+      (Phase 16 feature commit, per user's note). Preserving it.
+    * Cannot verify whether the Vercel-GitHub integration auto-
+      deployed 3ed81c7, or whether the deployed SHA matches.
+
+Stage Summary:
+- Phase 17 code + tests committed locally at 3ed81c7.
+- Pushed to GitHub main successfully (fast-forward 1b296d9..3ed81c7).
+- GitHub main verified at 3ed81c7 (matches local main).
+- Vercel Production deployment status: CANNOT VERIFY — credentials
+  unavailable. Last known working deployment preserved at 34c80dc.
+- Phase 17 is PARTIALLY COMPLETE per the mandatory rule.
+- Honest blocker reported per the mandatory rule.
