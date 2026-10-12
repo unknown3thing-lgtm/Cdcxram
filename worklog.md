@@ -144,3 +144,53 @@ Stage Summary:
 - Production safeguards preserved: no real orders, no leverage, no
   schema/migration/RLS changes, no portfolio resets, no strategy
   parameter tuning, env var names unchanged.
+
+---
+Task ID: phase-10-final
+Agent: main (super-z)
+Task: Commit, verify production safeguards, finalize Phase 10 report
+
+Work Log:
+- Verified env var names unchanged (ENV_SUPABASE_URL, ENV_SUPABASE_PUBLISHABLE_KEY,
+  ENV_SUPABASE_SERVICE_KEY, ENV_CRON_SECRET, ENV_API_ALLOWED_ORIGIN,
+  ENV_COINDCX_BASE_URL, ENV_COINDCX_TIMEOUT, ENV_COINDCX_MAX_RETRIES,
+  ENV_ALLOW_SIMULATED — all preserved).
+- Verified 11 deployed serverless functions (api/settings.py and
+  api/portfolio_reset.py remain UNTRACKED — vercel.json rewrites already
+  route /api/settings → /api/health?action=settings and
+  /api/portfolio_reset → /api/portfolio?action=reset, so these files
+  are bypassed and would be redundant if deployed).
+- Verified 4 migrations unchanged (0001_initial_schema.sql,
+  0002_rls_policies.sql, 0003_anon_user_policies.sql,
+  0004_add_request_key_column.sql). Migration 0004 file-mode change
+  (644 → 755) is a pre-existing artifact from prior phases, not a
+  content change.
+- Verified RLS policies unchanged (migration 0002 untouched).
+- Verified strategy parameters unchanged (TrendPullback.warmup_candles=200,
+  BreakoutRetest.warmup_candles=60, MomentumContinuation.warmup_candles=60,
+  BaselineSMAStrategy.warmup_candles=60 — all preserved from prior phases).
+- Verified RiskSettings defaults preserved (initial_inr=2000,
+  risk_per_trade_pct=1.0, fee_pct=0.1, spread_pct=0.05, slippage_pct=0.05,
+  max_drawdown_pct=15.0, etc.).
+- Final test suite result: 262 passing (244 baseline + 18 new Phase 10).
+- Committed Phase 10 changes: SHA 4defbf9 on main.
+
+Final Report Sections (per Phase 10 brief, 9 required sections):
+  1. Backtest results before and after the Phase 9 accounting fix
+  2. Verified warm-up behavior and eligible bars per segment
+  3. New tests and total suite results
+  4. Paper-exit gap detection and recovery behavior
+  5. Data coverage, missing candles and rate-limit failures
+  6. Whether the strategies have enough evidence for further evaluation
+  7. Commit SHA, deployment status and function count
+  8. What was verified locally versus live
+  9. Remaining limitations and next recommended phase
+
+Stage Summary:
+- Phase 10 implementation complete and committed (SHA 4defbf9).
+- Strategy profitability remains UNVALIDATED — 6 trades total across
+  16 walk-forward runs (BreakoutRetest only), all losing. Insufficient
+  evidence for further evaluation.
+- Production safeguards fully preserved — no real orders, no leverage,
+  no migration/RLS/env var changes, no portfolio resets.
+- Deployment: not deployed live in this session; verified locally only.
