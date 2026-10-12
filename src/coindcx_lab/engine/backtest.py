@@ -267,6 +267,23 @@ class Backtester:
         paused_today = False
         paused_entirely = False
 
+        # Phase 17: pre-compute the full IndicatorSet ONCE on the
+        # entire candle series. At each bar, create a lightweight
+        # IndicatorSet via at_bar() — this shares the pre-computed
+        # array indicators (EMA, RSI, ATR, MACD, ADX, BB, etc.) and
+        # only recomputes the cheap summary indicators (swing_highs_lows,
+        # breakout_retest, support_resistance) on the prefix.
+        # This reduces the backtest from O(N²) to O(N) for the
+        # expensive array indicators, with a small O(N²) residual
+        # from the cheap summary recomputations.
+        _precomputed_indicators = None
+        if all_candles:
+            try:
+                from .indicators import IndicatorSet
+                _precomputed_indicators = IndicatorSet.from_candles(all_candles)
+            except Exception:
+                _precomputed_indicators = None  # fall back to old path
+
         for i in range(len(all_candles)):
             # New day reset?
             today_iso = _day_iso_from_ms(all_candles[i].open_time_ms)
@@ -325,14 +342,24 @@ class Backtester:
             if (pos is None and not paused_today and not paused_entirely
                     and in_segment and warmup_ok):
                 prefix = all_candles[:i + 1]
-                # Phase 11: propagate the interval parameter so the
-                # signal engine knows what timeframe the candles
-                # represent (1h, 4h, 1d). Previously this was
-                # hard-coded to "1h".
-                sigs = self.signal_engine.evaluate(
-                    pair=pair, interval=interval,
-                    candles=prefix, provenance=provenance,
-                    risk_state=state)
+                # Phase 17: use pre-computed indicators for O(N)
+                # instead of O(N²) performance. The at_bar() method
+                # creates a lightweight IndicatorSet with shared arrays
+                # and recomputed summary indicators. Pass via
+                # signal_engine.evaluate(indicators=...) so the signal
+                # engine's strategy iteration and test mocks still work.
+                if _precomputed_indicators is not None:
+                    cached_ind = _precomputed_indicators.at_bar(
+                        all_candles, i)
+                    sigs = self.signal_engine.evaluate(
+                        pair=pair, interval=interval,
+                        candles=prefix, provenance=provenance,
+                        risk_state=state, indicators=cached_ind)
+                else:
+                    sigs = self.signal_engine.evaluate(
+                        pair=pair, interval=interval,
+                        candles=prefix, provenance=provenance,
+                        risk_state=state)
                 buy_sigs = [s for s in sigs
                             if s.state is SignalState.BUY_CANDIDATE]
                 if buy_sigs:

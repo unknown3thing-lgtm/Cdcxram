@@ -477,8 +477,15 @@ class SignalEngine:
                  candles: List[Candle],
                  provenance: DataProvenance,
                  risk_state: RiskState,
-                 current_price: Optional[float] = None) -> List[Signal]:
-        """Run every enabled strategy on the given candles."""
+                 current_price: Optional[float] = None,
+                 indicators: Optional[IndicatorSet] = None) -> List[Signal]:
+        """Run every enabled strategy on the given candles.
+
+        Phase 17: accepts an optional pre-computed ``indicators``
+        parameter. If provided, skips the IndicatorSet.from_candles()
+        call (O(N) savings per bar). If not provided, computes
+        indicators from scratch (backward compat).
+        """
         if not candles:
             return [Signal(
                 pair=pair, interval=interval, strategy="none",
@@ -489,7 +496,8 @@ class SignalEngine:
         # Compute indicators ONCE per evaluation (candles are a single
         # interval's worth — the multi-timeframe orchestration lives in
         # the scanner/dashboard).
-        indicators = IndicatorSet.from_candles(candles)
+        if indicators is None:
+            indicators = IndicatorSet.from_candles(candles)
         out: List[Signal] = []
         for strat in self.strategies:
             if not self.config.enabled.get(strat.name, True):

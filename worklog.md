@@ -1226,3 +1226,54 @@ Stage Summary:
 - The GitHub push IS complete; the Vercel deployment verification
   is NOT complete.
 - Honest blocker reported per the mandatory rule.
+
+---
+Task ID: phase-17-start
+Agent: main (super-z)
+Task: Phase 17 kickoff — baseline + optimization plan
+
+Work Log:
+- Verified baseline: local + GitHub main at 1b296d9 (docs-only —
+  49 worklog insertions, no app changes beyond 34c80dc). Vercel
+  Production at 34c80dc (per user's note). Working tree clean.
+  356 tests passing. 11 serverless functions. 4 migrations
+  byte-for-byte unchanged (9969/6954/2571/1157 bytes).
+- Inspected the current indicator computation hot path:
+    * Backtester.run() iterates through all_candles (prefix + segment).
+    * At each bar i, calls signal_engine.evaluate(candles=all_candles[:i+1]).
+    * SignalEngine.evaluate() calls IndicatorSet.from_candles(prefix).
+    * IndicatorSet.from_candles() recomputes ALL indicators from scratch
+      (EMA, RSI, ATR, MACD, ADX, BB, relvol, vol, swing_highs_lows,
+      breakout_retest, support_resistance).
+    * Total cost: O(N) per bar * N bars = O(N²) per segment.
+    * Phase 15/16 additions (ADX, BB, EMA100, +DI/-DI) roughly doubled
+      the per-IndicatorSet cost, causing the Phase 15 backtest to
+      timeout at 540s for 25 runs on 5 pairs × 5 candidates.
+
+Optimization plan:
+  1. Pre-compute ARRAY indicators (EMA20/50/100/200, RSI14, ATR14,
+     MACD, relvol20, vol20, ADX14, BB, +DI14, -DI14) on the full
+     candle series ONCE (O(N) total). These indicators have NO
+     look-ahead — the value at index i depends only on candles[0..i].
+  2. At each bar i, create a lightweight IndicatorSet that:
+     - References the pre-computed arrays (shared, not copied).
+     - Truncates swing_highs/swing_lows to [0..i] (O(N) list copy,
+       but tiny constant ~0.01ms per 1000 elements).
+     - Recomputes breakout_retest_signal on prefix[0..i] (O(i) per
+       bar, small constant).
+     - Recomputes support_resistance from truncated swing lists.
+     - Sets last_idx = i.
+  3. Modify Backtester.run() to use the pre-computed indicators
+     instead of calling SignalEngine.evaluate() (which recomputes
+     IndicatorSet at every bar). Call strategy.evaluate() directly
+     with the lightweight IndicatorSet.
+  4. SignalEngine.evaluate() API preserved for other callers
+     (backward compat).
+  5. Numerical equivalence: the pre-computed array values at index i
+     are IDENTICAL to the values computed from the prefix [0..i].
+     The truncated swing lists are IDENTICAL to computing
+     swing_highs_lows on the prefix. The recomputed breakout_retest
+     is IDENTICAL. So the strategy's decisions are unchanged.
+
+Stage Summary:
+- Optimization approach planned. Ready to implement.

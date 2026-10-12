@@ -99,10 +99,12 @@ class TestNoLookAhead:
         captured = []
         orig = eng.evaluate
 
-        def spy(*, pair, interval, candles, provenance, risk_state):
+        def spy(*, pair, interval, candles, provenance, risk_state,
+                **kwargs):
             captured.append(len(candles))
             return orig(pair=pair, interval=interval, candles=candles,
-                         provenance=provenance, risk_state=risk_state)
+                         provenance=provenance, risk_state=risk_state,
+                         **kwargs)
         eng.evaluate = spy
         bt = Backtester(settings=s, strategy=strat, signal_engine=eng,
                           config=BacktestConfig(starting_capital_inr=2000,

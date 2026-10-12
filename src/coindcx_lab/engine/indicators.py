@@ -551,3 +551,80 @@ class IndicatorSet:
         if self.macd_hist[i] < 0 and self.rsi14[i] < 45:
             return "bearish"
         return "neutral"
+
+    # ------------------------------------------------------------------
+    # Phase 17: incremental / cached indicator access
+    # ------------------------------------------------------------------
+    def at_bar(self, candles: List[Candle], i: int) -> "IndicatorSet":
+        """Create a lightweight IndicatorSet for bar ``i`` using the
+        pre-computed array indicators (shared, not copied) and
+        recomputing ONLY the summary indicators (swing_highs_lows,
+        breakout_retest, support_resistance) on the prefix [0..i].
+
+        Phase 17 brief req 2: "Previously calculated indicator values
+        are reused."
+
+        Numerical equivalence:
+          * Array indicators (EMA, RSI, ATR, MACD, ADX, BB, +DI/-DI,
+            relvol, vol) at index ``i`` are IDENTICAL to the values
+            computed from IndicatorSet.from_candles(candles[:i+1]).
+            This is because these indicators only use PAST data —
+            the value at index i depends only on candles[0..i].
+          * swing_highs_lows: truncated to [0..i] with the last
+            ``lookback`` (2) entries set to None (to prevent look-ahead
+            — pivots near the end need future bars for confirmation).
+            This is IDENTICAL to computing swing_highs_lows on the
+            prefix.
+          * breakout_retest_signal: recomputed on prefix[0..i]. This is
+            IDENTICAL to the full computation on the prefix.
+          * support_resistance: recomputed from the truncated swing
+            lists. IDENTICAL.
+
+        No look-ahead bias: the array indicators' values at index i
+        use only candles[0..i]. The swing lists are truncated. The
+        breakout_retest is recomputed on the prefix.
+        """
+        # Truncate swing lists to [0..i] and None-out the last
+        # `lookback` entries (unconfirmed pivots that need future
+        # bars). swing_highs_lows uses lookback=2.
+        swing_lookback = 2
+        sh = list(self.swing_highs[:i + 1])
+        sl = list(self.swing_lows[:i + 1])
+        # None out the last `swing_lookback` entries
+        for j in range(max(0, len(sh) - swing_lookback), len(sh)):
+            sh[j] = None
+            sl[j] = None
+
+        # Recompute breakout_retest on the prefix [0..i].
+        # This is O(i) but has a very small constant factor.
+        br = breakout_retest(candles[:i + 1], lookback=20)
+
+        # Recompute support_resistance from the truncated swing lists.
+        # We need the indices too — recompute from the truncated lists.
+        sh_indices = [idx for idx, p in enumerate(sh) if p is not None]
+        sl_indices = [idx for idx, p in enumerate(sl) if p is not None]
+        sh_prices = [p for p in sh if p is not None]
+        sl_prices = [p for p in sl if p is not None]
+        # Sort by recency (most recent first) and take last `lookback=20`
+        sr_lookback = 20
+        highs_sorted = sorted(zip(sh_indices, sh_prices),
+                               key=lambda x: -x[0])[:sr_lookback]
+        lows_sorted = sorted(zip(sl_indices, sl_prices),
+                              key=lambda x: -x[0])[:sr_lookback]
+        res = [p for _, p in highs_sorted]
+        sup = [p for _, p in lows_sorted]
+
+        return IndicatorSet(
+            ema20=self.ema20, ema50=self.ema50, ema100=self.ema100,
+            ema200=self.ema200, rsi14=self.rsi14, atr14=self.atr14,
+            macd_line=self.macd_line, macd_signal=self.macd_signal,
+            macd_hist=self.macd_hist, relvol20=self.relvol20,
+            vol20=self.vol20, adx14=self.adx14,
+            bb_middle=self.bb_middle, bb_upper=self.bb_upper,
+            bb_lower=self.bb_lower,
+            plus_di14=self.plus_di14, minus_di14=self.minus_di14,
+            swing_highs=sh, swing_lows=sl,
+            resistance_levels=res, support_levels=sup,
+            breakout_retest_signal=br,
+            last_close=float(candles[i].close) if candles else float("nan"),
+            last_idx=i)
